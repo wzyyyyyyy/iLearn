@@ -25,7 +25,7 @@ namespace iLearn
                 services.AddHostedService<ApplicationHostService>();
 
                 // Login window
-                services.AddSingleton(sp => new LoginWindow{ DataContext = sp.GetRequiredService<LoginViewModel> });
+                services.AddSingleton(sp => new LoginWindow{ DataContext = sp.GetRequiredService<LoginViewModel>() });
                 services.AddSingleton<LoginViewModel>();
             }).Build();
 
