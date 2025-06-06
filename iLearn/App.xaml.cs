@@ -1,12 +1,11 @@
 ﻿using System.IO;
 using System.Windows.Threading;
 using iLearn.Services;
+using iLearn.ViewModels.Windows;
 using iLearn.Views.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Wpf.Ui;
-using Wpf.Ui.DependencyInjection;
 
 namespace iLearn
 {
@@ -15,6 +14,9 @@ namespace iLearn
     /// </summary>
     public partial class App
     {
+        public IServiceProvider ServiceProvider { get; }
+        public static new App Current => (App)Application.Current;
+
         private static readonly IHost _host = Host
             .CreateDefaultBuilder()
             .ConfigureAppConfiguration(c => { c.SetBasePath(Path.GetDirectoryName(AppContext.BaseDirectory)); })
@@ -23,7 +25,8 @@ namespace iLearn
                 services.AddHostedService<ApplicationHostService>();
 
                 // Login window
-                services.AddSingleton<LoginWindow>();
+                services.AddSingleton(sp => new LoginWindow{ DataContext = sp.GetRequiredService<LoginViewModel> });
+                services.AddSingleton<LoginViewModel>();
             }).Build();
 
         /// <summary>

@@ -14,7 +14,6 @@ public partial class LoginWindow : FluentWindow
     public LoginWindow()
     {
         InitializeComponent();
-        DataContext = new LoginViewModel();
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
