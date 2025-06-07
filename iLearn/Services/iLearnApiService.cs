@@ -153,6 +153,16 @@ namespace iLearn.Services
             return LiveAndRecordInfo.Parse(json);
         }
 
+        public async Task<VideoInfo> GetVideoInfoAsync(string resourceId)
+        {
+            if (!Logined) throw new InvalidOperationException("Not logged in.");
+            await httpClient.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/zhwk/selectLanguageExists?resourceId={resourceId}");
+            var response = await httpClient.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/videoclass/videoClassInfo?resourceId={resourceId}");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return VideoInfo.Parse(json);
+        }
+
         private string GetStringFromJson(JsonDocument doc, string propertyName)
         {
             return doc.RootElement.GetProperty(propertyName).GetString() ?? string.Empty;
