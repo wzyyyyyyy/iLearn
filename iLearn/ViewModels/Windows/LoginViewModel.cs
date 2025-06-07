@@ -25,7 +25,7 @@ namespace iLearn.ViewModels.Windows
         private readonly ILearnApiService _learnApiService;
         private readonly ISnackbarService _SnackbarService;
 
-        public LoginViewModel(ILearnApiService learnApiService,ISnackbarService snackbarService)
+        public LoginViewModel(ILearnApiService learnApiService, ISnackbarService snackbarService)
         {
             _learnApiService = learnApiService ?? throw new ArgumentNullException(nameof(learnApiService));
             _SnackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
@@ -49,13 +49,13 @@ namespace iLearn.ViewModels.Windows
             {
                 var rel = await _learnApiService.LoginAsync(UserName, UserPassword);
 
-                if (!rel) { 
-                    
+                if (!rel)
+                {
+                    ShowSnackbar($"登录失败，用户名或密码错误");
                 }
             }
             catch (Exception ex)
             {
-
                 ShowSnackbar($"登录失败，用户名或密码错误");
             }
             finally
@@ -82,7 +82,7 @@ namespace iLearn.ViewModels.Windows
         public void ShowSnackbar(string message)
         {
             _SnackbarService.Show(
-                "登录失败", 
+                "登录失败",
                 message,
                 ControlAppearance.Danger,
                 new SymbolIcon(SymbolRegular.CalendarError16),

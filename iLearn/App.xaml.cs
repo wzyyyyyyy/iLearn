@@ -1,4 +1,5 @@
-﻿using iLearn.Services;
+﻿using iLearn.Models;
+using iLearn.Services;
 using iLearn.ViewModels.Windows;
 using iLearn.Views.Windows;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,11 @@ namespace iLearn
                 services.AddSingleton<LoginWindow>();
                 services.AddSingleton<LoginViewModel>();
 
+                services.AddSingleton(sp =>
+                {
+                    string configPath = Path.Combine(AppContext.BaseDirectory, "config.json");
+                    return new AppConfig(configPath);
+                });
                 services.AddSingleton<ILearnApiService>();
                 services.AddSingleton<ISnackbarService, SnackbarService>();
             }).Build();

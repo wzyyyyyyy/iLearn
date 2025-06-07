@@ -53,7 +53,7 @@ namespace iLearn.Services
             var casNonce = casDoc.DocumentNode.SelectSingleNode("//input[@name='lt']")?.GetAttributeValue("value", null);
 
             if (casNonce == null || casEvent == null || casExecution == null)
-                throw new InvalidOperationException("CAS Nonce is null");
+                return false;
 
             // 构建表单数据
             var formParams = new List<KeyValuePair<string, string>>
@@ -87,6 +87,11 @@ namespace iLearn.Services
             var casUsername = ticketDoc.DocumentNode.SelectSingleNode("//input[@id='username']")?.GetAttributeValue("value", null);
             var casPassword = ticketDoc.DocumentNode.SelectSingleNode("//input[@id='password']")?.GetAttributeValue("value", null);
 
+            if (String.IsNullOrEmpty(casUsername) || String.IsNullOrEmpty(casPassword))
+            {
+                return false;
+            }
+
             var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var passwordBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(casPassword));
 
@@ -114,11 +119,9 @@ namespace iLearn.Services
             var ssoUrl = $"https://ilearn.jlu.edu.cn/iplat/ssoservice?ssoservice=https://ilearntec.jlu.edu.cn/&ticket={GetStringFromJson(ilearnCasReturn, "ticket")}";
             await httpClient.GetAsync(ssoUrl);
             var text = await httpClient.GetAsync("https://ilearntec.jlu.edu.cn/coursecenter/main/index");
+
             Logined = true;
 
-            var a = httpClient.PostAsync("https://ilearntec.jlu.edu.cn/studycenter/platform/public/getUserInfo", new StringContent("")).Result;
-            Console.WriteLine(a.Content.ReadAsStringAsync().Result);
-            Console.WriteLine("Login successful!");
             return true;
         }
 
