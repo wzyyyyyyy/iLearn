@@ -144,6 +144,15 @@ namespace iLearn.Services
             return ClassInfo.Parse(json);
         }
 
+        public async Task<List<LiveAndRecordInfo>> GetLiveAndRecordInfoAsync(string termId, string classId)
+        {
+            if (!Logined) throw new InvalidOperationException("Not logged in.");
+            var response = await httpClient.GetAsync($"https://ilearntec.jlu.edu.cn/coursecenter/liveAndRecord/getLiveAndRecordInfoList?memberId=&termId={termId}&roomType=0&identity=2&liveStatus=0&submitStatus=0&weekNum=&dayNum=&timeRange=&teachClassId={classId}");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return LiveAndRecordInfo.Parse(json);
+        }
+
         private string GetStringFromJson(JsonDocument doc, string propertyName)
         {
             return doc.RootElement.GetProperty(propertyName).GetString() ?? string.Empty;
