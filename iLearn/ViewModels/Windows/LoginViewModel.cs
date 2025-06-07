@@ -1,16 +1,12 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using iLearn.Services;
 using System.Windows.Input;
 using Wpf.Ui;
-using Wpf.Ui.Abstractions;
 using Wpf.Ui.Controls;
 
 namespace iLearn.ViewModels.Windows
 {
     public partial class LoginViewModel : ObservableObject
     {
-        public string WindowTitle => "用户登录";
-
         [ObservableProperty]
         private string _userName = string.Empty;
 
@@ -26,9 +22,14 @@ namespace iLearn.ViewModels.Windows
         [ObservableProperty]
         private bool _isAuthenticationInProgress;
 
-        public LoginViewModel()
+        private readonly ILearnApiService _learnApiService;
+        private readonly ISnackbarService _SnackbarService;
+
+        public LoginViewModel(ILearnApiService learnApiService,ISnackbarService snackbarService)
         {
-            // 属性变更时刷新命令状态
+            _learnApiService = learnApiService ?? throw new ArgumentNullException(nameof(learnApiService));
+            _SnackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
+
             PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(UserName) ||
@@ -46,8 +47,16 @@ namespace iLearn.ViewModels.Windows
             IsAuthenticationInProgress = true;
             try
             {
-                //LOGIN
-                await Task.Delay(5000);
+                var rel = await _learnApiService.LoginAsync(UserName, UserPassword);
+
+                if (!rel) { 
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+
+                ShowSnackbar($"登录失败，用户名或密码错误");
             }
             finally
             {
@@ -68,6 +77,17 @@ namespace iLearn.ViewModels.Windows
                 LoginCommand.Execute(null);
                 e.Handled = true;
             }
+        }
+
+        public void ShowSnackbar(string message)
+        {
+            _SnackbarService.Show(
+                "登录失败", 
+                message,
+                ControlAppearance.Danger,
+                new SymbolIcon(SymbolRegular.CalendarError16),
+                TimeSpan.FromSeconds(3)
+            );
         }
     }
 }

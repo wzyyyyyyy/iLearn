@@ -1,19 +1,19 @@
 ﻿using iLearn.ViewModels.Windows;
 using System.Diagnostics;
-using System.Windows;
 using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using Wpf.Ui;
-using Wpf.Ui.Abstractions;
 using Wpf.Ui.Controls;
 
 namespace iLearn.Views.Windows;
 
 public partial class LoginWindow : FluentWindow
 {
-    public LoginWindow()
+    public LoginWindow(LoginViewModel viewModel, ISnackbarService snackbarService)
     {
         InitializeComponent();
+        DataContext = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        snackbarService.SetSnackbarPresenter(SnackbarPresenter);
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)

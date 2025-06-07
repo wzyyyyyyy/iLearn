@@ -1,7 +1,6 @@
 ﻿using iLearn.Views.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Wpf.Ui;
 
 namespace iLearn.Services
 {

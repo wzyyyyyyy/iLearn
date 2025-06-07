@@ -1,11 +1,12 @@
-﻿using System.IO;
-using System.Windows.Threading;
-using iLearn.Services;
+﻿using iLearn.Services;
 using iLearn.ViewModels.Windows;
 using iLearn.Views.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.IO;
+using System.Windows.Threading;
+using Wpf.Ui;
 
 namespace iLearn
 {
@@ -25,8 +26,11 @@ namespace iLearn
                 services.AddHostedService<ApplicationHostService>();
 
                 // Login window
-                services.AddSingleton(sp => new LoginWindow{ DataContext = sp.GetRequiredService<LoginViewModel>() });
+                services.AddSingleton<LoginWindow>();
                 services.AddSingleton<LoginViewModel>();
+
+                services.AddSingleton<ILearnApiService>();
+                services.AddSingleton<ISnackbarService, SnackbarService>();
             }).Build();
 
         /// <summary>

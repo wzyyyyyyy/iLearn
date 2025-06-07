@@ -274,5 +274,6 @@
                 </Border>
             </Grid>
         </Grid>
+        <ui:SnackbarPresenter x:Name="SnackbarPresenter" />
     </Grid>
 </ui:FluentWindow>
