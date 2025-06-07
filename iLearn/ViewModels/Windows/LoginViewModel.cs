@@ -1,4 +1,5 @@
-﻿using iLearn.Services;
+﻿using iLearn.Models;
+using iLearn.Services;
 using System.Windows.Input;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
@@ -24,11 +25,12 @@ namespace iLearn.ViewModels.Windows
 
         private readonly ILearnApiService _learnApiService;
         private readonly ISnackbarService _SnackbarService;
-
-        public LoginViewModel(ILearnApiService learnApiService, ISnackbarService snackbarService)
+        private readonly AppConfig _appConfig;
+        public LoginViewModel(ILearnApiService learnApiService, ISnackbarService snackbarService, AppConfig appConfig)
         {
             _learnApiService = learnApiService ?? throw new ArgumentNullException(nameof(learnApiService));
             _SnackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
+            _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
 
             PropertyChanged += (s, e) =>
             {
@@ -39,6 +41,7 @@ namespace iLearn.ViewModels.Windows
                     LoginCommand.NotifyCanExecuteChanged();
                 }
             };
+            _appConfig = appConfig;
         }
 
         [RelayCommand(CanExecute = nameof(CanLogin))]

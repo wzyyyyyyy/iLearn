@@ -12,6 +12,10 @@ namespace iLearn.Models
 
         private readonly string _filePath;
 
+        public AppConfig()
+        {
+        }
+
         public AppConfig(string filePath)
         {
             _filePath = filePath;
