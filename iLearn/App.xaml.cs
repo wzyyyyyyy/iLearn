@@ -16,7 +16,6 @@ namespace iLearn
     /// </summary>
     public partial class App
     {
-        public IServiceProvider ServiceProvider { get; }
         public static new App Current => (App)Application.Current;
 
         private static readonly IHost _host = Host
@@ -52,6 +51,9 @@ namespace iLearn
         /// </summary>
         private async void OnStartup(object sender, StartupEventArgs e)
         {
+            Application.Current.DispatcherUnhandledException += DispatcherUnhandledExceptionHandler;
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
+
             await _host.StartAsync();
         }
 
@@ -65,12 +67,28 @@ namespace iLearn
             _host.Dispose();
         }
 
-        /// <summary>
-        /// Occurs when an exception is thrown by an application but not handled.
-        /// </summary>
-        private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        private void DispatcherUnhandledExceptionHandler(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            // For more info see https://docs.microsoft.com/en-us/dotnet/api/system.windows.application.dispatcherunhandledexception?view=windowsdesktop-6.0
+            LogException(e.Exception);
+            e.Handled = true;
+        }
+
+        private void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
+        {
+            if (e.ExceptionObject is Exception exception)
+            {
+                LogException(exception);
+            }
+        }
+
+        private void LogException(Exception exception)
+        {
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var logFileName = $"error_{timestamp}.log";
+            var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, logFileName);
+            var errorMessage = $"[{DateTime.Now}] {exception.ToString()}\n";
+
+            File.AppendAllText(logFilePath, errorMessage);
         }
     }
 }

@@ -118,7 +118,7 @@ namespace iLearn.Services
             // 完成登录
             var ssoUrl = $"https://ilearn.jlu.edu.cn/iplat/ssoservice?ssoservice=https://ilearntec.jlu.edu.cn/&ticket={GetStringFromJson(ilearnCasReturn, "ticket")}";
             await httpClient.GetAsync(ssoUrl);
-            var text = await httpClient.GetAsync("https://ilearntec.jlu.edu.cn/coursecenter/main/index");
+            _ = await httpClient.GetAsync("https://ilearntec.jlu.edu.cn/coursecenter/main/index");
 
             Logined = true;
 

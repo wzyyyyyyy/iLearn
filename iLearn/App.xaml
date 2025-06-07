@@ -3,8 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"  
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"  
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"  
-    xmlns:converters="clr-namespace:iLearn.Resources"  
-    DispatcherUnhandledException="OnDispatcherUnhandledException"  
+    xmlns:converters="clr-namespace:iLearn.Resources"
     Exit="OnExit"  
     Startup="OnStartup">
     <Application.Resources>
