@@ -26,6 +26,7 @@ namespace iLearn.ViewModels.Windows
         private readonly ILearnApiService _learnApiService;
         private readonly ISnackbarService _SnackbarService;
         private readonly AppConfig _appConfig;
+
         public LoginViewModel(ILearnApiService learnApiService, ISnackbarService snackbarService, AppConfig appConfig)
         {
             _learnApiService = learnApiService ?? throw new ArgumentNullException(nameof(learnApiService));
@@ -41,7 +42,19 @@ namespace iLearn.ViewModels.Windows
                     LoginCommand.NotifyCanExecuteChanged();
                 }
             };
-            _appConfig = appConfig;
+
+            IsAutoLoginEnabled = _appConfig.IsAutoLoginEnabled;
+            IsRememberMeEnabled = _appConfig.IsRememberMeEnabled;
+
+            if ((_appConfig.UserPassword != null && _appConfig.UserName != null) && _appConfig.IsRememberMeEnabled)
+            {
+                UserName = _appConfig.UserName;
+                UserPassword = _appConfig.UserPassword;
+
+                if (_appConfig.IsAutoLoginEnabled) { 
+                    LoginCommand.Execute(null);
+                }
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanLogin))]
@@ -55,6 +68,14 @@ namespace iLearn.ViewModels.Windows
                 if (!rel)
                 {
                     ShowSnackbar($"登录失败，用户名或密码错误");
+                    return;
+                }
+
+                if (IsRememberMeEnabled)
+                {
+                    _appConfig.UserName = UserName;
+                    _appConfig.UserPassword = UserPassword;
+                    _appConfig.Save();
                 }
             }
             catch (Exception ex)
@@ -80,6 +101,14 @@ namespace iLearn.ViewModels.Windows
                 LoginCommand.Execute(null);
                 e.Handled = true;
             }
+        }
+
+        [RelayCommand]
+        private void ClickCheckBox()
+        {
+            _appConfig.IsRememberMeEnabled = IsRememberMeEnabled;
+            _appConfig.IsAutoLoginEnabled = IsAutoLoginEnabled;
+            _appConfig.Save();
         }
 
         public void ShowSnackbar(string message)

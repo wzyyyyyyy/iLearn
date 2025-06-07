@@ -29,7 +29,7 @@
         <Storyboard x:Key="CardLoadStoryboard">
             <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
             <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"   
-                             From="30" To="0" Duration="0:0:0.8">
+                             From="50" To="0" Duration="0:0:1">
                 <DoubleAnimation.EasingFunction>
                     <CubicEase EasingMode="EaseOut"/>
                 </DoubleAnimation.EasingFunction>
@@ -57,18 +57,13 @@
                 </StackPanel.RenderTransform>
 
                 <ui:ImageIcon Source="pack://application:,,,/Assets/iLearn.png"  
-                              Width="80" Height="80" HorizontalAlignment="Center" Margin="0,0,0,16"/>
-                <TextBlock Text="{Binding WindowTitle}"   
-                           FontSize="28"   
-                           FontWeight="SemiBold"   
-                           HorizontalAlignment="Center"  
-                           Margin="0,0,0,8"/>
+                              Width="120" Height="120" HorizontalAlignment="Center" Margin="0,0,0,16"/>
                 <TextBlock Text="请登录您的账户"   
                            FontSize="13"   
                            Opacity="0.8"  
                            Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"  
                            HorizontalAlignment="Center"  
-                           Margin="0,0,0,16"/>
+                           Margin="0,16,0,16"/>
             </StackPanel>
 
             <ui:Card Grid.Row="1" Margin="32,0,32,20"   
@@ -113,13 +108,13 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <CheckBox Grid.Column="0" Content="记住我" IsChecked="{Binding IsRememberMeEnabled}">
-                            <CheckBox.ToolTip>
-                                <ToolTip Content="下次登录时自动填充用户名"/>
-                            </CheckBox.ToolTip>
+                        <CheckBox Grid.Column="0" Content="记住我" IsChecked="{Binding IsRememberMeEnabled}" Command="{Binding ClickCheckBoxCommand}">  
+                            <CheckBox.ToolTip>  
+                                <ToolTip Content="下次登录时自动填充用户名"/>  
+                            </CheckBox.ToolTip>  
                         </CheckBox>
 
-                        <CheckBox Grid.Column="1" Content="自动登录" IsChecked="{Binding IsAutoLoginEnabled}" Margin="15,0,0,0">
+                        <CheckBox Grid.Column="1" Content="自动登录" IsChecked="{Binding IsAutoLoginEnabled}" Margin="15,0,0,0" Command="{Binding ClickCheckBoxCommand}">
                             <CheckBox.ToolTip>
                                 <ToolTip Content="下次启动应用时自动登录" Cursor=""/>
                             </CheckBox.ToolTip>
