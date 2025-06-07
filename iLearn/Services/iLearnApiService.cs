@@ -1,6 +1,7 @@
 ﻿using HtmlAgilityPack;
 using iLearn.Helpers;
 using iLearn.Models;
+using Microsoft.VisualBasic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -131,41 +132,21 @@ namespace iLearn.Services
             var response = await httpClient.PostAsync("https://ilearntec.jlu.edu.cn/studycenter/platform/common/termList", new StringContent(""));
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            return ParseJsonToTermList(json);
+            return TermInfo.Parse(json);
+        }
+
+        public async Task<List<ClassInfo>> GetClassesAsync(string year,string term)
+        {
+            if (!Logined) throw new InvalidOperationException("Not logged in.");
+            var response = await httpClient.GetAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/classroom/myClassroom?termYear={year}&term={term}");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return ClassInfo.Parse(json);
         }
 
         private string GetStringFromJson(JsonDocument doc, string propertyName)
         {
             return doc.RootElement.GetProperty(propertyName).GetString() ?? string.Empty;
-        }
-
-        private List<TermInfo> ParseJsonToTermList(string json)
-        {
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-
-            var termList = new List<TermInfo>();
-
-            if (root.TryGetProperty("data", out JsonElement dataElement) &&
-                dataElement.TryGetProperty("dataList", out JsonElement dataList))
-            {
-                foreach (var item in dataList.EnumerateArray())
-                {
-                    var term = new TermInfo
-                    {
-                        Year = item.GetProperty("year").GetString(),
-                        EndDate = item.GetProperty("endDate").GetString(),
-                        Num = item.GetProperty("num").GetString(),
-                        Name = item.GetProperty("name").GetString(),
-                        Id = item.GetProperty("id").GetString(),
-                        StartDate = item.GetProperty("startDate").GetString(),
-                        Selected = item.GetProperty("selected").GetString()
-                    };
-                    termList.Add(term);
-                }
-            }
-
-            return termList;
         }
     }
 }
