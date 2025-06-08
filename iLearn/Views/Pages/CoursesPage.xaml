@@ -10,41 +10,6 @@
     d:DataContext="{d:DesignInstance viewModels:CoursesViewModel}"
     Background="{DynamicResource ApplicationBackgroundBrush}">
 
-    <Page.Resources>
-        <!-- 动画资源 -->
-        <Storyboard x:Key="JoinPanelShowStoryboard">
-            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"/>
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"   
-                             From="0.95" To="1" Duration="0:0:0.4">
-                <DoubleAnimation.EasingFunction>
-                    <BackEase EasingMode="EaseOut" Amplitude="0.2"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"   
-                             From="0.95" To="1" Duration="0:0:0.4">
-                <DoubleAnimation.EasingFunction>
-                    <BackEase EasingMode="EaseOut" Amplitude="0.2"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
-        
-        <Storyboard x:Key="JoinPanelHideStoryboard">
-            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.25"/>
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"   
-                             From="1" To="0.95" Duration="0:0:0.3">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseIn"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"   
-                             From="1" To="0.95" Duration="0:0:0.3">
-                <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseIn"/>
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-        </Storyboard>
-    </Page.Resources>
-
     <Grid>
         <!-- 背景Mica效果 -->
         <ui:Card Margin="0" VerticalAlignment="Stretch" 
@@ -105,9 +70,9 @@
                     </StackPanel>
                 </ui:Button>
             </Grid>
-            <ui:SnackbarPresenter x:Name="SnackbarPresenter"/>
+            <ui:SnackbarPresenter Grid.Row="0" x:Name="SnackbarPresenter"/>
             <!-- 课程内容区域 -->
-            <ScrollViewer
+            <ScrollViewer Grid.Row="2"
               VerticalScrollBarVisibility="Auto">
                 <Grid Margin="0,8,0,0" Cursor="">
                     <Grid.RowDefinitions>

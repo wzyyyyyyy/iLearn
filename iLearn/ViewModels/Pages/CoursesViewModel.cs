@@ -1,8 +1,6 @@
 ﻿using iLearn.Models;
 using iLearn.Services;
 using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Controls;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 

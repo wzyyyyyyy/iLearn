@@ -1,18 +1,18 @@
 ﻿using iLearn.ViewModels.Pages;
-using System.Windows.Controls;
 using Wpf.Ui;
+using Wpf.Ui.Abstractions.Controls;
 
 namespace iLearn.Views.Pages
 {
-    /// <summary>
-    /// CoursesPage.xaml 的交互逻辑
-    /// </summary>
-    public partial class CoursesPage : Page
+    public partial class CoursesPage : INavigableView<CoursesViewModel>
     {
+        public CoursesViewModel ViewModel { get; }
+
         public CoursesPage(CoursesViewModel coursesViewModel, ISnackbarService snackbarService)
         {
             InitializeComponent();
-            DataContext = coursesViewModel ?? throw new ArgumentNullException(nameof(coursesViewModel));
+            ViewModel = coursesViewModel ?? throw new ArgumentNullException(nameof(coursesViewModel));
+            DataContext = ViewModel;
             snackbarService.SetSnackbarPresenter(SnackbarPresenter);
         }
     }

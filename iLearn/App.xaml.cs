@@ -41,6 +41,8 @@ namespace iLearn
                 //Pages
                 services.AddSingleton<CoursesPage>();
                 services.AddSingleton<CoursesViewModel>();
+                services.AddSingleton<MediaPage>();
+                services.AddSingleton<MediaViewModel>();
 
                 services.AddSingleton(sp =>
                 {

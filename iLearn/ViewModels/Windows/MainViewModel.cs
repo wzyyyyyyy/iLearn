@@ -17,6 +17,12 @@ namespace iLearn.ViewModels.Windows
                 Icon = new SymbolIcon { Symbol = SymbolRegular.Home24 },
                 TargetPageType = typeof(Views.Pages.CoursesPage)
             },
+            new NavigationViewItem()
+            {
+                Content = "课程视频",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.VideoClip24 },
+                TargetPageType = typeof(Views.Pages.MediaPage)
+            }
             ];
 
         [ObservableProperty]
