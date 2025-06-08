@@ -162,6 +162,18 @@ namespace iLearn.Services
             return VideoInfo.Parse(json);
         }
 
+        public async Task<string> JoinCourse(string courseId)
+        {
+            if (!Logined) throw new InvalidOperationException("Not logged in.");
+            var response = await httpClient.GetAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/classroom/joinClassroom?classroomCode={courseId}");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+            var dataListElement = doc.RootElement
+                .GetProperty("message");
+            return dataListElement.GetString() ?? string.Empty;
+        }
+
         private string GetStringFromJson(JsonDocument doc, string propertyName)
         {
             return doc.RootElement.GetProperty(propertyName).GetString() ?? string.Empty;

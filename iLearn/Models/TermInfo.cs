@@ -12,6 +12,11 @@ namespace iLearn.Models
         public string StartDate { get; set; }
         public string Selected { get; set; }
 
+        public override string ToString()
+        {
+            return $"{Year}-{int.Parse(Year) + 1}学年{Name}";
+        }
+
         public static List<TermInfo> Parse(string json)
         {
             using var doc = JsonDocument.Parse(json);

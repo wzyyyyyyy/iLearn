@@ -9,6 +9,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Light" />
                 <ui:ControlsDictionary />
