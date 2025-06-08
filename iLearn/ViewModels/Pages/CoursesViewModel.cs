@@ -1,6 +1,8 @@
 ﻿using iLearn.Models;
 using iLearn.Services;
+using iLearn.Views.Pages;
 using System.Collections.ObjectModel;
+using System.Windows.Navigation;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 
@@ -15,18 +17,20 @@ namespace iLearn.ViewModels.Pages
         private TermInfo? _selectedTerm;
 
         [ObservableProperty]
-        private ObservableCollection<CourseModel> _myCourses;
+        private ObservableCollection<ClassInfo> _myCourses;
 
         [ObservableProperty]
         private string _courseCode = string.Empty;
 
         private readonly ILearnApiService _ilearnApiService;
         private readonly ISnackbarService _snackbarService;
+        private readonly INavigationService _navigationService;
 
-        public CoursesViewModel(ILearnApiService ilearnApiService, ISnackbarService snackbarService)
+        public CoursesViewModel(ILearnApiService ilearnApiService, ISnackbarService snackbarService,INavigationService navigationService)
         {
             _ilearnApiService = ilearnApiService ?? throw new ArgumentNullException(nameof(ilearnApiService));
             _snackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
+            _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
             Init().ConfigureAwait(false);
         }
 
@@ -56,8 +60,7 @@ namespace iLearn.ViewModels.Pages
             MyCourses.Clear();
             foreach (var classInfo in classes)
             {
-                var course = new CourseModel(classInfo.Name, classInfo.TeacherName, classInfo.Cover);
-                MyCourses.Add(course);
+                MyCourses.Add(classInfo);
             }
         }
 
@@ -111,19 +114,11 @@ namespace iLearn.ViewModels.Pages
         {
             LoadCoursesAsync(SelectedTerm).ConfigureAwait(false);
         }
-    }
 
-    public class CourseModel
-    {
-        public string CourseName { get; set; }
-        public string TeacherName { get; set; }
-        public string ImageUrl { get; set; }
-
-        public CourseModel(string name, string teacher, string imageUrl)
+        [RelayCommand]
+        private void CourseSelected(ClassInfo course)
         {
-            CourseName = name;
-            TeacherName = teacher;
-            ImageUrl = imageUrl;
+            _navigationService.Navigate(typeof(MediaPage));
         }
     }
 }
