@@ -1,6 +1,8 @@
 ﻿using iLearn.Models;
 using iLearn.Services;
+using iLearn.ViewModels.Pages;
 using iLearn.ViewModels.Windows;
+using iLearn.Views.Pages;
 using iLearn.Views.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,10 +34,13 @@ namespace iLearn
                 services.AddSingleton<LoginViewModel>();
 
                 //Main window
-                services.AddSingleton<ITaskBarService, TaskBarService>();
                 services.AddSingleton<INavigationService, NavigationService>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<MainViewModel>();
+
+                //Pages
+                services.AddSingleton<CoursesPage>();
+                services.AddSingleton<CoursesViewModel>();
 
                 services.AddSingleton(sp =>
                 {

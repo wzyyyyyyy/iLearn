@@ -1,4 +1,5 @@
 ﻿using iLearn.ViewModels.Windows;
+using iLearn.Views.Pages;
 using Wpf.Ui;
 using Wpf.Ui.Abstractions;
 using Wpf.Ui.Appearance;
@@ -21,6 +22,8 @@ public partial class MainWindow : INavigationWindow
         SetPageService(navigationViewPageProvider);
 
         navigationService.SetNavigationControl(RootNavigation);
+
+        Loaded += (sender, e) => Navigate(typeof(CoursesPage));
     }
 
     #region INavigationWindow methods

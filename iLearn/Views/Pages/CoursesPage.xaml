@@ -1,0 +1,151 @@
+﻿<Page
+    x:Class="iLearn.Views.Pages.CoursesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:iLearn.ViewModels.Pages"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance viewModels:CoursesViewModel}"
+    Background="{DynamicResource ApplicationBackgroundBrush}">
+
+    <Grid>
+        <!-- 背景Mica效果 -->
+        <ui:Card Margin="0" VerticalAlignment="Stretch" 
+                 HorizontalAlignment="Stretch"
+                 Background="{DynamicResource ApplicationBackdropBrush}"
+                 BorderThickness="0"/>
+
+        <Grid Margin="32">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- 学期选择和加入课程按钮 -->
+            <Grid Grid.Row="1" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="学期:" 
+                           VerticalAlignment="Center" 
+                           Margin="0,0,12,0"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+
+                <ui:Card Grid.Column="1" Padding="0" Background="Transparent" BorderThickness="0">
+                    <ComboBox Width="220" HorizontalAlignment="Left"
+                              ItemsSource="{Binding TermsOptions}"
+                              SelectedItem="{Binding SelectedTerm}"/>
+                </ui:Card>
+
+                <ui:Button Grid.Column="2"
+                           Appearance="Primary"
+                           Command="{Binding JoinCourseCommand}"
+                           VerticalAlignment="Center"
+                           Padding="12,5">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Add12" Margin="0,0,8,0"/>
+                        <TextBlock Text="加入课程"/>
+                    </StackPanel>
+                </ui:Button>
+            </Grid>
+
+            <!-- 课程内容区域 -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <Grid Margin="0,8,0,0" Cursor="">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 课程区域标题栏 -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 我学的课标题 -->
+                        <StackPanel Orientation="Horizontal" Grid.Column="0">
+                            <ui:SymbolIcon Symbol="BookInformation20" Margin="0,0,8,0"/>
+                            <TextBlock Text="我学的课" 
+                                       FontSize="18" 
+                                       FontWeight="SemiBold" 
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 课程卡片网格 -->
+                    <ItemsControl Grid.Row="1" 
+                                  ItemsSource="{Binding MyCourses}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <ui:Card Margin="0,0,16,16" 
+                                       Width="260" Height="240"
+                                       Cursor="Hand">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="140"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- 课程图片 -->
+                                        <Border CornerRadius="4,4,0,0" ClipToBounds="True">
+                                            <Image Source="{Binding ImageUrl}"
+                                                   Stretch="UniformToFill"/>
+                                        </Border>
+
+                                        <!-- 课程名称 -->
+                                        <TextBlock Grid.Row="1" 
+                                                   Text="{Binding CourseName}" 
+                                                   FontSize="16" FontWeight="SemiBold"
+                                                   Margin="0,12,0,6"
+                                                   TextTrimming="CharacterEllipsis"/>
+
+                                        <!-- 课程底部信息 -->
+                                        <Grid Grid.Row="2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Orientation="Horizontal" 
+                                                        VerticalAlignment="Center">
+                                                <ui:SymbolIcon Symbol="Person16" 
+                                                             Margin="0,0,4,0" 
+                                                             FontSize="14"
+                                                             VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding TeacherName}" 
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                                           FontSize="12"/>
+                                            </StackPanel>
+
+                                            <ui:Button Grid.Column="1" 
+                                                     Appearance="Secondary"
+                                                     Padding="8,4"
+                                                     VerticalAlignment="Center"
+                                                     FontSize="11"
+                                                     Content="进入课程"/>
+                                        </Grid>
+                                    </Grid>
+                                </ui:Card>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>

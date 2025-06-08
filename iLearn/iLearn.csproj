@@ -36,9 +36,4 @@
     <Resource Include="Assets\iLearn.png" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ViewModels\Pages\" />
-    <Folder Include="Views\Pages\" />
-  </ItemGroup>
-
 </Project>
