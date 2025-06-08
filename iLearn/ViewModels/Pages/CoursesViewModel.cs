@@ -1,4 +1,6 @@
-﻿using iLearn.Models;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using iLearn.Helpers.Messages;
+using iLearn.Models;
 using iLearn.Services;
 using iLearn.Views.Pages;
 using System.Collections.ObjectModel;
@@ -118,6 +120,7 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void CourseSelected(ClassInfo course)
         {
+            WeakReferenceMessenger.Default.Send(new CourseMessage { classInfo = course});
             _navigationService.Navigate(typeof(MediaPage));
         }
     }

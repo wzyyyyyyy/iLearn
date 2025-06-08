@@ -45,7 +45,7 @@
             <!-- 页面标题 -->
             <StackPanel Orientation="Vertical">
                 <TextBlock 
-                    Text="媒体资源" 
+                    Text="视频资源" 
                     FontSize="32" 
                     FontWeight="SemiBold" 
                     VerticalAlignment="Center"/>
@@ -99,9 +99,9 @@
                                 <!-- 视频缩略图 -->
                                 <Border Grid.Column="0" Background="#10000000" CornerRadius="8,0,0,8">
                                     <Grid>
-                                        <Image Source="{Binding ThumbnailUrl}" Stretch="UniformToFill"/>
+                                        <Image Source="{Binding SchImgUrl}" Stretch="UniformToFill"/>
                                         <Border Background="#40000000" VerticalAlignment="Bottom" Padding="8,4">
-                                            <TextBlock Text="{Binding Duration}" Foreground="White" FontSize="12" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding ClassNames}" Foreground="White" FontSize="12" HorizontalAlignment="Right"/>
                                         </Border>
                                     </Grid>
                                 </Border>
@@ -113,56 +113,38 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    
-                                    <TextBlock Grid.Row="0" Text="{Binding Title}" 
+
+                                    <TextBlock Grid.Row="0" Text="{Binding LiveRecordName}" 
                                               FontWeight="SemiBold" 
                                               FontSize="16"
                                               TextTrimming="CharacterEllipsis"/>
-                                    
+
                                     <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
                                         <Border Background="{DynamicResource AccentFillColorLightSecondaryBrush}" 
                                                 CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <ui:SymbolIcon Symbol="CalendarLtr20" FontSize="12" Margin="0,0,4,0"/>
-                                                <TextBlock Text="{Binding Time}" FontSize="12"/>
+                                                <TextBlock Text="{Binding ScheduleTimeStart}" FontSize="12"/>
                                             </StackPanel>
                                         </Border>
-                                        
+
                                         <Border Background="{DynamicResource AccentFillColorLightTertiaryBrush}" 
                                                 CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
                                             <StackPanel Orientation="Horizontal">
                                                 <ui:SymbolIcon Symbol="Building20" FontSize="12" Margin="0,0,4,0"/>
-                                                <TextBlock Text="{Binding Building}" FontSize="12"/>
+                                                <TextBlock Text="{Binding BuildingName}" FontSize="12"/>
                                             </StackPanel>
                                         </Border>
-                                        
+
                                         <Border Background="{DynamicResource AccentFillColorLightDefaultBrush}" 
                                                 CornerRadius="4" Padding="6,2">
                                             <StackPanel Orientation="Horizontal">
                                                 <ui:SymbolIcon Symbol="Door20" FontSize="12" Margin="0,0,4,0"/>
-                                                <TextBlock Text="{Binding Classroom}" FontSize="12"/>
+                                                <TextBlock Text="{Binding RoomName}" FontSize="12"/>
                                             </StackPanel>
                                         </Border>
                                     </WrapPanel>
-                                    
-                                    <TextBlock Grid.Row="2" Text="{Binding Description}" 
-                                              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                              TextWrapping="Wrap"
-                                              TextTrimming="CharacterEllipsis"
-                                              Margin="0,8,0,0" 
-                                              FontSize="13"
-                                              VerticalAlignment="Top"/>
                                 </Grid>
-                                
-                                <!-- 右侧播放按钮 -->
-                                <Border Grid.Column="2" VerticalAlignment="Center" Margin="0,0,16,0">
-                                    <ui:Button 
-                                        Appearance="Transparent"
-                                        Icon="Play24" 
-                                        FontSize="20"
-                                        Command="{Binding DataContext.OpenMediaCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" 
-                                        CommandParameter="{Binding}"/>
-                                </Border>
                             </Grid>
                         </ui:Card>
                     </DataTemplate>
