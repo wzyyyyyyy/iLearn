@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wpf.Ui.Controls;
+﻿using Wpf.Ui.Controls;
 
 namespace iLearn.Services
 {
@@ -34,7 +29,7 @@ namespace iLearn.Services
                 close();
             else
             {
-                foreach (Window window in Application.Current.Windows)
+                foreach (FluentWindow window in Application.Current.Windows)
                 {
                     if (window.DataContext is TViewModel)
                     {

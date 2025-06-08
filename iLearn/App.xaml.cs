@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using System.IO;
 using System.Windows.Threading;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
+using Wpf.Ui.DependencyInjection;
 
 namespace iLearn
 {
@@ -24,6 +24,7 @@ namespace iLearn
             .ConfigureAppConfiguration(c => { c.SetBasePath(Path.GetDirectoryName(AppContext.BaseDirectory)); })
             .ConfigureServices((context, services) =>
             {
+                services.AddNavigationViewPageProvider();
                 services.AddHostedService<ApplicationHostService>();
 
                 // Login window
@@ -31,6 +32,8 @@ namespace iLearn
                 services.AddSingleton<LoginViewModel>();
 
                 //Main window
+                services.AddSingleton<ITaskBarService, TaskBarService>();
+                services.AddSingleton<INavigationService, NavigationService>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<MainViewModel>();
 
@@ -49,12 +52,12 @@ namespace iLearn
                         [typeof(LoginViewModel)] = () =>
                         {
                             var win = sp.GetRequiredService<LoginWindow>();
-                            win.ShowDialog();
+                            win.Show();
                         },
                         [typeof(MainViewModel)] = () =>
                         {
                             var win = sp.GetRequiredService<MainWindow>();
-                            win.ShowDialog();
+                            win.Show();
                         }
                     };
 

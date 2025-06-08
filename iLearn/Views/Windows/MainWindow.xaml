@@ -6,21 +6,61 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"  
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"  
     xmlns:viewmodels="clr-namespace:iLearn.ViewModels.Windows"  
-    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"  
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    Title="{Binding ApplicationTitle}"
     mc:Ignorable="d"  
     Width="1100"
     Height="650"
     d:DataContext="{d:DesignInstance Type=viewmodels:MainViewModel, IsDesignTimeCreatable=True}"
-     d:DesignHeight="450"
-     d:DesignWidth="800"
-     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
-     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-     ExtendsContentIntoTitleBar="True"
-     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-     WindowBackdropType="Mica"
-     WindowCornerPreference="Round"
-     WindowStartupLocation="CenterScreen">
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    WindowBackdropType="Mica"
+    WindowCornerPreference="Round"
+    WindowStartupLocation="CenterScreen">
     <Grid>
+        <ui:TitleBar
+         x:Name="TitleBar"
+         Title="{Binding ApplicationTitle}"
+         Grid.Row="0"
+         CloseWindowByDoubleClickOnIcon="True">
+                <ui:TitleBar.Icon>
+                    <ui:ImageIcon Source="pack://application:,,,/Assets/iLearn.png" />
+                </ui:TitleBar.Icon>
+        </ui:TitleBar>
+        <ui:NavigationView
+    x:Name="RootNavigation"
+    Padding="42,0,42,0"
+    BreadcrumbBar="{Binding ElementName=BreadcrumbBar}"
+    FooterMenuItemsSource="{Binding FooterMenuItems, Mode=OneWay}"
+    FrameMargin="0"
+    IsBackButtonVisible="Visible"
+    IsPaneToggleVisible="True"
+    MenuItemsSource="{Binding MenuItems, Mode=OneWay}"
+    OpenPaneLength="310"
+    PaneDisplayMode="Left"
+    TitleBar="{Binding ElementName=TitleBar, Mode=OneWay}">
+            <ui:NavigationView.Header>
+                <ui:BreadcrumbBar x:Name="BreadcrumbBar" Margin="42,32,42,20" />
+            </ui:NavigationView.Header>
+            <ui:NavigationView.AutoSuggestBox>
+                <ui:AutoSuggestBox x:Name="AutoSuggestBox" PlaceholderText="Search">
+                    <ui:AutoSuggestBox.Icon>
+                        <ui:IconSourceElement>
+                            <ui:SymbolIconSource Symbol="Search24" />
+                        </ui:IconSourceElement>
+                    </ui:AutoSuggestBox.Icon>
+                </ui:AutoSuggestBox>
+            </ui:NavigationView.AutoSuggestBox>
+            <ui:NavigationView.ContentOverlay>
+                <Grid>
+                    <ui:SnackbarPresenter x:Name="SnackbarPresenter" />
+                </Grid>
+            </ui:NavigationView.ContentOverlay>
+        </ui:NavigationView>
     </Grid>  
 </ui:FluentWindow>
 

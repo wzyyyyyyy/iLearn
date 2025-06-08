@@ -80,8 +80,8 @@ namespace iLearn.ViewModels.Windows
                     _appConfig.UserPassword = UserPassword;
                     _appConfig.Save();
                 }
-
                 _windowsManagerService.Show<MainViewModel>();
+                _windowsManagerService.Close<LoginViewModel>();
             }
             catch (Exception ex)
             {
