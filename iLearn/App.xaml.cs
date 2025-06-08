@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using System.IO;
 using System.Windows.Threading;
 using Wpf.Ui;
+using Wpf.Ui.Controls;
 
 namespace iLearn
 {
@@ -29,6 +30,10 @@ namespace iLearn
                 services.AddSingleton<LoginWindow>();
                 services.AddSingleton<LoginViewModel>();
 
+                //Main window
+                services.AddSingleton<MainWindow>();
+                services.AddSingleton<MainViewModel>();
+
                 services.AddSingleton(sp =>
                 {
                     string configPath = Path.Combine(AppContext.BaseDirectory, "config.json");
@@ -36,6 +41,27 @@ namespace iLearn
                 });
                 services.AddSingleton<ILearnApiService>();
                 services.AddSingleton<ISnackbarService, SnackbarService>();
+
+                services.AddSingleton(sp =>
+                {
+                    var showActions = new Dictionary<Type, Action>
+                    {
+                        [typeof(LoginViewModel)] = () =>
+                        {
+                            var win = sp.GetRequiredService<LoginWindow>();
+                            win.ShowDialog();
+                        },
+                        [typeof(MainViewModel)] = () =>
+                        {
+                            var win = sp.GetRequiredService<MainWindow>();
+                            win.ShowDialog();
+                        }
+                    };
+
+                    var closeActions = new Dictionary<Type, Action>();
+
+                    return new WindowsManagerService(showActions, closeActions);
+                });
             }).Build();
 
         /// <summary>
@@ -53,6 +79,7 @@ namespace iLearn
         {
             Application.Current.DispatcherUnhandledException += DispatcherUnhandledExceptionHandler;
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
+            TaskScheduler.UnobservedTaskException += TaskSchedulerOnUnobservedTaskException;
 
             await _host.StartAsync();
         }
@@ -79,6 +106,12 @@ namespace iLearn
             {
                 LogException(exception);
             }
+        }
+
+        private void TaskSchedulerOnUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            LogException(e.Exception);
+            e.SetObserved();
         }
 
         private void LogException(Exception exception)

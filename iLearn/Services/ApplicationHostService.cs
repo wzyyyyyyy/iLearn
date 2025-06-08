@@ -1,4 +1,5 @@
-﻿using iLearn.Views.Windows;
+﻿using iLearn.ViewModels.Windows;
+using iLearn.Views.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -22,7 +23,7 @@ namespace iLearn.Services
         /// <param name="cancellationToken">Indicates that the start process has been aborted.</param>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _serviceProvider.GetRequiredService<LoginWindow>().Show();
+            _serviceProvider.GetRequiredService<WindowsManagerService>().Show<LoginViewModel>();
         }
 
         /// <summary>

@@ -1,7 +1,6 @@
 ﻿using HtmlAgilityPack;
 using iLearn.Helpers;
 using iLearn.Models;
-using Microsoft.VisualBasic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -135,7 +134,7 @@ namespace iLearn.Services
             return TermInfo.Parse(json);
         }
 
-        public async Task<List<ClassInfo>> GetClassesAsync(string year,string term)
+        public async Task<List<ClassInfo>> GetClassesAsync(string year, string term)
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
             var response = await httpClient.GetAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/classroom/myClassroom?termYear={year}&term={term}");

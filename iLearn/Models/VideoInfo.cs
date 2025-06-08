@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 
 namespace iLearn.Models
 {
@@ -19,7 +14,7 @@ namespace iLearn.Models
         public int TransPhaseStatus { get; set; }
         public int Company { get; set; }
         public string CourseId { get; set; }
-        public object VideoCutStatus { get; set; }  
+        public object VideoCutStatus { get; set; }
         public string ScheduleId { get; set; }
         public string ResourceCover { get; set; }
         public string PhaseUrl { get; set; }
@@ -27,7 +22,7 @@ namespace iLearn.Models
         public string TeacherIds { get; set; }
         public string ResourceName { get; set; }
         public int IsPublish { get; set; }
-        public object ParentId { get; set; } 
+        public object ParentId { get; set; }
         public string RoomName { get; set; }
         public string AudioPath { get; set; }
         public int CommentStatus { get; set; }
@@ -37,7 +32,8 @@ namespace iLearn.Models
         public List<object> SilenceList { get; set; }
         public int ResourceType { get; set; }
 
-        public static VideoInfo Parse(string json) {
+        public static VideoInfo Parse(string json)
+        {
             using var doc = JsonDocument.Parse(json);
             var dataListElement = doc.RootElement
                 .GetProperty("data");

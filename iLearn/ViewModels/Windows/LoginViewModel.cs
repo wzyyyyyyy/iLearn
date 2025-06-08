@@ -26,12 +26,14 @@ namespace iLearn.ViewModels.Windows
         private readonly ILearnApiService _learnApiService;
         private readonly ISnackbarService _SnackbarService;
         private readonly AppConfig _appConfig;
+        private readonly WindowsManagerService _windowsManagerService;
 
-        public LoginViewModel(ILearnApiService learnApiService, ISnackbarService snackbarService, AppConfig appConfig)
+        public LoginViewModel(ILearnApiService learnApiService, ISnackbarService snackbarService, AppConfig appConfig, WindowsManagerService windowsManagerService)
         {
             _learnApiService = learnApiService ?? throw new ArgumentNullException(nameof(learnApiService));
             _SnackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
             _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
+            _windowsManagerService = windowsManagerService ?? throw new ArgumentNullException(nameof(windowsManagerService));
 
             PropertyChanged += (s, e) =>
             {
@@ -51,7 +53,8 @@ namespace iLearn.ViewModels.Windows
                 UserName = _appConfig.UserName;
                 UserPassword = _appConfig.UserPassword;
 
-                if (_appConfig.IsAutoLoginEnabled) { 
+                if (_appConfig.IsAutoLoginEnabled)
+                {
                     LoginCommand.Execute(null);
                 }
             }
@@ -77,6 +80,8 @@ namespace iLearn.ViewModels.Windows
                     _appConfig.UserPassword = UserPassword;
                     _appConfig.Save();
                 }
+
+                _windowsManagerService.Show<MainViewModel>();
             }
             catch (Exception ex)
             {
