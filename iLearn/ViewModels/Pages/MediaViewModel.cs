@@ -28,10 +28,10 @@ namespace iLearn.ViewModels.Pages
         public MediaViewModel(ILearnApiService ilearnApiService)
         {
             _ilearnApiService = ilearnApiService ?? throw new ArgumentNullException(nameof(ilearnApiService));
+            IsActive = true;
 
             WeakReferenceMessenger.Default.Register<CourseMessage>(this, (r, m) => {
                 CurrentCourse = m.classInfo;
-                MessageBox.Show(CurrentCourse.TeacherName);
                 LoadData().ConfigureAwait(false);
             });
         }

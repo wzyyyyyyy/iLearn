@@ -5,7 +5,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:viewModels="clr-namespace:iLearn.ViewModels.Pages" xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:viewModels="clr-namespace:iLearn.ViewModels.Pages"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors" 
+    xmlns:behaviors="clr-namespace:iLearn.Behaviors"
     mc:Ignorable="d"
     d:DataContext="{d:DesignInstance viewModels:CoursesViewModel}"
     Background="{DynamicResource ApplicationBackgroundBrush}">
@@ -40,9 +42,10 @@
                 <ui:Card Grid.Column="1" Padding="0" Background="Transparent" BorderThickness="0">
                     <ComboBox 
                         ItemsSource="{Binding TermsOptions}" 
-                SelectedItem="{Binding SelectedTerm}"
-                        Margin="0,0,230,0"
-                        Width="230"
+                        SelectedItem="{Binding SelectedTerm}"
+                        HorizontalAlignment="Left"
+                        MinWidth="150"
+                        MaxWidth="230"
                         Cursor="">
                         <b:Interaction.Triggers>
                             <b:EventTrigger EventName="SelectionChanged">
@@ -73,7 +76,11 @@
             <ui:SnackbarPresenter Grid.Row="0" x:Name="SnackbarPresenter"/>
             <!-- 课程内容区域 -->
             <ScrollViewer Grid.Row="2"
-              VerticalScrollBarVisibility="Auto">
+              VerticalScrollBarVisibility="Auto"
+              PanningMode="Both">
+                <b:Interaction.Behaviors>
+                    <behaviors:MouseWheelToScrollBehavior />
+                </b:Interaction.Behaviors>
                 <Grid Margin="0,8,0,0" Cursor="">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>

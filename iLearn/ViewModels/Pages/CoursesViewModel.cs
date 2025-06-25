@@ -120,8 +120,8 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void CourseSelected(ClassInfo course)
         {
-            WeakReferenceMessenger.Default.Send(new CourseMessage { classInfo = course});
             _navigationService.Navigate(typeof(MediaPage));
+            WeakReferenceMessenger.Default.Send(new CourseMessage { classInfo = course });
         }
     }
 }
