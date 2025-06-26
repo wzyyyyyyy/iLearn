@@ -1,5 +1,6 @@
 ﻿using iLearn.Models;
 using iLearn.Services;
+using System.Text;
 using System.Windows.Input;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
@@ -85,7 +86,17 @@ namespace iLearn.ViewModels.Windows
             }
             catch (Exception ex)
             {
-                ShowSnackbar($"登录失败，用户名或密码错误");
+                var sb = new StringBuilder();
+                while (ex != null)
+                {
+                    sb.AppendLine($"类型：{ex.GetType().Name}");
+                    sb.AppendLine($"消息：{ex.Message}");
+                    sb.AppendLine($"堆栈：{ex.StackTrace}");
+                    sb.AppendLine("------");
+                    ex = ex.InnerException;
+                }
+
+                System.Windows.MessageBox.Show(sb.ToString(), "登录错误");
             }
             finally
             {

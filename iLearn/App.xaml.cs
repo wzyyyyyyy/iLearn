@@ -7,6 +7,7 @@ using iLearn.Views.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Configuration;
 using System.IO;
 using System.Windows.Threading;
 using Wpf.Ui;
@@ -47,6 +48,8 @@ namespace iLearn
                 services.AddSingleton<CoursesViewModel>();
                 services.AddSingleton<MediaPage>();
                 services.AddSingleton<MediaViewModel>();
+                services.AddSingleton<SettingPage>();
+                services.AddSingleton<SettingViewModel>();
 
                 services.AddSingleton(sp =>
                 {

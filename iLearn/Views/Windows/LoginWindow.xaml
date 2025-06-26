@@ -16,7 +16,9 @@
     WindowBackdropType="Mica"  
     ResizeMode="NoResize"  
     Loaded="Window_Loaded"  
-    d:DataContext="{d:DesignInstance Type=viewmodels:LoginViewModel, IsDesignTimeCreatable=True}">
+    d:DataContext="{d:DesignInstance Type=viewmodels:LoginViewModel, IsDesignTimeCreatable=True}"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
 
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="KeyDown">

@@ -8,17 +8,12 @@
     xmlns:viewModels="clr-namespace:iLearn.ViewModels.Pages"
     xmlns:b="http://schemas.microsoft.com/xaml/behaviors" 
     xmlns:behaviors="clr-namespace:iLearn.Behaviors"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d"
-    d:DataContext="{d:DesignInstance viewModels:CoursesViewModel}"
-    Background="{DynamicResource ApplicationBackgroundBrush}">
+    d:DataContext="{d:DesignInstance viewModels:CoursesViewModel}">
 
     <Grid>
-        <!-- 背景Mica效果 -->
-        <ui:Card Margin="0" VerticalAlignment="Stretch" 
-                 HorizontalAlignment="Stretch"
-                 Background="{DynamicResource ApplicationBackdropBrush}"
-                 BorderThickness="0"/>
-
         <Grid Margin="32">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -34,7 +29,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="学期:" 
+                <TextBlock Text="学期:  " 
                            VerticalAlignment="Center" 
                            Margin="0,0,0,0"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>

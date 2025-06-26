@@ -24,14 +24,14 @@ namespace iLearn.Services
                 CookieContainer = cookieContainer,
                 UseCookies = true,
                 AllowAutoRedirect = true,
-                MaxAutomaticRedirections = 10,
+                MaxAutomaticRedirections = 50,
                 ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true,
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             };
 
             httpClient = new HttpClient(handler)
             {
-                Timeout = TimeSpan.FromSeconds(5)
+                Timeout = TimeSpan.FromSeconds(10)
             };
 
             httpClient.DefaultRequestHeaders.Add("Accept", "*/*");

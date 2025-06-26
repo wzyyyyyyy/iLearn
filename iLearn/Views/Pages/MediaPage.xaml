@@ -8,7 +8,8 @@
       xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance viewModels:MediaViewModel}"
-      Background="{DynamicResource ApplicationBackgroundBrush}">
+      ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+      ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
 
     <Page.Resources>
         <Style x:Key="MediaCardStyle" TargetType="ui:Card">

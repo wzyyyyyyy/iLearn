@@ -26,7 +26,14 @@ namespace iLearn.ViewModels.Windows
             ];
 
         [ObservableProperty]
-        private ObservableCollection<object> _footerMenuItems = [];
+        private ObservableCollection<object> _footerMenuItems = [
+            new NavigationViewItem()
+            {
+                Content = "设置",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.Settings16 },
+                TargetPageType = typeof(Views.Pages.SettingPage)
+            },
+            ];
 
         [ObservableProperty]
         private ObservableCollection<MenuItem> _trayMenuItems =
