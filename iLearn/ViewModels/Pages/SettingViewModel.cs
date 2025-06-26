@@ -37,6 +37,7 @@ namespace iLearn.ViewModels.Pages
         {
             await Task.Delay(1500);
             LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            //(WIP...)
             MessageBox.Show("您当前使用的已经是最新版本。", "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -56,7 +57,7 @@ namespace iLearn.ViewModels.Pages
             {
                 "Light" => ApplicationTheme.Light,
                 "Dark" => ApplicationTheme.Dark,
-                "HighContrast" => ApplicationTheme.HighContrast // 系统默认
+                "HighContrast" => ApplicationTheme.HighContrast
             };
 
             ApplicationThemeManager.Apply(theme);

@@ -92,11 +92,11 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="开发团队" />
+                            <TextBlock Grid.Column="0" Text="开发者" />
                             <TextBlock
                                 Grid.Column="1"
                                 Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                Text="iLearn 团队" />
+                                Text="Github@wzyyyyyyy" />
                         </Grid>
                         <Grid Margin="16,0,16,16">
                             <Grid.ColumnDefinitions>
@@ -107,7 +107,7 @@
                             <TextBlock
                                 Grid.Column="1"
                                 Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                Text="support@ilearnapp.com" />
+                                Text="382271046@qq.com" />
                         </Grid>
                         
                         <ui:Anchor
@@ -118,7 +118,7 @@
                             Background="Transparent"
                             BorderThickness="0,1,0,1"
                             CornerRadius="0"
-                            NavigateUri="https://ilearnapp.com/">
+                            NavigateUri="https://github.com/wzyyyyyyy/iLearn">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
