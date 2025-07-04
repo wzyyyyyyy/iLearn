@@ -1,8 +1,4 @@
-﻿using Downloader;
-using iLearn.Models;
-using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using iLearn.Models;
 
 namespace iLearn.Services
 {
