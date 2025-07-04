@@ -21,7 +21,17 @@ namespace iLearn.ViewModels.Windows
             {
                 Content = "课程视频",
                 Icon = new SymbolIcon { Symbol = SymbolRegular.VideoClip24 },
-                TargetPageType = typeof(Views.Pages.MediaPage)
+                TargetPageType = typeof(Views.Pages.MediaPage),
+                MenuItemsSource = new object[]
+                {
+                    new NavigationViewItemSeparator(),
+                    new NavigationViewItem()
+                    {
+                        Content = "课程列表",
+                        Icon = new SymbolIcon { Symbol = SymbolRegular.ArrowDownload16 },
+                        TargetPageType = typeof(Views.Pages.VideoDownloadListPage)
+                    }
+                }
             }
             ];
 

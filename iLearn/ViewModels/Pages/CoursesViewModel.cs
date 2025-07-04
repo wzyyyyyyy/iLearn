@@ -4,7 +4,6 @@ using iLearn.Models;
 using iLearn.Services;
 using iLearn.Views.Pages;
 using System.Collections.ObjectModel;
-using System.Windows.Navigation;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 
@@ -28,7 +27,7 @@ namespace iLearn.ViewModels.Pages
         private readonly ISnackbarService _snackbarService;
         private readonly INavigationService _navigationService;
 
-        public CoursesViewModel(ILearnApiService ilearnApiService, ISnackbarService snackbarService,INavigationService navigationService)
+        public CoursesViewModel(ILearnApiService ilearnApiService, ISnackbarService snackbarService, INavigationService navigationService)
         {
             _ilearnApiService = ilearnApiService ?? throw new ArgumentNullException(nameof(ilearnApiService));
             _snackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));

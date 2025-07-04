@@ -1,9 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Threading.Tasks;
-using System.Windows;
-using Wpf.Ui.Appearance;
+﻿using Wpf.Ui.Appearance;
 
 namespace iLearn.ViewModels.Pages
 {

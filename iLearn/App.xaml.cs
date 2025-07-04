@@ -7,7 +7,6 @@ using iLearn.Views.Windows;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Configuration;
 using System.IO;
 using System.Windows.Threading;
 using Wpf.Ui;
@@ -50,7 +49,13 @@ namespace iLearn
                 services.AddSingleton<MediaViewModel>();
                 services.AddSingleton<SettingPage>();
                 services.AddSingleton<SettingViewModel>();
+                services.AddTransient<VideoDownloadListPage>();
+                services.AddTransient<VideoDownloadListViewModel>();
 
+                //public values
+                services.AddSingleton<List<LiveAndRecordInfo>>();
+
+                //service
                 services.AddSingleton(sp =>
                 {
                     string configPath = Path.Combine(AppContext.BaseDirectory, "config.json");
@@ -58,6 +63,7 @@ namespace iLearn
                 });
                 services.AddSingleton<ILearnApiService>();
                 services.AddSingleton<ISnackbarService, SnackbarService>();
+                services.AddSingleton<VideoDownloadService>();
 
                 services.AddSingleton(sp =>
                 {

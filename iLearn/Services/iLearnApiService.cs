@@ -160,8 +160,6 @@ namespace iLearn.Services
             var response = await httpClient.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/videoclass/videoClassInfo?resourceId={resourceId}");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            File.WriteAllText("videoInfo.json", json); // Debugging purpose, remove in production
-            Thread.Sleep(10000000); // Simulate delay for debugging
             return VideoInfo.Parse(json);
         }
 

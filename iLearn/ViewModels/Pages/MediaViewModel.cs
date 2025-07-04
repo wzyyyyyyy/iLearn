@@ -1,14 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using iLearn.Helpers.Messages;
 using iLearn.Models;
 using iLearn.Services;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using System.Windows.Input;
 using Wpf.Ui;
-using Wpf.Ui.Abstractions.Controls;
 
 namespace iLearn.ViewModels.Pages
 {
@@ -22,17 +17,22 @@ namespace iLearn.ViewModels.Pages
 
         [ObservableProperty]
         private ClassInfo? _currentCourse;
-        
-        private readonly ILearnApiService _ilearnApiService;
 
-        public MediaViewModel(ILearnApiService ilearnApiService)
+        private readonly ILearnApiService _ilearnApiService;
+        private readonly INavigationService _navigationService;
+
+        public MediaViewModel(ILearnApiService ilearnApiService, INavigationService navigationService, List<LiveAndRecordInfo> liveAndRecordInfos)
         {
             _ilearnApiService = ilearnApiService ?? throw new ArgumentNullException(nameof(ilearnApiService));
             IsActive = true;
+            _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
 
-            WeakReferenceMessenger.Default.Register<CourseMessage>(this, (r, m) => {
+            WeakReferenceMessenger.Default.Register<CourseMessage>(this, async (r, m) =>
+            {
                 CurrentCourse = m.classInfo;
-                LoadData().ConfigureAwait(false);
+                await LoadData();
+                liveAndRecordInfos.Clear();
+                liveAndRecordInfos.AddRange(MediaItems);
             });
         }
 
@@ -42,8 +42,8 @@ namespace iLearn.ViewModels.Pages
             await LoadData();
 
             var filteredItems = MediaItems.Where(item =>
-                (item.CourseName?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
-                (item.ResourceId?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) == true))
+                (item.LiveRecordName?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) == true) ||
+                (item.TeacherName?.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) == true))
                 .ToList();
 
             MediaItems.Clear();
