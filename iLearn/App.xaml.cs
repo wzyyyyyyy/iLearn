@@ -51,6 +51,8 @@ namespace iLearn
                 services.AddSingleton<SettingViewModel>();
                 services.AddTransient<VideoDownloadListPage>();
                 services.AddTransient<VideoDownloadListViewModel>();
+                services.AddSingleton<DownloadManagePage>();
+                services.AddSingleton<DownloadManageViewModel>();
 
                 //public values
                 services.AddSingleton<List<LiveAndRecordInfo>>();

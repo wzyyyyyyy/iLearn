@@ -41,6 +41,10 @@
                    FontWeight="Bold"
                    Margin="24,24,24,12"/>
 
+        <ui:SnackbarPresenter x:Name="SnackbarPresenter"
+                      Grid.Row="0"
+                      Panel.ZIndex="1000"/>
+
         <!-- 搜索和按钮 -->
         <Grid Grid.Row="1" Margin="24,0,24,12">
             <Grid.ColumnDefinitions>
@@ -122,13 +126,6 @@
                                                FontWeight="SemiBold"
                                                FontSize="16"
                                                TextTrimming="CharacterEllipsis"/>
-
-                                    <TextBlock Grid.Row="1"
-                                               Text="{Binding Description}"
-                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                               FontSize="12"
-                                               Margin="0,4,0,0"
-                                               TextWrapping="Wrap"/>
 
                                     <WrapPanel Grid.Row="2"
                                                Orientation="Horizontal"

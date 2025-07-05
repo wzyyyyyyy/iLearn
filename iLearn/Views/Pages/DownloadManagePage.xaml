@@ -1,0 +1,347 @@
+﻿<Page x:Class="iLearn.Views.Pages.DownloadManagePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:iLearn.Views.Pages"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:viewModels="clr-namespace:iLearn.ViewModels.Pages"
+      xmlns:res="clr-namespace:iLearn.Resources"
+      mc:Ignorable="d" 
+      ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+      ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+      d:DesignHeight="720" d:DesignWidth="1280"
+      d:DataContext="{d:DesignInstance viewModels:DownloadManageViewModel}">
+
+    <Page.Resources>
+        <Style x:Key="DownloadCardStyle" TargetType="ui:Card">
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 状态颜色转换器 -->
+        <DataTemplate x:Key="StatusTemplate">
+            <Border CornerRadius="12" Padding="8,4">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status}" Value="Downloading">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="Completed">
+                                <Setter Property="Background" Value="Green"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="Paused">
+                                <Setter Property="Background" Value="Orange"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="Failed">
+                                <Setter Property="Background" Value="Red"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                <Setter Property="Background" Value="Gray"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="Queued">
+                                <Setter Property="Background" Value="Purple"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="Waiting">
+                                <Setter Property="Background" Value="LightBlue"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding Status}" 
+                           Foreground="White" 
+                           FontSize="10" 
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"/>
+            </Border>
+        </DataTemplate>
+
+        <!-- 速度格式化转换器 -->
+        <res:SpeedConverter x:Key="SpeedConverter"/>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ui:SnackbarPresenter x:Name="SnackbarPresenter"
+                              Grid.Row="0"
+                              Panel.ZIndex="1000"/>
+
+        <!-- 统计信息 -->
+        <Grid Grid.Row="0" Margin="24,24,24,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <ui:Card Grid.Column="0" Margin="0,0,6,0" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="正在下载" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{Binding ActiveDownloadsCount}" FontSize="20" FontWeight="Bold"/>
+                </StackPanel>
+            </ui:Card>
+
+            <ui:Card Grid.Column="1" Margin="3,0,3,0" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="等待队列" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{Binding QueuedDownloadsCount}" FontSize="20" FontWeight="Bold"/>
+                </StackPanel>
+            </ui:Card>
+
+            <ui:Card Grid.Column="2" Margin="3,0,3,0" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="已完成" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{Binding CompletedDownloadsCount}" FontSize="20" FontWeight="Bold"/>
+                </StackPanel>
+            </ui:Card>
+
+            <ui:Card Grid.Column="3" Margin="6,0,0,0" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="总下载速度" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{Binding TotalDownloadSpeed}" FontSize="20" FontWeight="Bold"/>
+                </StackPanel>
+            </ui:Card>
+        </Grid>
+
+        <!-- 操作按钮 -->
+        <Grid Grid.Row="1" Margin="24,0,24,12">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+
+                <!-- 全部暂停按钮 -->
+                <ui:Button Content="全部暂停"
+                           Icon="PauseCircle24"
+                           Command="{Binding PauseAllDownloadsCommand}"
+                           Appearance="Secondary"
+                           Margin="0,0,8,0"
+                           Visibility="{Binding HasDownloadingItems, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                <!-- 全部开始按钮 -->
+                <ui:Button Content="全部开始"
+                           Icon="PlayCircle24"
+                           Command="{Binding ResumeAllDownloadsCommand}"
+                           Appearance="Primary"
+                           Margin="0,0,8,0"
+                           Visibility="{Binding HasPausedItems, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                <ui:Button Content="打开下载文件夹"
+                           Icon="FolderOpen24"
+                           Command="{Binding OpenDownloadsFolderCommand}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 下载列表 -->
+        <ScrollViewer Grid.Row="2"
+                      Padding="24,0,24,24"
+                      VerticalScrollBarVisibility="Auto">
+
+            <ItemsControl ItemsSource="{Binding Downloads}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ui:Card Style="{StaticResource DownloadCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- 文件名和状态 -->
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding FileName}"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center"/>
+
+                                    <ContentPresenter Grid.Column="1" 
+                                                      Content="{Binding}"
+                                                      ContentTemplate="{StaticResource StatusTemplate}"
+                                                      Margin="8,0,0,0"/>
+
+                                    <ui:Button Grid.Column="2"
+                                               Icon="Dismiss24"
+                                               Command="{Binding DataContext.RemoveDownloadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                               CommandParameter="{Binding}"
+                                               Appearance="Transparent"
+                                               Width="24"
+                                               Height="24"
+                                               Margin="8,0,0,0"/>
+                                </Grid>
+
+                                <!-- 进度条 -->
+                                <Grid Grid.Row="1" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <ProgressBar Grid.Column="0"
+                                                 Value="{Binding Progress}"
+                                                 Maximum="100"
+                                                 Height="6"
+                                                 Margin="0,0,8,0"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Progress, StringFormat='{}{0:F1}%'}"
+                                               FontSize="12"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- 下载信息 -->
+                                <Grid Grid.Row="2" Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                        <TextBlock Text="{Binding SpeedValue, Converter={StaticResource SpeedConverter}}" 
+                                                   FontSize="12" 
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                   Margin="0,0,16,0"/>
+                                        <TextBlock FontSize="12" 
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                                            <Run Text="{Binding BytesReceived, StringFormat='{}{0:N0}'}" />
+                                            <Run Text="/" />
+                                            <Run Text="{Binding TotalBytes, StringFormat='{}{0:N0}'}" />
+                                            <Run Text=" 字节" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- 操作按钮 -->
+                                <StackPanel Grid.Row="3" Orientation="Horizontal">
+                                    <!-- 暂停按钮 -->
+                                    <ui:Button Content="暂停"
+                                               Icon="Pause24"
+                                               Command="{Binding DataContext.PauseDownloadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                               CommandParameter="{Binding}"
+                                               Appearance="Secondary"
+                                               Margin="0,0,8,0">
+                                        <ui:Button.Style>
+                                            <Style TargetType="ui:Button">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Downloading">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </Style>
+                                        </ui:Button.Style>
+                                    </ui:Button>
+
+                                    <!-- 继续按钮 -->
+                                    <ui:Button Content="继续"
+                                               Icon="Play24"
+                                               Command="{Binding DataContext.ResumeDownloadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                               CommandParameter="{Binding}"
+                                               Appearance="Primary"
+                                               Margin="0,0,8,0">
+                                        <ui:Button.Style>
+                                            <Style TargetType="ui:Button">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Paused">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </Style>
+                                        </ui:Button.Style>
+                                    </ui:Button>
+
+                                    <!-- 重试按钮 -->
+                                    <ui:Button Content="重试"
+                                               Icon="ArrowSync24"
+                                               Command="{Binding DataContext.RetryDownloadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                               CommandParameter="{Binding}"
+                                               Appearance="Caution"
+                                               Margin="0,0,8,0">
+                                        <ui:Button.Style>
+                                            <Style TargetType="ui:Button">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Failed">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </Style>
+                                        </ui:Button.Style>
+                                    </ui:Button>
+
+                                    <!-- 取消按钮 -->
+                                    <ui:Button Content="取消"
+                                               Icon="Stop24"
+                                               Command="{Binding DataContext.CancelDownloadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                               CommandParameter="{Binding}"
+                                               Appearance="Caution"
+                                               Margin="0,0,8,0">
+                                        <ui:Button.Style>
+                                            <Style TargetType="ui:Button">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Downloading">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Paused">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </Style>
+                                        </ui:Button.Style>
+                                    </ui:Button>
+
+                                    <!-- 打开文件 -->
+                                    <ui:Button Content="打开文件"
+                                               Icon="Open24"
+                                               Command="{Binding DataContext.OpenDownloadFileCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                               CommandParameter="{Binding}"
+                                               Appearance="Success">
+                                        <ui:Button.Style>
+                                            <Style TargetType="ui:Button">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Completed">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </Style>
+                                        </ui:Button.Style>
+                                    </ui:Button>
+                                </StackPanel>
+                            </Grid>
+                        </ui:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</Page>

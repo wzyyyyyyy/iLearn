@@ -3,6 +3,8 @@ using iLearn.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using Wpf.Ui;
+using Wpf.Ui.Controls;
 
 namespace iLearn.ViewModels.Pages
 {
@@ -10,6 +12,7 @@ namespace iLearn.ViewModels.Pages
     {
         private readonly VideoDownloadService _downloadService;
         private readonly ILearnApiService _iLearnApiService;
+        private readonly ISnackbarService _snackbarService;
         private bool _isUpdatingAllSelected = false; // 添加标志位防止循环触发
 
         [ObservableProperty]
@@ -34,10 +37,12 @@ namespace iLearn.ViewModels.Pages
         public VideoDownloadListViewModel(
             List<LiveAndRecordInfo> liveAndRecordInfos,
             VideoDownloadService downloadService,
-            ILearnApiService iLearnApiService)
+            ILearnApiService iLearnApiService,
+            ISnackbarService snackbarService)
         {
             _downloadService = downloadService;
             _iLearnApiService = iLearnApiService;
+            _snackbarService = snackbarService;
 
             Videos = new ObservableCollection<LiveAndRecordInfo>(liveAndRecordInfos ?? new List<LiveAndRecordInfo>());
 
@@ -135,14 +140,27 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void DownloadSelected()
         {
-
             var selectedHdmiVideos = Videos.Where(v => v.IsHdmiSelected).ToList();
+            var selectedTeacherVideos = Videos.Where(v => v.IsTeacherSelected).ToList();
+
+            var totalSelectedCount = selectedHdmiVideos.Count + selectedTeacherVideos.Count;
+
+            if (totalSelectedCount == 0)
+            {
+                ShowSnackbar("请选择要下载的视频", "没有选中任何视频进行下载", ControlAppearance.Info);
+                return;
+            }
+
+            ShowSnackbar(
+                "开始下载",
+                $"正在准备下载 {totalSelectedCount} 个视频文件",
+                ControlAppearance.Success);
+
             foreach (var video in selectedHdmiVideos)
             {
                 DownloadVideoAsync(video, "hdmi").ConfigureAwait(false);
             }
 
-            var selectedTeacherVideos = Videos.Where(v => v.IsTeacherSelected).ToList();
             foreach (var video in selectedTeacherVideos)
             {
                 DownloadVideoAsync(video, "teacher").ConfigureAwait(false);
@@ -159,35 +177,38 @@ namespace iLearn.ViewModels.Pages
             var folder = Path.Combine(System.Environment.CurrentDirectory, "Downloads");
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
-            var videoInfo = await _iLearnApiService.GetVideoInfoAsync(video.ResourceId);
-
-            string? url;
-            string? perspectiveSuffix;
-
-            switch (perspective)
-            {
-                case "hdmi":
-                    perspectiveSuffix = "_HDMI";
-                    url = videoInfo.VideoList[1].VideoPath;
-                    break;
-                case "teacher":
-                    perspectiveSuffix = "_教师";
-                    url = videoInfo.VideoList[0].VideoPath;
-                    break;
-                default:
-                    return; // 无效的视角
-            }
-
-            var fileName = SanitizeFileName(video.LiveRecordName) + perspectiveSuffix + ".mp4";
-            var filePath = Path.Combine(folder, fileName);
 
             try
             {
-                
+                var videoInfo = await _iLearnApiService.GetVideoInfoAsync(video.ResourceId);
+
+                string? url;
+                string? perspectiveSuffix;
+
+                switch (perspective)
+                {
+                    case "hdmi":
+                        perspectiveSuffix = "_HDMI";
+                        url = videoInfo.VideoList[1].VideoPath;
+                        break;
+                    case "teacher":
+                        perspectiveSuffix = "_教师";
+                        url = videoInfo.VideoList[0].VideoPath;
+                        break;
+                    default:
+                        return; // 无效的视角
+                }
+
+                var fileName = SanitizeFileName(video.LiveRecordName) + perspectiveSuffix + ".mp4";
+
+                _ = _downloadService.StartDownloadAsync(url, fileName, folder).ConfigureAwait(false);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                // 处理下载异常
+                ShowSnackbar(
+                    "下载失败",
+                    $"无法下载视频 {video.LiveRecordName}: {ex.Message}",
+                    ControlAppearance.Danger);
             }
         }
 
@@ -201,6 +222,25 @@ namespace iLearn.ViewModels.Pages
                 name = name.Replace(c, '_');
             }
             return name;
+        }
+
+        private void ShowSnackbar(string title, string message, ControlAppearance appearance)
+        {
+            var icon = appearance switch
+            {
+                ControlAppearance.Success => new SymbolIcon(SymbolRegular.CheckmarkCircle24),
+                ControlAppearance.Danger => new SymbolIcon(SymbolRegular.ErrorCircle24),
+                ControlAppearance.Info => new SymbolIcon(SymbolRegular.Info24),
+                _ => new SymbolIcon(SymbolRegular.Info24)
+            };
+
+            _snackbarService.Show(
+                title,
+                message,
+                appearance,
+                icon,
+                TimeSpan.FromSeconds(4)
+            );
         }
     }
 }

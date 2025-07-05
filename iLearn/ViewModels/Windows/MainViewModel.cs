@@ -32,7 +32,12 @@ namespace iLearn.ViewModels.Windows
                         TargetPageType = typeof(Views.Pages.VideoDownloadListPage)
                     }
                 }
-            }
+            },
+             new NavigationViewItem(){
+                Content = "下载管理",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.MailArrowDown16 },
+                TargetPageType = typeof(Views.Pages.DownloadManagePage),
+             }
             ];
 
         [ObservableProperty]
