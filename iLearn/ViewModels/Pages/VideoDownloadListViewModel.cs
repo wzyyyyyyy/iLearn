@@ -18,8 +18,10 @@ namespace iLearn.ViewModels.Pages
         private string _searchText = string.Empty;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(FilteredVideos))]
-        private bool _isAllSelected;
+        private bool _isAllHdmiSelected;
+
+        [ObservableProperty]
+        private bool _isAllTeacherSelected;
 
         public ObservableCollection<LiveAndRecordInfo> FilteredVideos =>
             string.IsNullOrWhiteSpace(SearchText)
@@ -29,14 +31,13 @@ namespace iLearn.ViewModels.Pages
                                      v.TeacherName.Contains(SearchText)));
 
         public VideoDownloadListViewModel(
-            System.Collections.Generic.List<LiveAndRecordInfo> liveAndRecordInfos,
+            List<LiveAndRecordInfo> liveAndRecordInfos,
             VideoDownloadService downloadService)
         {
             _downloadService = downloadService;
 
-            Videos = new ObservableCollection<LiveAndRecordInfo>(liveAndRecordInfos ?? new System.Collections.Generic.List<LiveAndRecordInfo>());
+            Videos = new ObservableCollection<LiveAndRecordInfo>(liveAndRecordInfos ?? new List<LiveAndRecordInfo>());
 
-            // 订阅每个视频项的选择状态变化
             foreach (var video in Videos)
             {
                 video.PropertyChanged += OnVideoPropertyChanged;
@@ -48,12 +49,11 @@ namespace iLearn.ViewModels.Pages
             OnPropertyChanged(nameof(FilteredVideos));
         }
 
-        partial void OnIsAllSelectedChanged(bool value)
+        partial void OnIsAllHdmiSelectedChanged(bool value)
         {
             if (_isUpdatingAllSelected)
                 return;
 
-            // 暂时取消订阅，避免循环触发
             foreach (var video in Videos)
             {
                 video.PropertyChanged -= OnVideoPropertyChanged;
@@ -61,7 +61,28 @@ namespace iLearn.ViewModels.Pages
 
             foreach (var video in Videos)
             {
-                video.IsSelected = value;
+                video.IsHdmiSelected = value;
+            }
+
+            foreach (var video in Videos)
+            {
+                video.PropertyChanged += OnVideoPropertyChanged;
+            }
+        }
+
+        partial void OnIsAllTeacherSelectedChanged(bool value)
+        {
+            if (_isUpdatingAllSelected)
+                return;
+
+            foreach (var video in Videos)
+            {
+                video.PropertyChanged -= OnVideoPropertyChanged;
+            }
+
+            foreach (var video in Videos)
+            {
+                video.IsTeacherSelected = value;
             }
 
             foreach (var video in Videos)
@@ -72,17 +93,33 @@ namespace iLearn.ViewModels.Pages
 
         private void OnVideoPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(LiveAndRecordInfo.IsSelected))
+            if (e.PropertyName == nameof(LiveAndRecordInfo.IsHdmiSelected))
             {
                 _isUpdatingAllSelected = true;
 
                 try
                 {
-                    var allSelected = Videos.All(v => v.IsSelected);
-
-                    if (IsAllSelected != allSelected)
+                    var allHdmiSelected = Videos.All(v => v.IsHdmiSelected);
+                    if (IsAllHdmiSelected != allHdmiSelected)
                     {
-                        IsAllSelected = allSelected;
+                        IsAllHdmiSelected = allHdmiSelected;
+                    }
+                }
+                finally
+                {
+                    _isUpdatingAllSelected = false;
+                }
+            }
+            else if (e.PropertyName == nameof(LiveAndRecordInfo.IsTeacherSelected))
+            {
+                _isUpdatingAllSelected = true;
+
+                try
+                {
+                    var allTeacherSelected = Videos.All(v => v.IsTeacherSelected);
+                    if (IsAllTeacherSelected != allTeacherSelected)
+                    {
+                        IsAllTeacherSelected = allTeacherSelected;
                     }
                 }
                 finally
@@ -93,43 +130,45 @@ namespace iLearn.ViewModels.Pages
         }
 
         [RelayCommand]
-        private async Task DownloadSelectedAsync()
+        private void DownloadSelected()
         {
-            var selectedVideos = Videos.Where(v => v.IsSelected).ToList();
-            if (!selectedVideos.Any())
-                return;
 
-            foreach (var video in selectedVideos)
+            var selectedHdmiVideos = Videos.Where(v => v.IsHdmiSelected).ToList();
+            foreach (var video in selectedHdmiVideos)
             {
-                await DownloadVideoAsync(video);
+                DownloadVideoAsync(video, "hdmi").ConfigureAwait(false);
+            }
+
+            var selectedTeacherVideos = Videos.Where(v => v.IsTeacherSelected).ToList();
+            foreach (var video in selectedTeacherVideos)
+            {
+                DownloadVideoAsync(video, "teacher").ConfigureAwait(false);
             }
         }
 
-        [RelayCommand]
-        private async Task DownloadSingleAsync(LiveAndRecordInfo video)
-        {
-            if (video == null)
-                return;
-
-            await DownloadVideoAsync(video);
-        }
-
-        private async Task DownloadVideoAsync(LiveAndRecordInfo video)
+        private async Task DownloadVideoAsync(LiveAndRecordInfo video, string perspective)
         {
             var folder = Path.Combine(System.Environment.CurrentDirectory, "Downloads");
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
-            var fileName = SanitizeFileName(video.LiveRecordName) + ".mp4";
+            var perspectiveSuffix = perspective switch
+            {
+                "hdmi" => "_HDMI",
+                "teacher" => "_教师",
+                _ => ""
+            };
+
+            var fileName = SanitizeFileName(video.LiveRecordName) + perspectiveSuffix + ".mp4";
             var filePath = Path.Combine(folder, fileName);
-            MessageBox.Show($"正在下载: {video.LiveRecordName} 到 {filePath}", "下载开始", MessageBoxButton.OK, MessageBoxImage.Information);
+
             try
             {
-                await _downloadService.DownloadFileAsync(video, filePath);
+                //await _downloadService.DownloadFileAsync(video, filePath, perspective);
             }
             catch (System.Exception ex)
             {
-
+                // 处理下载异常
             }
         }
 

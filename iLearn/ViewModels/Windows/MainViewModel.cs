@@ -27,7 +27,7 @@ namespace iLearn.ViewModels.Windows
                     new NavigationViewItemSeparator(),
                     new NavigationViewItem()
                     {
-                        Content = "课程列表",
+                        Content = "课程下载",
                         Icon = new SymbolIcon { Symbol = SymbolRegular.ArrowDownload16 },
                         TargetPageType = typeof(Views.Pages.VideoDownloadListPage)
                     }

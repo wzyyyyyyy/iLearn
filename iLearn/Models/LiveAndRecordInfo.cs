@@ -1,16 +1,8 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace iLearn.Models
 {
-    public class VideoClass
-    {
-        public string VideoClassId { get; set; }
-        public string VideoName { get; set; }
-    }
-
-    public class LiveAndRecordInfo : INotifyPropertyChanged
+    public partial class LiveAndRecordInfo : ObservableObject
     {
         public string Id { get; set; }
         public string ResourceId { get; set; }
@@ -45,26 +37,11 @@ namespace iLearn.Models
         public string ScheduleTimeStart { get; set; }
         public string ScheduleTimeEnd { get; set; }
 
-        private bool _isSelected = false;
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set
-            {
-                if (_isSelected != value)
-                {
-                    _isSelected = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        [ObservableProperty]
+        private bool _isHdmiSelected = false;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        [ObservableProperty]
+        private bool _isTeacherSelected = false;
 
         public static List<LiveAndRecordInfo> Parse(string json)
         {
@@ -78,5 +55,11 @@ namespace iLearn.Models
                 PropertyNameCaseInsensitive = true
             }) ?? new List<LiveAndRecordInfo>();
         }
+    }
+
+    public class VideoClass
+    {
+        public string Id { get; set; }
+        public string ClassName { get; set; }
     }
 }
