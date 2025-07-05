@@ -10,11 +10,11 @@ namespace iLearn.Services
 {
     public class ILearnApiService
     {
-        private readonly HttpClient httpClient;
+        private HttpClient httpClient;
         private const string CAS_URL = "https://cas.jlu.edu.cn/tpass/login";
         public bool Logined { get; private set; } = false;
 
-        public ILearnApiService()
+        public void Init()
         {
             var cookieContainer = new CookieContainer();
 
@@ -41,6 +41,9 @@ namespace iLearn.Services
         public async Task<bool> LoginAsync(string username, string password)
         {
             if (Logined) return true;
+
+            Init();
+
             var casResponse = await httpClient.GetAsync($"{CAS_URL}?service=https://jwcidentity.jlu.edu.cn/iplat-pass-jlu/thirdLogin/jlu/login");
             casResponse.EnsureSuccessStatusCode();
             var casHtml = await casResponse.Content.ReadAsStringAsync();
