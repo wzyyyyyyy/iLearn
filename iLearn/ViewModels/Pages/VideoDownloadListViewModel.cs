@@ -9,6 +9,7 @@ namespace iLearn.ViewModels.Pages
     public partial class VideoDownloadListViewModel : ObservableObject
     {
         private readonly VideoDownloadService _downloadService;
+        private readonly ILearnApiService _iLearnApiService;
         private bool _isUpdatingAllSelected = false; // 添加标志位防止循环触发
 
         [ObservableProperty]
@@ -32,9 +33,11 @@ namespace iLearn.ViewModels.Pages
 
         public VideoDownloadListViewModel(
             List<LiveAndRecordInfo> liveAndRecordInfos,
-            VideoDownloadService downloadService)
+            VideoDownloadService downloadService,
+            ILearnApiService iLearnApiService)
         {
             _downloadService = downloadService;
+            _iLearnApiService = iLearnApiService;
 
             Videos = new ObservableCollection<LiveAndRecordInfo>(liveAndRecordInfos ?? new List<LiveAndRecordInfo>());
 
@@ -148,23 +151,39 @@ namespace iLearn.ViewModels.Pages
 
         private async Task DownloadVideoAsync(LiveAndRecordInfo video, string perspective)
         {
+            if (video.ResourceId == null)
+            {
+                return;
+            }
+
             var folder = Path.Combine(System.Environment.CurrentDirectory, "Downloads");
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
+            var videoInfo = await _iLearnApiService.GetVideoInfoAsync(video.ResourceId);
 
-            var perspectiveSuffix = perspective switch
+            string? url;
+            string? perspectiveSuffix;
+
+            switch (perspective)
             {
-                "hdmi" => "_HDMI",
-                "teacher" => "_教师",
-                _ => ""
-            };
+                case "hdmi":
+                    perspectiveSuffix = "_HDMI";
+                    url = videoInfo.VideoList[1].VideoPath;
+                    break;
+                case "teacher":
+                    perspectiveSuffix = "_教师";
+                    url = videoInfo.VideoList[0].VideoPath;
+                    break;
+                default:
+                    return; // 无效的视角
+            }
 
             var fileName = SanitizeFileName(video.LiveRecordName) + perspectiveSuffix + ".mp4";
             var filePath = Path.Combine(folder, fileName);
 
             try
             {
-                //await _downloadService.DownloadFileAsync(video, filePath, perspective);
+                
             }
             catch (System.Exception ex)
             {
