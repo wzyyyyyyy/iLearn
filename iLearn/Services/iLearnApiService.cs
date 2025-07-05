@@ -174,6 +174,14 @@ namespace iLearn.Services
             return dataListElement.GetString() ?? string.Empty;
         }
 
+        public async Task<UserInfo> GetUserInfo() {
+            if (!Logined) throw new InvalidOperationException("Not logged in.");
+            var response = await httpClient.PostAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/public/getUserInfo", new StringContent(""));
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return UserInfo.Parse(json);
+        }
+
         private string GetStringFromJson(JsonDocument doc, string propertyName)
         {
             return doc.RootElement.GetProperty(propertyName).GetString() ?? string.Empty;
