@@ -1,4 +1,4 @@
-name: Build
+name: Build Debug & Release
 
 on:
   push:
@@ -10,6 +10,7 @@ on:
 jobs:
   build-debug:
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -21,11 +22,11 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build Debug (Solution)
-        run: dotnet build iLearn.sln --configuration Debug --no-restore -v normal
+      - name: Build Debug
+        run: dotnet build --configuration Debug --no-restore -v quiet
 
-      - name: Publish Debug (Project, Framework-dependent)
-        run: dotnet publish iLearn/iLearn.csproj --configuration Debug --runtime win-x64 --no-self-contained --no-restore --output ./publish/debug
+      - name: Publish Debug
+        run: dotnet publish --configuration Debug --runtime win-x64 --output ./publish/debug
 
       - name: Archive Debug
         run: |
@@ -41,6 +42,7 @@ jobs:
 
   build-release:
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -52,11 +54,11 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build Release (Solution)
-        run: dotnet build iLearn.sln --configuration Release --no-restore -v normal
+      - name: Build Release
+        run: dotnet build --configuration Release --no-restore -v quiet
 
-      - name: Publish Release (Project, Framework-dependent)
-        run: dotnet publish iLearn/iLearn.csproj --configuration Release --runtime win-x64 --no-self-contained --no-restore --output ./publish/release
+      - name: Publish Release
+        run: dotnet publish --configuration Release --runtime win-x64 --output ./publish/release
 
       - name: Archive Release
         run: |
