@@ -140,8 +140,8 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void DownloadSelected()
         {
-            var selectedHdmiVideos = Videos.Where(v => v.IsHdmiSelected).ToList();
-            var selectedTeacherVideos = Videos.Where(v => v.IsTeacherSelected).ToList();
+            var selectedHdmiVideos = Videos.Where(v => v.IsHdmiSelected && v.ResourceId is not null).ToList();
+            var selectedTeacherVideos = Videos.Where(v => v.IsTeacherSelected && v.ResourceId is not null).ToList();
 
             var totalSelectedCount = selectedHdmiVideos.Count + selectedTeacherVideos.Count;
 
@@ -169,11 +169,6 @@ namespace iLearn.ViewModels.Pages
 
         private async Task DownloadVideoAsync(LiveAndRecordInfo video, string perspective)
         {
-            if (video.ResourceId == null)
-            {
-                return;
-            }
-
             var folder = Path.Combine(System.Environment.CurrentDirectory, "Downloads");
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);

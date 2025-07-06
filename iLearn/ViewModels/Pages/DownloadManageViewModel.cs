@@ -61,7 +61,6 @@ namespace iLearn.ViewModels.Pages
         {
             var activeDownloads = _downloadService.ActiveDownloads.ToList();
 
-            // 更新或添加新的下载项
             foreach (var download in activeDownloads)
             {
                 var existingItem = Downloads.FirstOrDefault(d => d.Url == download.Url);
@@ -71,16 +70,15 @@ namespace iLearn.ViewModels.Pages
                 }
             }
 
-            // 更新统计信息
+            SortDownloadsByStatus();
+
             ActiveDownloadsCount = Downloads.Count(d => d.Status == "Downloading");
             CompletedDownloadsCount = Downloads.Count(d => d.Status == "Completed");
             QueuedDownloadsCount = Downloads.Count(d => d.Status == "Queued") + _downloadService.GetQueuedDownloadsCount();
 
-            // 更新按钮状态
             HasDownloadingItems = Downloads.Any(d => d.Status == "Downloading");
             HasPausedItems = Downloads.Any(d => d.Status == "Paused");
 
-            // 计算总下载速度，转换为MB/s
             var totalSpeedBytes = Downloads
                 .Where(d => d.Status == "Downloading")
                 .Sum(d => d.SpeedValue);
@@ -89,27 +87,33 @@ namespace iLearn.ViewModels.Pages
             TotalDownloadSpeed = $"{totalSpeedMB:F2} MB/s";
         }
 
-        private double ParseSpeed(string speedText)
+        private void SortDownloadsByStatus()
         {
-            if (string.IsNullOrEmpty(speedText))
-                return 0;
+            var sortedDownloads = Downloads.OrderBy(d => GetStatusSortOrder(d.Status))
+                                          .ThenBy(d => d.FileName)
+                                          .ToList();
 
-            // 处理KB/s格式
-            if (speedText.Contains("KB/s"))
+            for (int i = 0; i < sortedDownloads.Count; i++)
             {
-                var parts = speedText.Split(' ');
-                if (parts.Length > 0 && double.TryParse(parts[0], out var speed))
-                    return speed;
+                var currentIndex = Downloads.IndexOf(sortedDownloads[i]);
+                if (currentIndex != i)
+                {
+                    Downloads.Move(currentIndex, i);
+                }
             }
-            // 处理MB/s格式
-            else if (speedText.Contains("MB/s"))
-            {
-                var parts = speedText.Split(' ');
-                if (parts.Length > 0 && double.TryParse(parts[0], out var speed))
-                    return speed * 1024; // 转换为KB/s用于统计
-            }
+        }
 
-            return 0;
+        private int GetStatusSortOrder(string status)
+        {
+            return status switch
+            {
+                "Failed" => 0,        // 下载失败
+                "Downloading" => 1,   // 正在下载
+                "Paused" => 2,        // 已暂停
+                "Queued" => 3,        // 排队中
+                "Completed" => 4,     // 已完成
+                _ => 5                // 其他状态
+            };
         }
 
         [RelayCommand]

@@ -23,12 +23,12 @@ namespace iLearn.Services
         {
             ChunkCount = 8,
             ParallelDownload = true,
-            Timeout = 5000,
+            Timeout = 600000,
             BufferBlockSize = 10240,
-            MaxTryAgainOnFailover = 3,
+            MaxTryAgainOnFailover = 20,
             RequestConfiguration = {
                 Accept = "*/*",
-                Timeout = 20000
+                Timeout = 200000
             }
         };
 
@@ -158,6 +158,7 @@ namespace iLearn.Services
             if (_downloaders.TryGetValue(url, out var d))
             {
                 d.Pause();
+                Task.Delay(100).Wait(); // 确保暂停操作完成
                 if (_activeDownloads.TryGetValue(url, out var item))
                 {
                     item.Status = "Paused";
@@ -244,7 +245,7 @@ namespace iLearn.Services
             var pausedItems = _activeDownloads.Values.Where(d => d.Status == "Paused").ToList();
             foreach (var item in pausedItems)
             {
-                await StartDownloadAsync(item.Url, item.FileName, Path.GetDirectoryName(item.OutputPath));
+                ResumeDownload(item.Url);
             }
         }
     }
