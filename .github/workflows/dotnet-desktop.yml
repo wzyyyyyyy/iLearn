@@ -1,5 +1,4 @@
 name: Build
-
 on:
   push:
     branches: [ "main", "master" ]
@@ -8,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-debug:
     runs-on: windows-latest
 
     steps:
@@ -22,12 +21,12 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      # --- Build & Publish Debug ---
-      - name: Build Debug
-        run: dotnet build --configuration Debug --no-restore
+      - name: Build Debug (No Warnings)
+        run: dotnet build --configuration Debug --no-restore -v quiet
 
-      - name: Publish Debug
-        run: dotnet publish --configuration Debug --runtime win-x64 --self-contained true --output ./publish/debug
+      - name: Publish Debug (Trimmed + AOT)
+        run: |
+          dotnet publish --configuration Debug --runtime win-x64 --self-contained true /p:PublishTrimmed=true /p:PublishAot=true --no-restore --output ./publish/debug
 
       - name: Archive Debug
         run: |
@@ -41,12 +40,26 @@ jobs:
           path: iLearn-Debug-${{ github.sha }}.zip
           retention-days: 30
 
-      # --- Build & Publish Release ---
-      - name: Build Release
-        run: dotnet build --configuration Release --no-restore
+  build-release:
+    runs-on: windows-latest
 
-      - name: Publish Release
-        run: dotnet publish --configuration Release --runtime win-x64 --self-contained true --output ./publish/release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Release (No Warnings)
+        run: dotnet build --configuration Release --no-restore -v quiet
+
+      - name: Publish Release (Trimmed + AOT)
+        run: |
+          dotnet publish --configuration Release --runtime win-x64 --self-contained true /p:PublishTrimmed=true /p:PublishAot=true --no-restore --output ./publish/release
 
       - name: Archive Release
         run: |
@@ -59,34 +72,3 @@ jobs:
           name: iLearn-Release-${{ github.sha }}
           path: iLearn-Release-${{ github.sha }}.zip
           retention-days: 30
-
-      # --- GitHub Release (only on tag) ---
-      - name: Create Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: |
-            iLearn-Debug-${{ github.sha }}.zip
-            iLearn-Release-${{ github.sha }}.zip
-          body: |
-            ## iLearn Application Release
-
-            ### 🐞 Debug Build
-            - Includes debug symbols
-            - Logging enabled
-            - Suitable for troubleshooting and development
-
-            ### 🚀 Release Build
-            - Optimized for performance
-            - No debug symbols
-            - Recommended for general users
-
-            ### 📦 How to Use
-            1. Download the appropriate zip
-            2. Extract to a folder
-            3. Run `iLearn.exe`
-
-          name: "iLearn ${{ github.ref_name }}"
-          tag: ${{ github.ref_name }}
-          draft: false
-          prerelease: false
