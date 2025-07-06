@@ -10,6 +10,10 @@ namespace iLearn.Models
         public bool IsRememberMeEnabled { get; set; } = false;
         public bool IsAutoLoginEnabled { get; set; } = false;
 
+        public int MaxConcurrentDownloads { get; set; } = 3;
+        public int ChunkCount { get; set; } = 8;
+        public long SpeedLimitBytesPerSecond { get; set; } = 0; // 0 表示不限速
+
         private readonly string _filePath;
 
         public AppConfig()
@@ -34,6 +38,9 @@ namespace iLearn.Models
                     UserPassword = config.UserPassword;
                     IsRememberMeEnabled = config.IsRememberMeEnabled;
                     IsAutoLoginEnabled = config.IsAutoLoginEnabled;
+                    MaxConcurrentDownloads = config.MaxConcurrentDownloads;
+                    ChunkCount = config.ChunkCount;
+                    SpeedLimitBytesPerSecond = config.SpeedLimitBytesPerSecond;
                 }
             }
         }

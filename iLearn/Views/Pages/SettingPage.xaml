@@ -18,6 +18,99 @@
     <Grid>
         <ScrollViewer>
             <StackPanel Margin="42,24,42,24">
+                <!-- 下载配置 -->
+                <ui:TextBlock
+                    Margin="0,0,0,8"
+                    FontTypography="BodyStrong"
+                    Text="下载配置" />
+                
+                <ui:CardControl Margin="0,0,0,12" Icon="{ui:SymbolIcon ArrowDownload24}">
+                    <ui:CardControl.Header>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ui:TextBlock
+                                Grid.Row="0"
+                                FontTypography="Body"
+                                Text="同时下载个数" />
+                            <ui:TextBlock
+                                Grid.Row="1"
+                                Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                Text="设置可以同时进行的下载任务数量 (1-10)" />
+                        </Grid>
+                    </ui:CardControl.Header>
+                    <ui:NumberBox
+                        MinWidth="120"
+                        Minimum="1"
+                        Maximum="10"
+                        Value="{Binding MaxConcurrentDownloads}" />
+                </ui:CardControl>
+
+                <ui:CardControl Margin="0,0,0,12" Icon="{ui:SymbolIcon Branch24}">
+                    <ui:CardControl.Header>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ui:TextBlock
+                                Grid.Row="0"
+                                FontTypography="Body"
+                                Text="单文件下载线程数" />
+                            <ui:TextBlock
+                                Grid.Row="1"
+                                Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                Text="设置单个文件的下载线程数，更多线程可能提高下载速度 (1-32)" />
+                        </Grid>
+                    </ui:CardControl.Header>
+                    <ui:NumberBox
+                        MinWidth="120"
+                        Minimum="1"
+                        Maximum="32"
+                        Value="{Binding ChunkCount}" />
+                </ui:CardControl>
+
+                <ui:CardControl Margin="0,0,0,12" Icon="{ui:SymbolIcon Gauge24}">
+                    <ui:CardControl.Header>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ui:TextBlock
+                                Grid.Row="0"
+                                FontTypography="Body"
+                                Text="速度限制 (MB/s)" />
+                            <ui:TextBlock
+                                Grid.Row="1"
+                                Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                Text="设置下载速度限制，0表示不限速" />
+                        </Grid>
+                    </ui:CardControl.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Slider
+                            MinWidth="200"
+                            Minimum="0"
+                            Maximum="100"
+                            Value="{Binding SpeedLimitMBps}"
+                            TickFrequency="1"
+                            IsSnapToTickEnabled="True" />
+                        <ui:TextBlock
+                            VerticalAlignment="Center"
+                            Text="{Binding SpeedLimitMBps, StringFormat={}{0:F1} MB/s}" />
+                    </StackPanel>
+                </ui:CardControl>
+
+                <ui:Button
+                    Margin="0,0,0,24"
+                    HorizontalAlignment="Right"
+                    Appearance="Secondary"
+                    Content="重置为默认值"
+                    Icon="ArrowReset24"
+                    Command="{Binding ResetDownloadSettingsCommand}" />
+
                 <!-- 主题设置 -->
                 <ui:TextBlock
                     Margin="0,0,0,8"

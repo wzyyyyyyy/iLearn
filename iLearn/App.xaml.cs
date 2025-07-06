@@ -97,9 +97,10 @@ namespace iLearn
         /// <summary>
         /// Gets services.
         /// </summary>
-        public static IServiceProvider Services
+        public static T GetService<T>()
+            where T : class
         {
-            get { return _host.Services; }
+            return _host.Services.GetService(typeof(T)) as T;
         }
 
         /// <summary>

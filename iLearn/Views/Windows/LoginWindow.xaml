@@ -71,8 +71,7 @@
             <ui:Card Grid.Row="1" Margin="32,0,32,20"   
                      Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}"  
                      BorderBrush="{ui:ThemeResource ControlStrokeColorDefaultBrush}"  
-                     BorderThickness="1" x:Name="LoginCard" Opacity="0"
-                     IsEnabled="{Binding IsLoggingIn, Converter={StaticResource InverseBooleanConverter}}">
+                     BorderThickness="1" x:Name="LoginCard" Opacity="0">
                 <ui:Card.RenderTransform>
                     <TranslateTransform Y="0"/>
                 </ui:Card.RenderTransform>

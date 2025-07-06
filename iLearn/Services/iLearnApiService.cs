@@ -12,15 +12,16 @@ namespace iLearn.Services
     {
         private HttpClient httpClient;
         private const string CAS_URL = "https://cas.jlu.edu.cn/tpass/login";
+        private CookieContainer CookieContainer;
         public bool Logined { get; private set; } = false;
 
         public void Init()
         {
-            var cookieContainer = new CookieContainer();
+            CookieContainer = new CookieContainer();
 
             var handler = new HttpClientHandler()
             {
-                CookieContainer = cookieContainer,
+                CookieContainer = CookieContainer,
                 UseCookies = true,
                 AllowAutoRedirect = true,
                 MaxAutomaticRedirections = 50,
@@ -157,10 +158,25 @@ namespace iLearn.Services
 
         public async Task<VideoInfo> GetVideoInfoAsync(string resourceId)
         {
-            if (!Logined) throw new InvalidOperationException("Not logged in.");
-            await httpClient.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/zhwk/selectLanguageExists?resourceId={resourceId}");
-            var response = await httpClient.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/videoclass/videoClassInfo?resourceId={resourceId}");
+            if (!Logined)
+                throw new InvalidOperationException("Not logged in.");
+
+            var handler = new HttpClientHandler
+            {
+                CookieContainer = CookieContainer,
+                UseCookies = true
+            };
+
+            using var client = new HttpClient(handler)
+            {
+                Timeout = TimeSpan.FromSeconds(60)
+            };
+
+            await client.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/zhwk/selectLanguageExists?resourceId={resourceId}");
+
+            var response = await client.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/videoclass/videoClassInfo?resourceId={resourceId}");
             response.EnsureSuccessStatusCode();
+
             var json = await response.Content.ReadAsStringAsync();
             return VideoInfo.Parse(json);
         }

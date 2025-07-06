@@ -3,6 +3,7 @@ using iLearn.Models;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,8 +17,8 @@ namespace iLearn.Services
         private readonly ConcurrentDictionary<string, DownloadService> _downloaders = new();
         private readonly Queue<(string url, string fileName, string outputPath)> _downloadQueue = new();
         private readonly object _queueLock = new object();
-        private const int MaxConcurrentDownloads = 3;
-        private readonly SemaphoreSlim _semaphore = new(MaxConcurrentDownloads);
+        private SemaphoreSlim _semaphore;
+        private int _maxConcurrentDownloads = 3;
 
         private readonly DownloadConfiguration _config = new()
         {
@@ -26,11 +27,17 @@ namespace iLearn.Services
             Timeout = 600000,
             BufferBlockSize = 10240,
             MaxTryAgainOnFailover = 20,
+            MaximumBytesPerSecond = 0, // 不限速
             RequestConfiguration = {
                 Accept = "*/*",
                 Timeout = 200000
             }
         };
+
+        public VideoDownloadService()
+        {
+            _semaphore = new SemaphoreSlim(_maxConcurrentDownloads);
+        }
 
         public async Task StartDownloadAsync(string url, string fileName, string outputPath)
         {
@@ -158,7 +165,7 @@ namespace iLearn.Services
             if (_downloaders.TryGetValue(url, out var d))
             {
                 d.Pause();
-                Task.Delay(100).Wait(); // 确保暂停操作完成
+                Task.Delay(100).Wait();
                 if (_activeDownloads.TryGetValue(url, out var item))
                 {
                     item.Status = "Paused";
@@ -211,7 +218,7 @@ namespace iLearn.Services
             if (_activeDownloads.TryGetValue(url, out var item))
             {
                 CancelDownload(url);
-                await Task.Delay(200); // 确保已取消干净
+                await Task.Delay(200);
 
                 item.Progress = 0;
                 item.Speed = "0 KB/s";
@@ -247,6 +254,34 @@ namespace iLearn.Services
             {
                 ResumeDownload(item.Url);
             }
+        }
+
+        public void UpdateChunkCount(int value)
+        {
+            _config.ChunkCount = value;
+        }
+
+        public void UpdateMaxConcurrentDownloads(int value)
+        {
+            if (value <= 0 || value == _maxConcurrentDownloads)
+                return;
+
+            lock (_queueLock)
+            {
+                _maxConcurrentDownloads = value;
+
+                var newSemaphore = new SemaphoreSlim(_maxConcurrentDownloads);
+                _semaphore.Dispose();
+                _semaphore = newSemaphore;
+            }
+        }
+
+        public void UpdateSpeedLimit(long speedLimitBytesPerSecond)
+        {
+            if (speedLimitBytesPerSecond < 0)
+                throw new ArgumentOutOfRangeException(nameof(speedLimitBytesPerSecond));
+
+            _config.MaximumBytesPerSecond = speedLimitBytesPerSecond;
         }
     }
 }
