@@ -13,7 +13,7 @@ namespace iLearn.Views.Pages
             InitializeComponent();
             ViewModel = coursesViewModel ?? throw new ArgumentNullException(nameof(coursesViewModel));
             DataContext = ViewModel;
-            snackbarService.SetSnackbarPresenter(SnackbarPresenter);
+            //snackbarService.SetSnackbarPresenter(SnackbarPresenter);
         }
     }
 }

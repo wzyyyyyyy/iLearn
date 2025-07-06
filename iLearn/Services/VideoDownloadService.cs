@@ -2,8 +2,9 @@
 using iLearn.Models;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace iLearn.Services
 {
@@ -16,6 +17,7 @@ namespace iLearn.Services
         private readonly Queue<(string url, string fileName, string outputPath)> _downloadQueue = new();
         private readonly object _queueLock = new object();
         private const int MaxConcurrentDownloads = 3;
+        private readonly SemaphoreSlim _semaphore = new(MaxConcurrentDownloads);
 
         private readonly DownloadConfiguration _config = new()
         {
@@ -35,6 +37,9 @@ namespace iLearn.Services
             if (_activeDownloads.ContainsKey(url))
                 return;
 
+            if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(outputPath))
+                return;
+
             string fullPath = Path.Combine(outputPath, fileName);
 
             var item = new DownloadItem
@@ -49,18 +54,46 @@ namespace iLearn.Services
 
             _activeDownloads[url] = item;
 
-            var currentDownloading = _activeDownloads.Values.Count(d => d.Status == "Downloading");
-            if (currentDownloading >= MaxConcurrentDownloads)
+            lock (_queueLock)
             {
-                lock (_queueLock)
-                {
-                    _downloadQueue.Enqueue((url, fileName, outputPath));
-                }
-                item.Status = "Queued";
-                return;
+                _downloadQueue.Enqueue((url, fileName, outputPath));
             }
 
-            await StartActualDownloadAsync(url, fileName, outputPath);
+            await ProcessDownloadQueue();
+        }
+
+        private async Task ProcessDownloadQueue()
+        {
+            (string url, string fileName, string outputPath)? task = null;
+
+            lock (_queueLock)
+            {
+                if (_downloadQueue.Count > 0)
+                    task = _downloadQueue.Dequeue();
+            }
+
+            if (task != null)
+            {
+                var (url, fileName, outputPath) = task.Value;
+
+                var item = _activeDownloads[url];
+                item.Status = "Queued";
+
+                _ = Task.Run(async () =>
+                {
+                    await _semaphore.WaitAsync();
+
+                    try
+                    {
+                        await StartActualDownloadAsync(url, fileName, outputPath);
+                    }
+                    finally
+                    {
+                        _semaphore.Release();
+                        await ProcessDownloadQueue();
+                    }
+                });
+            }
         }
 
         private async Task StartActualDownloadAsync(string url, string fileName, string outputPath)
@@ -76,7 +109,12 @@ namespace iLearn.Services
             {
                 item.Progress = e.ProgressPercentage;
                 var speedKB = e.BytesPerSecondSpeed / 1024.0;
-                item.Speed = speedKB >= 1024 ? $"{speedKB / 1024.0:F2} MB/s" : $"{speedKB:F2} KB/s";
+                item.Speed = speedKB switch
+                {
+                    >= 1024 => $"{speedKB / 1024.0:F2} MB/s",
+                    >= 1 => $"{speedKB:F2} KB/s",
+                    _ => $"{e.BytesPerSecondSpeed:F0} B/s"
+                };
                 item.SpeedValue = e.BytesPerSecondSpeed;
                 item.BytesReceived = e.ReceivedBytesSize;
                 item.TotalBytes = e.TotalBytesToReceive;
@@ -111,25 +149,7 @@ namespace iLearn.Services
                 item.Speed = "0 KB/s";
                 item.SpeedValue = 0;
                 _downloaders.TryRemove(url, out _);
-
                 await ProcessDownloadQueue();
-            }
-        }
-
-        private async Task ProcessDownloadQueue()
-        {
-            lock (_queueLock)
-            {
-                var currentDownloading = _activeDownloads.Values.Count(d => d.Status == "Downloading");
-                if (currentDownloading >= MaxConcurrentDownloads || _downloadQueue.Count == 0)
-                    return;
-
-                var (url, fileName, outputPath) = _downloadQueue.Dequeue();
-
-                Task.Run(async () =>
-                {
-                    await StartActualDownloadAsync(url, fileName, outputPath);
-                });
             }
         }
 
@@ -189,13 +209,16 @@ namespace iLearn.Services
         {
             if (_activeDownloads.TryGetValue(url, out var item))
             {
+                CancelDownload(url);
+                await Task.Delay(200); // 确保已取消干净
+
                 item.Progress = 0;
                 item.Speed = "0 KB/s";
                 item.SpeedValue = 0;
                 item.BytesReceived = 0;
                 item.Status = "Waiting";
 
-                await StartActualDownloadAsync(url, item.FileName, Path.GetDirectoryName(item.OutputPath));
+                await StartDownloadAsync(url, item.FileName, Path.GetDirectoryName(item.OutputPath));
             }
         }
 
@@ -221,20 +244,7 @@ namespace iLearn.Services
             var pausedItems = _activeDownloads.Values.Where(d => d.Status == "Paused").ToList();
             foreach (var item in pausedItems)
             {
-                // 检查并发限制
-                var currentDownloading = _activeDownloads.Values.Count(d => d.Status == "Downloading");
-                if (currentDownloading >= MaxConcurrentDownloads)
-                {
-                    lock (_queueLock)
-                    {
-                        _downloadQueue.Enqueue((item.Url, item.FileName, Path.GetDirectoryName(item.OutputPath)));
-                    }
-                    item.Status = "Queued";
-                }
-                else
-                {
-                    ResumeDownload(item.Url);
-                }
+                await StartDownloadAsync(item.Url, item.FileName, Path.GetDirectoryName(item.OutputPath));
             }
         }
     }

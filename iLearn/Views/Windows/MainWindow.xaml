@@ -42,7 +42,9 @@
     OpenPaneLength="310"
     PaneDisplayMode="Left"
     TitleBar="{Binding ElementName=TitleBar, Mode=OneWay}">
-            
+            <ui:NavigationView.Header>
+                <ui:BreadcrumbBar x:Name="BreadcrumbBar" Margin="42,32,42,20" />
+            </ui:NavigationView.Header>
             <ui:NavigationView.AutoSuggestBox>
                 <ui:AutoSuggestBox x:Name="AutoSuggestBox" PlaceholderText="Search">
                     <ui:AutoSuggestBox.Icon>
@@ -54,18 +56,6 @@
             </ui:NavigationView.AutoSuggestBox>
             <ui:NavigationView.ContentOverlay>
                 <Grid>
-                    <Grid VerticalAlignment="Bottom" Margin="16,0,16,20">
-                        <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                 CornerRadius="8" 
-                 Padding="12">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="48"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                            </Grid>
-                        </Border>
-                    </Grid>
                     <ui:SnackbarPresenter x:Name="SnackbarPresenter" />
                 </Grid>
             </ui:NavigationView.ContentOverlay>

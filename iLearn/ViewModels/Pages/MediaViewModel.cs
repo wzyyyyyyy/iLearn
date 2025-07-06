@@ -1,13 +1,17 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using iLearn.Helpers.Messages;
 using iLearn.Models;
 using iLearn.Services;
+using iLearn.ViewModels.Windows;
 using System.Collections.ObjectModel;
+using System.Windows;
 using Wpf.Ui;
 
 namespace iLearn.ViewModels.Pages
 {
-    public partial class MediaViewModel : ObservableRecipient
+    public partial class MediaViewModel : ObservableObject
     {
         [ObservableProperty]
         private string _searchQuery = string.Empty;
@@ -20,12 +24,13 @@ namespace iLearn.ViewModels.Pages
 
         private readonly ILearnApiService _ilearnApiService;
         private readonly INavigationService _navigationService;
+        private readonly WindowsManagerService _windowsManagerService;
 
-        public MediaViewModel(ILearnApiService ilearnApiService, INavigationService navigationService, List<LiveAndRecordInfo> liveAndRecordInfos)
+        public MediaViewModel(ILearnApiService ilearnApiService, INavigationService navigationService, List<LiveAndRecordInfo> liveAndRecordInfos, WindowsManagerService windowsManagerService)
         {
             _ilearnApiService = ilearnApiService ?? throw new ArgumentNullException(nameof(ilearnApiService));
-            IsActive = true;
             _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+            _windowsManagerService = windowsManagerService ?? throw new ArgumentNullException(nameof(windowsManagerService));
 
             WeakReferenceMessenger.Default.Register<CourseMessage>(this, async (r, m) =>
             {
@@ -56,6 +61,8 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void OpenMedia(LiveAndRecordInfo media)
         {
+            MessageBox.Show($"正在打开: {media.LiveRecordName}", "信息", MessageBoxButton.OK, MessageBoxImage.Information);
+            _windowsManagerService.Show<VideoPlayerViewModel>();
         }
 
         private async Task LoadData()

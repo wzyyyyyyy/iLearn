@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
     xmlns:viewmodels="clr-namespace:iLearn.ViewModels.Windows"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -10,8 +11,64 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:VideoPlayerViewModel, IsDesignTimeCreatable=True}"
     Width="1000"
     Height="600"
-    WindowStartupLocation="CenterScreen">
+    WindowStartupLocation="CenterScreen"
+    ResizeMode="CanResize">
+
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- WebView2 控件 -->
+        <wv2:WebView2 
+            x:Name="WebView"
+            Grid.Row="0"
+            NavigationCompleted="WebView_NavigationCompleted"
+            CoreWebView2InitializationCompleted="WebView_CoreWebView2InitializationCompleted"/>
+
+        <!-- 加载指示器 -->
+        <ui:ProgressRing 
+            Grid.Row="0"
+            Width="40"
+            Height="40"
+            IsIndeterminate="{Binding IsLoading}"
+            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"/>
+
+        <!-- 状态栏 -->
+        <Border 
+            Grid.Row="1"
+            Background="{DynamicResource ApplicationBackgroundBrush}"
+            BorderThickness="0,1,0,0"
+            Height="24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock 
+                    Grid.Column="0"
+                    Text="{Binding StatusMessage}"
+                    VerticalAlignment="Center"
+                    Margin="8,0"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+
+                <StackPanel 
+                    Grid.Column="1"
+                    Orientation="Horizontal"
+                    Margin="8,0">
+                    <ui:Button 
+                        Content="加载默认内容"
+                        Command="{Binding LoadDefaultContentCommand}"
+                        Appearance="Transparent"
+                        FontSize="12"
+                        Padding="8,2"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </ui:FluentWindow>

@@ -17,7 +17,7 @@ namespace iLearn.Views.Pages
             ViewModel = videoDownloadListViewModel ?? throw new ArgumentNullException(nameof(videoDownloadListViewModel));
             DataContext = ViewModel;
 
-            snackbarService.SetSnackbarPresenter(SnackbarPresenter);
+            //snackbarService.SetSnackbarPresenter(SnackbarPresenter);
         }
     }
 }

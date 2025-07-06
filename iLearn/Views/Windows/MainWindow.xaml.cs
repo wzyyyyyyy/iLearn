@@ -11,7 +11,8 @@ public partial class MainWindow : INavigationWindow
 {
     public MainWindow(MainViewModel mainViewModel,
         INavigationViewPageProvider navigationViewPageProvider,
-            INavigationService navigationService
+            INavigationService navigationService,
+            ISnackbarService snackbarService
         )
     {
         DataContext = mainViewModel;
@@ -22,6 +23,7 @@ public partial class MainWindow : INavigationWindow
         SetPageService(navigationViewPageProvider);
 
         navigationService.SetNavigationControl(RootNavigation);
+        snackbarService.SetSnackbarPresenter(SnackbarPresenter);
 
         Loaded += (sender, e) => Navigate(typeof(CoursesPage));
     }
