@@ -4,16 +4,18 @@ using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
+using Wpf.Ui.Extensions;
 
 namespace iLearn.Views.Windows;
 
 public partial class LoginWindow : FluentWindow
 {
-    public LoginWindow(LoginViewModel viewModel, ISnackbarService snackbarService)
+    public LoginWindow(LoginViewModel viewModel, ISnackbarService snackbarService, IContentDialogService contentDialogService)
     {
         InitializeComponent();
         DataContext = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         snackbarService.SetSnackbarPresenter(SnackbarPresenter);
+        contentDialogService.SetDialogHost(RootContentDialogPresenter);
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)

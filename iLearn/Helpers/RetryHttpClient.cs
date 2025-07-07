@@ -29,7 +29,6 @@ namespace iLearn.Helpers
                      r.StatusCode == HttpStatusCode.ServiceUnavailable ||
                      r.StatusCode == HttpStatusCode.GatewayTimeout))
                 .Or<HttpRequestException>()
-                .Or<TaskCanceledException>(ex => !ex.CancellationToken.IsCancellationRequested)
                 .WaitAndRetryAsync(
                     retryCount: 5,
                     sleepDurationProvider: retryAttempt =>

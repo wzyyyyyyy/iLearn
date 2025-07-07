@@ -65,6 +65,7 @@ namespace iLearn
                 });
                 services.AddSingleton<ILearnApiService>();
                 services.AddSingleton<ISnackbarService, SnackbarService>();
+                services.AddSingleton<IContentDialogService, ContentDialogService>();
                 services.AddSingleton<VideoDownloadService>();
 
                 services.AddSingleton(sp =>

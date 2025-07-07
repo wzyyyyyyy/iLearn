@@ -67,7 +67,9 @@
                            HorizontalAlignment="Center"  
                            Margin="0,16,0,16"/>
             </StackPanel>
-
+            
+            <ContentPresenter x:Name="RootContentDialogPresenter" Grid.Row="0" />
+            
             <ui:Card Grid.Row="1" Margin="32,0,32,20"   
                      Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}"  
                      BorderBrush="{ui:ThemeResource ControlStrokeColorDefaultBrush}"  

@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows.Input;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
+using Wpf.Ui.Extensions;
 
 namespace iLearn.ViewModels.Windows
 {
@@ -28,13 +29,15 @@ namespace iLearn.ViewModels.Windows
         private readonly ISnackbarService _SnackbarService;
         private readonly AppConfig _appConfig;
         private readonly WindowsManagerService _windowsManagerService;
+        private readonly IContentDialogService _contentDialogService;
 
-        public LoginViewModel(ILearnApiService learnApiService, ISnackbarService snackbarService, AppConfig appConfig, WindowsManagerService windowsManagerService)
+        public LoginViewModel(ILearnApiService learnApiService, ISnackbarService snackbarService, AppConfig appConfig, WindowsManagerService windowsManagerService, IContentDialogService contentDialogService)
         {
             _learnApiService = learnApiService ?? throw new ArgumentNullException(nameof(learnApiService));
             _SnackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
             _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
             _windowsManagerService = windowsManagerService ?? throw new ArgumentNullException(nameof(windowsManagerService));
+            _contentDialogService = contentDialogService ?? throw new ArgumentNullException(nameof(contentDialogService));
 
             PropertyChanged += (s, e) =>
             {
@@ -64,14 +67,16 @@ namespace iLearn.ViewModels.Windows
         [RelayCommand(CanExecute = nameof(CanLogin))]
         private async Task LoginAsync()
         {
+            if (IsAuthenticationInProgress) return;
+
             IsAuthenticationInProgress = true;
             try
             {
-                var rel = await _learnApiService.LoginAsync(UserName, UserPassword);
+                bool success = await _learnApiService.LoginAsync(UserName, UserPassword);
 
-                if (!rel)
+                if (!success)
                 {
-                    ShowSnackbar($"登录失败，用户名或密码错误");
+                    ShowSnackbar("登录失败，用户名或密码错误");
                     return;
                 }
 
@@ -81,28 +86,51 @@ namespace iLearn.ViewModels.Windows
                     _appConfig.UserPassword = UserPassword;
                     _appConfig.Save();
                 }
+
                 _windowsManagerService.Show<MainViewModel>();
                 _windowsManagerService.Close<LoginViewModel>();
             }
             catch (Exception ex)
             {
-                var sb = new StringBuilder();
-                while (ex != null)
-                {
-                    sb.AppendLine($"类型：{ex.GetType().Name}");
-                    sb.AppendLine($"消息：{ex.Message}");
-                    sb.AppendLine($"堆栈：{ex.StackTrace}");
-                    sb.AppendLine("------");
-                    ex = ex.InnerException;
-                }
-
-                System.Windows.MessageBox.Show(sb.ToString(), "登录错误");
+                _ = ShowLoginErrorDialogAsync(ex);
             }
             finally
             {
                 IsAuthenticationInProgress = false;
             }
         }
+
+        private async Task ShowLoginErrorDialogAsync(Exception ex)
+        {
+            if (ex is TaskCanceledException tcEx && !tcEx.CancellationToken.IsCancellationRequested)
+            {
+                await _contentDialogService.ShowSimpleDialogAsync(new SimpleContentDialogCreateOptions
+                {
+                    Title = "登录失败",
+                    Content = "请求超时，请检查网络连接或稍后重试。",
+                    CloseButtonText = "关闭"
+                });
+                return;
+            }
+
+            var sb = new StringBuilder();
+            while (ex != null)
+            {
+                sb.AppendLine($"类型：{ex.GetType().Name}");
+                sb.AppendLine($"消息：{ex.Message}");
+                sb.AppendLine($"堆栈：{ex.StackTrace}");
+                sb.AppendLine("------");
+                ex = ex.InnerException;
+            }
+
+            await _contentDialogService.ShowSimpleDialogAsync(new SimpleContentDialogCreateOptions
+            {
+                Title = "登录失败，请尝试联系开发者",
+                Content = sb.ToString(),
+                CloseButtonText = "关闭"
+            });
+        }
+
 
         private bool CanLogin() =>
             !IsAuthenticationInProgress &&
