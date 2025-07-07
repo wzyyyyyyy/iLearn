@@ -10,7 +10,7 @@ namespace iLearn.Services
 {
     public class ILearnApiService
     {
-        private HttpClient httpClient;
+        private RetryHttpClient httpClient;
         private const string CAS_URL = "https://cas.jlu.edu.cn/tpass/login";
         private CookieContainer CookieContainer;
         public bool Logined { get; private set; } = false;
@@ -29,7 +29,7 @@ namespace iLearn.Services
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             };
 
-            httpClient = new HttpClient(handler)
+            httpClient = new RetryHttpClient(handler)
             {
                 Timeout = TimeSpan.FromSeconds(10)
             };
@@ -161,20 +161,9 @@ namespace iLearn.Services
             if (!Logined)
                 throw new InvalidOperationException("Not logged in.");
 
-            var handler = new HttpClientHandler
-            {
-                CookieContainer = CookieContainer,
-                UseCookies = true
-            };
+            await httpClient.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/zhwk/selectLanguageExists?resourceId={resourceId}");
 
-            using var client = new HttpClient(handler)
-            {
-                Timeout = TimeSpan.FromSeconds(60)
-            };
-
-            await client.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/zhwk/selectLanguageExists?resourceId={resourceId}");
-
-            var response = await client.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/videoclass/videoClassInfo?resourceId={resourceId}");
+            var response = await httpClient.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/videoclass/videoClassInfo?resourceId={resourceId}");
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
