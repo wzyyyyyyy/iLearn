@@ -1,8 +1,4 @@
-﻿using Microsoft.Web.WebView2.Core;
-using System.Net.Http;
-using System.Threading.Tasks;
-
-namespace iLearn.ViewModels.Windows
+﻿namespace iLearn.ViewModels.Windows
 {
     public partial class VideoPlayerViewModel : ObservableObject
     {

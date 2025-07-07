@@ -1,6 +1,5 @@
 ﻿using iLearn.ViewModels.Windows;
 using Microsoft.Web.WebView2.Core;
-using System.Threading.Tasks;
 using Wpf.Ui.Controls;
 
 namespace iLearn.Views.Windows

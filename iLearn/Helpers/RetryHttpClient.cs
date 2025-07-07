@@ -1,7 +1,6 @@
 ﻿using Polly;
 using System.Net;
 using System.Net.Http;
-using Wpf.Ui.Controls;
 
 namespace iLearn.Helpers
 {

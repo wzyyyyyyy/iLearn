@@ -1,5 +1,5 @@
-﻿using iLearn.Services;
-using iLearn.Models;
+﻿using iLearn.Models;
+using iLearn.Services;
 using System.Collections.ObjectModel;
 using Wpf.Ui.Controls;
 

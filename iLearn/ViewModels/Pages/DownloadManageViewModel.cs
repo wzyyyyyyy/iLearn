@@ -1,8 +1,6 @@
-﻿using Downloader;
-using iLearn.Models;
+﻿using iLearn.Models;
 using iLearn.Services;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Threading;

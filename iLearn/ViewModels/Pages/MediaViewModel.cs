@@ -1,12 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using iLearn.Helpers.Messages;
 using iLearn.Models;
 using iLearn.Services;
 using iLearn.ViewModels.Windows;
 using System.Collections.ObjectModel;
-using System.Windows;
 using Wpf.Ui;
 
 namespace iLearn.ViewModels.Pages

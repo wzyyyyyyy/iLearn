@@ -1,7 +1,4 @@
 ﻿using iLearn.ViewModels.Pages;
-using System.Globalization;
-using System.Windows.Controls;
-using System.Windows.Data;
 using Wpf.Ui;
 using Wpf.Ui.Abstractions.Controls;
 
