@@ -13,6 +13,7 @@ namespace iLearn.Models
         public int MaxConcurrentDownloads { get; set; } = 3;
         public int ChunkCount { get; set; } = 8;
         public long SpeedLimitBytesPerSecond { get; set; } = 0; // 0 表示不限速
+        public string DownloadPath { get; set; } = Path.Combine(Environment.CurrentDirectory, "Downloads");
 
         private readonly string _filePath;
 
@@ -41,6 +42,7 @@ namespace iLearn.Models
                     MaxConcurrentDownloads = config.MaxConcurrentDownloads;
                     ChunkCount = config.ChunkCount;
                     SpeedLimitBytesPerSecond = config.SpeedLimitBytesPerSecond;
+                    DownloadPath = config.DownloadPath ?? Path.Combine(Environment.CurrentDirectory, "Downloads");
                 }
             }
         }

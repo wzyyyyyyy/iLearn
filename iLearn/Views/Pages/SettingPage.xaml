@@ -23,7 +23,52 @@
                     Margin="0,0,0,8"
                     FontTypography="BodyStrong"
                     Text="下载配置" />
-                
+
+                <ui:CardControl Margin="0,0,0,12" Icon="{ui:SymbolIcon FolderOpen24}">
+                    <ui:CardControl.Header>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ui:TextBlock
+                                Grid.Row="0"
+                                FontTypography="Body"
+                                Text="下载保存位置" />
+                            <ui:TextBlock
+                                Grid.Row="1"
+                                Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                Text="设置文件下载后的保存路径" />
+                        </Grid>
+                    </ui:CardControl.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ui:TextBox
+                            Grid.Column="0"
+                            Text="{Binding DownloadPath}"
+                            IsReadOnly="True"
+                            MaxWidth="400"
+                            Margin="0,0,8,0" />
+                        <ui:Button
+                            Grid.Column="1"
+                            Content="浏览"
+                            Icon="FolderOpen24"
+                            Command="{Binding BrowseDownloadPathCommand}"
+                            Appearance="Secondary"
+                            Margin="0,0,8,0" />
+                        <ui:Button
+                            Grid.Column="2"
+                            Content="打开"
+                            Icon="Open24"
+                            Command="{Binding OpenDownloadPathCommand}"
+                            Appearance="Secondary" />
+                    </Grid>
+                </ui:CardControl>
+
                 <ui:CardControl Margin="0,0,0,12" Icon="{ui:SymbolIcon ArrowDownload24}">
                     <ui:CardControl.Header>
                         <Grid>
@@ -202,7 +247,7 @@
                                 Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
                                 Text="382271046@qq.com" />
                         </Grid>
-                        
+
                         <ui:Anchor
                             Margin="0"
                             Padding="16"
@@ -221,7 +266,7 @@
                                 <ui:SymbolIcon Grid.Column="1" Symbol="Link24" />
                             </Grid>
                         </ui:Anchor>
-                        
+
                         <Grid Margin="16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -233,7 +278,7 @@
                                 Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
                                 Text="{Binding LastChecked}" />
                         </Grid>
-                        
+
                         <ui:Button
                             Margin="16,0,16,16"
                             HorizontalAlignment="Right"

@@ -1,5 +1,7 @@
 ﻿using iLearn.Models;
 using iLearn.Services;
+using Microsoft.Win32;
+using System.IO;
 using Wpf.Ui.Appearance;
 
 namespace iLearn.ViewModels.Pages
@@ -28,14 +30,18 @@ namespace iLearn.ViewModels.Pages
         [ObservableProperty]
         private double _speedLimitMBps;
 
+        [ObservableProperty]
+        private string _downloadPath = string.Empty;
+
         public SettingViewModel(AppConfig appConfig, VideoDownloadService downloadService)
         {
             _appConfig = appConfig;
             _downloadService = downloadService;
-            
+
             MaxConcurrentDownloads = _appConfig.MaxConcurrentDownloads;
             ChunkCount = _appConfig.ChunkCount;
             SpeedLimitMBps = _appConfig.SpeedLimitBytesPerSecond / (1024.0 * 1024.0);
+            DownloadPath = _appConfig.DownloadPath;
         }
 
         public string Theme
@@ -80,12 +86,46 @@ namespace iLearn.ViewModels.Pages
             }
         }
 
+        partial void OnDownloadPathChanged(string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value) && Directory.Exists(value))
+            {
+                _appConfig.DownloadPath = value;
+                _appConfig.Save();
+            }
+        }
+
+        [RelayCommand]
+        private void BrowseDownloadPath()
+        {
+            var dialog = new OpenFolderDialog
+            {
+                Title = "选择下载文件夹",
+                InitialDirectory = DownloadPath
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                DownloadPath = dialog.FolderName;
+            }
+        }
+
+        [RelayCommand]
+        private void OpenDownloadPath()
+        {
+            if (Directory.Exists(DownloadPath))
+            {
+                System.Diagnostics.Process.Start("explorer.exe", DownloadPath);
+            }
+        }
+
         [RelayCommand]
         private void ResetDownloadSettings()
         {
             MaxConcurrentDownloads = 3;
             ChunkCount = 8;
             SpeedLimitMBps = 0;
+            DownloadPath = Path.Combine(Environment.CurrentDirectory, "Downloads");
         }
 
         [RelayCommand]
