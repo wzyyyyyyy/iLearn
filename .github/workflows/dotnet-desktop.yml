@@ -1,0 +1,73 @@
+name: Build Debug & Release
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-debug:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Debug
+        run: dotnet build --configuration Debug --no-restore -v quiet
+
+      - name: Publish Debug
+        run: dotnet publish --configuration Debug --runtime win-x64 --output ./publish/debug
+
+      - name: Archive Debug
+        run: |
+          cd ./publish/debug
+          7z a -tzip "../../iLearn-Debug-${{ github.sha }}.zip" *
+
+      - name: Upload Debug Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iLearn-Debug-${{ github.sha }}
+          path: iLearn-Debug-${{ github.sha }}.zip
+          retention-days: 30
+
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build Release
+        run: dotnet build --configuration Release --no-restore -v quiet
+
+      - name: Publish Release
+        run: dotnet publish --configuration Release --runtime win-x64 --output ./publish/release
+
+      - name: Archive Release
+        run: |
+          cd ./publish/release
+          7z a -tzip "../../iLearn-Release-${{ github.sha }}.zip" *
+
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iLearn-Release-${{ github.sha }}
+          path: iLearn-Release-${{ github.sha }}.zip
+          retention-days: 30
