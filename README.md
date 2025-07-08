@@ -7,9 +7,9 @@
 > ⚠️ 本工具**不提供盗版内容**，仅用于改善已有平台的访问效率，适用于网络不佳或需要离线观看的用户。
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/02241d3d-7abb-4bc8-91f2-29f9ca2ca45a" alt="界面截图1" width="45%" />
+  <img src="https://github.com/user-attachments/assets/f9365add-28e6-4588-905e-ab51a45da9ac" alt="界面截图1" width="45%" />
   &nbsp;
-  <img src="https://github.com/user-attachments/assets/f6d99662-b320-4912-8845-cbf5afaca3f7" alt="界面截图2" width="45%" />
+  <img src="https://github.com/user-attachments/assets/f10d9431-ecf8-4d5b-a83b-f3ee277a4a82" alt="界面截图2" width="45%" />
 </p>
 
 ## 📜 免责声明
@@ -31,6 +31,16 @@
 
 6. **遵守当地法律法规**  
    使用本项目的用户须确保其行为符合所在国家或地区的法律法规。如果本项目在某些地区被认定为违法或侵权，请用户立即停止使用。
+
+## 使用方法
+
+### 1. 下载和安装
+
+在 [Action](https://github.com/wzyyyyyyy/iLearn/actions)或 [Release](https://github.com/wzyyyyyyy/iLearn/releases)下载最新版本的软件，并确保安装了 [.Net9](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/sdk-9.0.301-windows-x64-installer)。
+
+### 2. 解压并启动
+
+运行软件即可:)
 
 ## ✅ Todo List
 
