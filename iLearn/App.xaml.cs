@@ -38,10 +38,6 @@ namespace iLearn
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<MainViewModel>();
 
-                //video player
-                services.AddTransient<VideoPlayerWindow>();
-                services.AddTransient<VideoPlayerViewModel>();
-
                 //Pages
                 services.AddSingleton<CoursesPage>();
                 services.AddSingleton<CoursesViewModel>();
@@ -80,11 +76,6 @@ namespace iLearn
                         [typeof(MainViewModel)] = () =>
                         {
                             var win = sp.GetRequiredService<MainWindow>();
-                            win.Show();
-                        },
-                        [typeof(VideoPlayerViewModel)] = () =>
-                        {
-                            var win = sp.GetRequiredService<VideoPlayerWindow>();
                             win.Show();
                         },
                     };

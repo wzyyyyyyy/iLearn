@@ -85,7 +85,7 @@
                     <DataTemplate>
                         <ui:Card Style="{StaticResource MediaCardStyle}" Height="124">
                             <b:Interaction.Triggers>
-                                <b:EventTrigger EventName="Click">
+                                <b:EventTrigger EventName="MouseLeftButtonUp">
                                     <b:InvokeCommandAction Command="{Binding DataContext.OpenMediaCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" 
                                                           CommandParameter="{Binding}"/>
                                 </b:EventTrigger>

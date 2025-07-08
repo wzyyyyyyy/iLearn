@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <None Remove="Assets\iLearn.png" />
+    <None Remove="Assets\VideoPlayer.html" />
     <None Remove="iLearn-icon.ico" />
   </ItemGroup>
 
@@ -37,6 +38,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\iLearn.png" />
+    <Resource Include="Assets\VideoPlayer.html" />
   </ItemGroup>
 
   <ItemGroup>
