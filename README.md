@@ -3,6 +3,7 @@
 [![Stars](https://img.shields.io/github/stars/wzyyyyyyy/iLearn)](https://github.com/wzyyyyyyy/iLearn/stargazers)
 [![Build](https://github.com/wzyyyyyyy/iLearn/actions/workflows/dotnet-desktop.yml/badge.svg)](https://github.com/wzyyyyyyy/iLearn/actions)
 [![Downloads](https://img.shields.io/github/downloads/wzyyyyyyy/iLearn/total.svg)](https://github.com/wzyyyyyyy/iLearn/releases)
+[![CodeFactor](https://www.codefactor.io/repository/github/wzyyyyyyy/ilearn/badge)](https://www.codefactor.io/repository/github/wzyyyyyyy/ilearn)
 [![.NET](https://img.shields.io/badge/.NET-9.0-blue)](https://dotnet.microsoft.com/)
 
 
