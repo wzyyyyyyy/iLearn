@@ -1,9 +1,12 @@
 ![iLearn](https://socialify.git.ci/wzyyyyyyy/iLearn/image?custom_description=%E7%8E%B0%E4%BB%A3%E7%9A%84+FluentUI+%E9%A3%8E%E6%A0%BC%E7%9A%84%E5%AD%A6%E5%9C%A8%E5%90%89%E5%A4%A7%E5%AE%A2%E6%88%B7%E7%AB%AF%E3%80%82%0A&description=1&font=Inter&forks=1&issues=1&language=1&name=1&owner=1&pattern=Formal+Invitation&pulls=1&stargazers=1&theme=Auto)
-[![Stars](https://img.shields.io/github/stars/wzyyyyyyy/iLearn)](https://github.com/wzyyyyyyy/iLearn/stargazers)
-[![Build](https://github.com/wzyyyyyyy/iLearn/actions/workflows/dotnet-desktop.yml/badge.svg)](https://github.com/wzyyyyyyy/iLearn/actions)
-[![Downloads](https://img.shields.io/github/downloads/wzyyyyyyy/iLearn/total.svg)](https://github.com/wzyyyyyyy/iLearn/releases)
-[![CodeFactor](https://www.codefactor.io/repository/github/wzyyyyyyy/ilearn/badge)](https://www.codefactor.io/repository/github/wzyyyyyyy/ilearn)
-[![.NET](https://img.shields.io/badge/.NET-9.0-blue)](https://dotnet.microsoft.com/)
+<p align="center">
+  <img src="https://img.shields.io/github/stars/wzyyyyyyy/iLearn" />
+  <img src="https://github.com/wzyyyyyyy/iLearn/actions/workflows/dotnet-desktop.yml/badge.svg" />
+  <img src="https://img.shields.io/github/downloads/wzyyyyyyy/iLearn/total.svg" />
+  <img src="https://www.codefactor.io/repository/github/wzyyyyyyy/ilearn/badge" />
+  <img src="https://img.shields.io/badge/.NET-9.0-blue" />
+</p>
+
 
 ---
 
