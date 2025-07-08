@@ -32,6 +32,16 @@
 6. **遵守当地法律法规**  
    使用本项目的用户须确保其行为符合所在国家或地区的法律法规。如果本项目在某些地区被认定为违法或侵权，请用户立即停止使用。
 
+## 使用方法
+
+### 1. 下载和安装
+
+在 [Action](https://github.com/wzyyyyyyy/iLearn/actions)或 [Release](https://github.com/wzyyyyyyy/iLearn/releases)下载最新版本的软件，并确保安装了 [.Net9](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/sdk-9.0.301-windows-x64-installer)。
+
+### 2. 解压并启动
+
+运行软件即可:)
+
 ## ✅ Todo List
 
 以下是项目开发中的目标任务：
