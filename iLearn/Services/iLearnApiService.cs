@@ -31,7 +31,7 @@ namespace iLearn.Services
 
             httpClient = new RetryHttpClient(handler)
             {
-                Timeout = TimeSpan.FromSeconds(10)
+                Timeout = TimeSpan.FromSeconds(30)
             };
 
             httpClient.DefaultRequestHeaders.Add("Accept", "*/*");

@@ -15,26 +15,18 @@ namespace iLearn.Helpers
         }
     }
 
-    public class RetryHandler : DelegatingHandler
+    public class RetryHandler(HttpMessageHandler innerHandler = null) : DelegatingHandler(innerHandler ?? new HttpClientHandler())
     {
-        private readonly IAsyncPolicy<HttpResponseMessage> _retryPolicy;
+        private readonly IAsyncPolicy<HttpResponseMessage> _retryPolicy = Policy
+            .Handle<HttpRequestException>() 
+            .Or<TaskCanceledException>() 
+            .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode) 
+            .WaitAndRetryAsync(
+                retryCount: 5,
+                sleepDurationProvider: retryAttempt =>
+                    TimeSpan.FromMilliseconds(Math.Pow(4, retryAttempt)) +
+                    TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)));
 
-        public RetryHandler(HttpMessageHandler innerHandler = null) : base(innerHandler ?? new HttpClientHandler())
-        {
-            _retryPolicy = Policy
-                .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode &&
-                    (r.StatusCode == HttpStatusCode.RequestTimeout ||
-                     r.StatusCode == HttpStatusCode.InternalServerError ||
-                     r.StatusCode == HttpStatusCode.BadGateway ||
-                     r.StatusCode == HttpStatusCode.ServiceUnavailable ||
-                     r.StatusCode == HttpStatusCode.GatewayTimeout))
-                .Or<TaskCanceledException>()
-                .WaitAndRetryAsync(
-                    retryCount: 5,
-                    sleepDurationProvider: retryAttempt =>
-                        TimeSpan.FromMilliseconds(Math.Pow(4, retryAttempt)) +
-                        TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)));
-        }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
