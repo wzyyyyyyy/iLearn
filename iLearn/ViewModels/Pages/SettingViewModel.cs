@@ -2,6 +2,8 @@
 using iLearn.Services;
 using Microsoft.Win32;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using Wpf.Ui.Appearance;
 
 namespace iLearn.ViewModels.Pages
@@ -131,9 +133,29 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private async Task CheckForUpdates()
         {
-            await Task.Delay(1500);
-            LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            MessageBox.Show("您当前使用的已经是最新版本。", "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                HttpClient httpClient = new();
+                var request = await httpClient.GetAsync("https://raw.githubusercontent.com/wzyyyyyyy/iLearn/refs/heads/master/iLearn/Assets/version.txt");
+                request.EnsureSuccessStatusCode();
+                var latestVersion = await request.Content.ReadAsStringAsync();
+
+                if (string.IsNullOrWhiteSpace(latestVersion) || latestVersion == GetAppVersion())
+                {
+                    MessageBox.Show("您当前使用的已经是最新版本。", "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                MessageBox.Show($"发现新版本:{latestVersion}", "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"检查更新失败: {ex.Message}", "检查更新", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            }
         }
 
         private static string GetCurrentTheme()
