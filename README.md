@@ -7,9 +7,9 @@
 > ⚠️ 本工具**不提供盗版内容**，仅用于改善已有平台的访问效率，适用于网络不佳或需要离线观看的用户。
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/02241d3d-7abb-4bc8-91f2-29f9ca2ca45a" alt="界面截图1" width="45%" />
+  <img src="https://github.com/user-attachments/assets/f9365add-28e6-4588-905e-ab51a45da9ac" alt="界面截图1" width="45%" />
   &nbsp;
-  <img src="https://github.com/user-attachments/assets/f6d99662-b320-4912-8845-cbf5afaca3f7" alt="界面截图2" width="45%" />
+  <img src="https://github.com/user-attachments/assets/f10d9431-ecf8-4d5b-a83b-f3ee277a4a82" alt="界面截图2" width="45%" />
 </p>
 
 ## 📜 免责声明
