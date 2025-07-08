@@ -40,22 +40,6 @@ OutputBaseFilename=mysetup
 SolidCompression=yes
 WizardStyle=modern
 
-[Code]
-function IsDotNetInstalled(): Boolean;
-begin
-  // 可自定义检查注册表或用工具辅助
-  Result := RegKeyExists(HKLM, 'SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedhost');
-end;
-
-function InitializeSetup(): Boolean;
-begin
-  if not IsDotNetInstalled() then begin
-    MsgBox('请先安装 .NET 9.0 运行时。', mbError, MB_OK);
-    Result := False;
-  end else
-    Result := True;
-end;
-
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
@@ -63,12 +47,12 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\WZY\source\repos\iLearn\iLearn\bin\Release\net9.0-windows\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\WZY\source\repos\iLearn\iLearn\bin\Release\net9.0-windows\iLearn.deps.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\WZY\source\repos\iLearn\iLearn\bin\Release\net9.0-windows\iLearn.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\WZY\source\repos\iLearn\iLearn\bin\Release\net9.0-windows\iLearn.pdb"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\WZY\source\repos\iLearn\iLearn\bin\Release\net9.0-windows\iLearn.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\WZY\source\repos\iLearn\iLearn\bin\Release\net9.0-windows\runtimes\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\iLearn\bin\Release\net9.0-windows\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\iLearn\bin\Release\net9.0-windows\iLearn.deps.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\iLearn\bin\Release\net9.0-windows\iLearn.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\iLearn\bin\Release\net9.0-windows\iLearn.pdb"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\iLearn\bin\Release\net9.0-windows\iLearn.runtimeconfig.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\iLearn\bin\Release\net9.0-windows\runtimes\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
@@ -83,4 +67,3 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-
