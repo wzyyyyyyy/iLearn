@@ -108,13 +108,6 @@ jobs:
           }
         shell: powershell
 
-      - name: Update Inno Setup Script paths
-        run: |
-          $issContent = Get-Content "./iLearn/iLearnSetup/build.iss"
-          $issContent = $issContent -replace "C:\\Users\\WZY\\source\\repos\\iLearn\\iLearn\\Assets\\License\.rtf", "Assets\License.rtf"
-          $issContent = $issContent -replace "\.\.\\iLearn\\bin\\Release\\net9\.0-windows\\", "..\iLearn\bin\Release\net9.0-windows\"
-          $issContent | Set-Content "./iLearn/iLearnSetup/build.iss"
-        shell: powershell
 
       - name: Inno Setup
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
