@@ -99,8 +99,8 @@ jobs:
           (Get-Content $issFile -Raw) -replace 'LicenseFile=C:.*License\.rtf', 'LicenseFile=..\Assets\License.rtf' `
                                       -replace 'Source: "..\\iLearn\\bin\\', 'Source: "..\\bin\\' | Set-Content -Path $issFile
 
-      - name: Compile installer with Inno Setup
-        uses: crazy-max/ghaction-innosetup@v3
+      - name: Inno Setup
+        uses: crazy-max/ghaction-innosetup@v2
         with:
           script: ./iLearn/iLearnSetup/build.iss
 
