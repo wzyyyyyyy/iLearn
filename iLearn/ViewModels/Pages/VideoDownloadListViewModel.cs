@@ -13,6 +13,7 @@ namespace iLearn.ViewModels.Pages
         private readonly VideoDownloadService _downloadService;
         private readonly ILearnApiService _iLearnApiService;
         private readonly ISnackbarService _snackbarService;
+        private readonly AppConfig _appConfig;
         private bool _isUpdatingAllSelected = false; // 添加标志位防止循环触发
 
         [ObservableProperty]
@@ -38,11 +39,13 @@ namespace iLearn.ViewModels.Pages
             List<LiveAndRecordInfo> liveAndRecordInfos,
             VideoDownloadService downloadService,
             ILearnApiService iLearnApiService,
-            ISnackbarService snackbarService)
+            ISnackbarService snackbarService,
+            AppConfig appConfig)
         {
             _downloadService = downloadService;
             _iLearnApiService = iLearnApiService;
             _snackbarService = snackbarService;
+            _appConfig = appConfig;
 
             Videos = new ObservableCollection<LiveAndRecordInfo>(liveAndRecordInfos ?? new List<LiveAndRecordInfo>());
 
@@ -153,7 +156,7 @@ namespace iLearn.ViewModels.Pages
 
             ShowSnackbar(
                 "开始下载",
-                $"正在准备下载 {totalSelectedCount} 个视频文件",
+                $"正在准备下载 {totalSelectedCount} 个文件",
                 ControlAppearance.Success);
 
             foreach (var video in hdmiSelectedVideos)
@@ -169,7 +172,7 @@ namespace iLearn.ViewModels.Pages
 
         private async Task DownloadVideoAsync(LiveAndRecordInfo video, string perspective)
         {
-            var folder = Path.Combine(System.Environment.CurrentDirectory, "Downloads");
+            var folder = _appConfig.DownloadPath;
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
@@ -212,7 +215,7 @@ namespace iLearn.ViewModels.Pages
         private void DownloadSubtitle(VideoInfo videoInfo) {
             var url = videoInfo.PhaseUrl;
             var fileName = SanitizeFileName(videoInfo.ResourceName) + ".vtt";
-            var folder = Path.Combine(System.Environment.CurrentDirectory, "Downloads", "Subtitles");
+            var folder = Path.Combine(_appConfig.DownloadPath, "Subtitles");
 
             _ = _downloadService.StartDownloadAsync(url, fileName, folder).ConfigureAwait(false);
         }
