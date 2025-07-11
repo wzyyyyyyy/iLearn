@@ -71,3 +71,47 @@ jobs:
           name: iLearn-Release-${{ github.sha }}
           path: iLearn-Release-${{ github.sha }}.zip
           retention-days: 30
+
+  build-installer:
+    name: Build Installer
+    runs-on: windows-latest
+    needs: build-release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore ./iLearn
+
+      - name: Build Release Project
+        run: dotnet build ./iLearn --configuration Release --no-restore -v quiet
+
+      - name: Correct paths in Inno Setup script
+        shell: pwsh
+        run: |
+          $issFile = "./iLearn/iLearnSetup/build.iss"
+          (Get-Content $issFile -Raw) -replace 'LicenseFile=C:.*License\.rtf', 'LicenseFile=..\Assets\License.rtf' `
+                                      -replace 'Source: "..\\iLearn\\bin\\', 'Source: "..\\bin\\' | Set-Content -Path $issFile
+
+      - name: Compile installer with Inno Setup
+        uses: crazy-max/ghaction-innosetup@v3
+        with:
+          script: ./iLearn/iLearnSetup/build.iss
+
+      - name: Archive Installer
+        run: |
+          cd ./iLearn/iLearnSetup/Output
+          7z a -tzip "../../../iLearn-Installer-${{ github.sha }}.zip" *
+
+      - name: Upload Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iLearn-Installer-${{ github.sha }}
+          path: iLearn-Installer-${{ github.sha }}.zip
+          retention-days: 30
