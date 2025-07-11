@@ -92,13 +92,6 @@ jobs:
       - name: Build Release Project
         run: dotnet build ./iLearn --configuration Release --no-restore -v quiet
 
-      - name: Correct paths in Inno Setup script
-        shell: pwsh
-        run: |
-          $issFile = "./iLearn/iLearnSetup/build.iss"
-          (Get-Content $issFile -Raw) -replace 'LicenseFile=C:.*License\.rtf', 'LicenseFile=..\Assets\License.rtf' `
-                                      -replace 'Source: "..\\iLearn\\bin\\', 'Source: "..\\bin\\' | Set-Content -Path $issFile
-
       - name: Inno Setup
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
         with:
