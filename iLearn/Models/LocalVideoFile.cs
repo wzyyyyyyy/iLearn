@@ -88,14 +88,6 @@ namespace iLearn.Models
             };
         }
 
-        public string GetSubtitleFilePath()
-        {
-            var subtitlePath = FullPath.Replace(Path.GetExtension(FullPath), ".vtt")
-                                 .Replace("_HDMI", "")
-                                 .Replace("_ΩÃ ¶", "");
-            return File.Exists(subtitlePath) ? subtitlePath : string.Empty;
-        }
-
         public static LocalVideoFile FromFileName(string filePath)
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);

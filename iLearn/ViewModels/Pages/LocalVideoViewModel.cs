@@ -230,11 +230,7 @@ namespace iLearn.ViewModels.Pages
             if (partnerVideo != null)
                 content = content.Replace("_RIGHTVIDEO_", partnerVideo.FullPath);
 
-            var subtitlePath = video.GetSubtitleFilePath();
-            if (!string.IsNullOrEmpty(subtitlePath))
-                content = content.Replace("_SUBTITLE_", subtitlePath);
-            
-            string tempFile = Path.Combine(Path.GetTempPath(), $"video_preview_{Guid.NewGuid()}.html");
+            string tempFile = Path.Combine(Path.GetTempPath(), $"video_local_{Guid.NewGuid()}.html");
             await File.WriteAllTextAsync(tempFile, content);
 
             using var process = new System.Diagnostics.Process();

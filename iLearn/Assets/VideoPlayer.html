@@ -241,7 +241,7 @@
                 opacity: 0;
             }
 
-        #play-pause-btn, #fullscreen-btn, #subtitle-toggle-btn, #subtitle-nav-toggle-btn {
+        #play-pause-btn, #fullscreen-btn, #subtitle-toggle-btn, #subtitle-nav-toggle-btn, #load-local-subtitle-btn {
             background: var(--glass-bg);
             border: none;
             color: white;
@@ -252,16 +252,17 @@
             backdrop-filter: blur(10px);
         }
 
-            #play-pause-btn:hover, #fullscreen-btn:hover, #subtitle-toggle-btn:hover, #subtitle-nav-toggle-btn:hover {
+            #play-pause-btn:hover, #fullscreen-btn:hover, #subtitle-toggle-btn:hover, #subtitle-nav-toggle-btn:hover, #load-local-subtitle-btn:hover {
                 background: rgba(255, 255, 255, 0.15);
                 transform: scale(1.05);
             }
 
-            #play-pause-btn svg, #fullscreen-btn svg, #subtitle-toggle-btn svg, #subtitle-nav-toggle-btn svg {
+            #play-pause-btn svg, #fullscreen-btn svg, #subtitle-toggle-btn svg, #subtitle-nav-toggle-btn svg, #load-local-subtitle-btn svg {
                 width: 20px;
                 height: 20px;
                 fill: white;
                 transition: fill 0.2s ease;
+                display: block; /* Ensures proper alignment */
             }
 
             #subtitle-toggle-btn.active svg, #subtitle-nav-toggle-btn.active svg {
@@ -755,6 +756,13 @@
                     <option value="2.5">2.5x</option>
                     <option value="3">3.0x</option>
                 </select>
+                
+                <!-- New button to load local subtitles -->
+                <button id="load-local-subtitle-btn" title="加载本地字幕文件 (.vtt)">
+                    <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-8-8-8 8h4v6zm-4 2h14v2H5v-2z"></path></svg>
+                </button>
+                <input type="file" id="local-subtitle-input" accept=".vtt" style="display: none;">
+                
                 <button id="subtitle-toggle-btn" title="字幕开/关 (S键)">
                     <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"></path></svg>
                 </button>
@@ -789,6 +797,7 @@
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // --- DOM Element References ---
             const playerContainer = document.querySelector('.player-container');
             const playerArea = document.getElementById('player-area');
             const modeButtons = document.querySelectorAll('.mode-btn');
@@ -810,14 +819,19 @@
             const subtitleNavToggleBtn = document.getElementById('subtitle-nav-toggle-btn');
             const subtitleNavClose = document.getElementById('subtitle-nav-close');
             const subtitleList = document.getElementById('subtitle-list');
+            
+            // --- New Elements for Local Subtitle Loading ---
+            const loadLocalSubtitleBtn = document.getElementById('load-local-subtitle-btn');
+            const localSubtitleInput = document.getElementById('local-subtitle-input');
 
-            // 字幕搜索相关元素
+            // --- Subtitle Search Elements ---
             const subtitleSearchInput = document.getElementById('subtitle-search-input');
             const searchPrevBtn = document.getElementById('search-prev-btn');
             const searchNextBtn = document.getElementById('search-next-btn');
             const searchClearBtn = document.getElementById('search-clear-btn');
             const searchCount = document.getElementById('search-count');
 
+            // --- State Variables ---
             let playerLeft, playerRight;
             let currentMode = 'both';
             let activePlayerForUI;
@@ -831,20 +845,21 @@
             let searchResults = [];
             let currentSearchIndex = -1;
             let searchQuery = '';
-
-            const SYNC_THRESHOLD = 0.1;
-            const SYNC_CHECK_INTERVAL = 200;
-
             let shortcutsHintTimeout;
             let controlsTimeout;
             let isControlsVisible = true;
             let isMouseOverControls = false;
+
+            // --- Constants ---
+            const SYNC_THRESHOLD = 0.1;
+            const SYNC_CHECK_INTERVAL = 200;
             const CONTROLS_HIDE_DELAY = 3000;
 
+            // --- Player Initialization ---
             playerLeft = videojs('video-left', { controls: false, fluid: true });
             playerRight = videojs('video-right', { controls: false, fluid: true, muted: true });
 
-            // 字幕搜索功能
+            // --- Subtitle Search Functions ---
             const performSearch = (query) => {
                 searchQuery = query.toLowerCase().trim();
                 searchResults = [];
@@ -857,8 +872,6 @@
                     return;
                 }
 
-                // 搜索匹配的字幕
-                searchResults = [];
                 subtitles.forEach((subtitle, index) => {
                     if (subtitle.text.toLowerCase().includes(searchQuery)) {
                         searchResults.push({ subtitle, originalIndex: index, resultIndex: searchResults.length });
@@ -907,16 +920,8 @@
                 const subtitleItem = subtitleList.querySelector(`[data-search-index="${index}"]`);
 
                 if (subtitleItem) {
-                    // 滚动到搜索结果
-                    subtitleItem.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-
-                    // 高亮显示
-                    subtitleList.querySelectorAll('.search-match').forEach(item => {
-                        item.classList.remove('search-match');
-                    });
+                    subtitleItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    subtitleList.querySelectorAll('.search-match').forEach(item => item.classList.remove('search-match'));
                     subtitleItem.classList.add('search-match');
                 }
 
@@ -925,30 +930,18 @@
 
             const navigateSearch = (direction) => {
                 if (searchResults.length === 0) return;
-
                 let newIndex = currentSearchIndex + direction;
                 if (newIndex < 0) newIndex = searchResults.length - 1;
                 if (newIndex >= searchResults.length) newIndex = 0;
-
                 highlightSearchResult(newIndex);
             };
 
             const clearSearch = () => {
                 subtitleSearchInput.value = '';
-                searchQuery = '';
-                searchResults = [];
-                currentSearchIndex = -1;
-                filteredSubtitles = [...subtitles];
-
-                // 清除所有搜索高亮
-                subtitleList.querySelectorAll('.search-match').forEach(item => {
-                    item.classList.remove('search-match');
-                });
-
-                updateSearchUI();
-                renderSubtitleNavigation();
+                performSearch('');
             };
 
+            // --- Subtitle Navigation Functions ---
             const toggleSubtitleNavigation = () => {
                 subtitleNavVisible = !subtitleNavVisible;
                 subtitleNavToggleBtn.classList.toggle('active', subtitleNavVisible);
@@ -956,10 +949,7 @@
 
                 if (subtitleNavVisible) {
                     renderSubtitleNavigation();
-                    // 聚焦搜索框
-                    setTimeout(() => {
-                        subtitleSearchInput.focus();
-                    }, 300);
+                    setTimeout(() => subtitleSearchInput.focus(), 300);
                 }
             };
 
@@ -970,29 +960,20 @@
                 }
 
                 const subtitlesToRender = searchQuery ? filteredSubtitles : subtitles;
-
                 const subtitleItems = subtitlesToRender.map((subtitle, index) => {
-                    const originalIndex = searchQuery ?
-                        searchResults.find(result => result.subtitle === subtitle)?.originalIndex || index :
-                        index;
-                    const searchIndex = searchQuery ?
-                        searchResults.find(result => result.subtitle === subtitle)?.resultIndex || -1 :
-                        -1;
-
+                    const originalIndex = searchQuery ? searchResults.find(r => r.subtitle === subtitle)?.originalIndex ?? -1 : index;
+                    const searchIndex = searchQuery ? searchResults.find(r => r.subtitle === subtitle)?.resultIndex ?? -1 : -1;
                     const startTime = formatTime(subtitle.start);
-                    const highlightedText = searchQuery ?
-                        highlightText(subtitle.text, searchQuery) :
-                        subtitle.text;
+                    const highlightedText = searchQuery ? highlightText(subtitle.text, searchQuery) : subtitle.text;
 
                     return `
-                                <div class="subtitle-item"
-                                     data-index="${originalIndex}"
-                                     data-search-index="${searchIndex}"
-                                     data-time="${subtitle.start}">
-                                    <div class="subtitle-time">${startTime}</div>
-                                    <div class="subtitle-text">${highlightedText}</div>
-                                </div>
-                            `;
+                        <div class="subtitle-item"
+                             data-index="${originalIndex}"
+                             data-search-index="${searchIndex}"
+                             data-time="${subtitle.start}">
+                            <div class="subtitle-time">${startTime}</div>
+                            <div class="subtitle-text">${highlightedText.replace(/\n/g, '<br>')}</div>
+                        </div>`;
                 }).join('');
 
                 subtitleList.innerHTML = subtitleItems;
@@ -1005,12 +986,10 @@
                     });
                 });
             };
-
+            
             const jumpToTime = (time) => {
                 if (!activePlayerForUI || isNaN(activePlayerForUI.duration())) return;
-
                 const clampedTime = Math.max(0, Math.min(activePlayerForUI.duration(), time));
-
                 isSeeking = true;
                 if (currentMode === 'both') {
                     playerLeft.currentTime(clampedTime);
@@ -1022,41 +1001,30 @@
             };
 
             const updateActiveSubtitle = () => {
-                if (!subtitleNavVisible || !activePlayerForUI || subtitles.length === 0) {
-                    return;
-                }
+                if (!subtitleNavVisible || !activePlayerForUI || subtitles.length === 0) return;
 
                 const currentTime = activePlayerForUI.currentTime();
-                const newActiveIndex = subtitles.findIndex(sub =>
-                    currentTime >= sub.start && currentTime <= sub.end
-                );
+                const newActiveIndex = subtitles.findIndex(sub => currentTime >= sub.start && currentTime <= sub.end);
 
                 if (newActiveIndex !== currentActiveSubtitleIndex) {
                     if (currentActiveSubtitleIndex >= 0) {
                         const prevItem = subtitleList.querySelector(`[data-index="${currentActiveSubtitleIndex}"]`);
-                        if (prevItem) {
-                            prevItem.classList.remove('active');
-                        }
+                        if (prevItem) prevItem.classList.remove('active');
                     }
-
                     if (newActiveIndex >= 0) {
                         const newItem = subtitleList.querySelector(`[data-index="${newActiveIndex}"]`);
                         if (newItem) {
                             newItem.classList.add('active');
-                            // 滚动到当前字幕（非搜索模式下）
                             if (!searchQuery) {
-                                newItem.scrollIntoView({
-                                    behavior: 'smooth',
-                                    block: 'nearest'
-                                });
+                                newItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                             }
                         }
                     }
-
                     currentActiveSubtitleIndex = newActiveIndex;
                 }
             };
 
+            // --- UI Control Functions ---
             const showControls = () => {
                 if (!isControlsVisible) {
                     unifiedControls.classList.remove('hidden');
@@ -1083,14 +1051,6 @@
                 }
             };
 
-            const handleMouseMove = () => {
-                showControls();
-            };
-
-            const handleMouseLeave = () => {
-                resetControlsTimer();
-            };
-
             const showShortcutsHint = () => {
                 shortcutsHint.classList.add('visible');
                 clearTimeout(shortcutsHintTimeout);
@@ -1099,16 +1059,12 @@
                 }, 2000);
             };
 
+            // --- Keyboard and Mouse Control Handlers ---
             const handleKeydown = (event) => {
-                // 如果焦点在搜索输入框上，特殊处理
                 if (event.target === subtitleSearchInput) {
                     if (event.key === 'Enter') {
                         event.preventDefault();
-                        if (event.shiftKey) {
-                            navigateSearch(-1); // Shift+Enter 上一个
-                        } else {
-                            navigateSearch(1); // Enter 下一个
-                        }
+                        navigateSearch(event.shiftKey ? -1 : 1);
                     } else if (event.key === 'Escape') {
                         event.preventDefault();
                         clearSearch();
@@ -1116,108 +1072,29 @@
                     }
                     return;
                 }
-
-                if (event.target === playbackRateSelector) {
-                    return;
+                if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'BUTTON') {
+                    if (event.key !== ' ' && event.key !== 'Escape') return;
                 }
-
-                if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') {
-                    return;
-                }
-
+                
                 const playerToControl = activePlayerForUI || playerLeft;
                 if (!playerToControl || isNaN(playerToControl.duration())) return;
 
                 let handled = false;
-
-                switch (event.key) {
-                    case ' ':
-                        event.preventDefault();
-                        handlePlayPause();
-                        showShortcutsHint();
-                        showControls();
-                        handled = true;
-                        break;
-
-                    case 'ArrowLeft':
-                        event.preventDefault();
-                        const rewindTime = event.shiftKey ? 30 : 5;
-                        seekBySeconds(-rewindTime);
-                        showShortcutsHint();
-                        showControls();
-                        handled = true;
-                        break;
-
-                    case 'ArrowRight':
-                        event.preventDefault();
-                        const forwardTime = event.shiftKey ? 30 : 5;
-                        seekBySeconds(forwardTime);
-                        showShortcutsHint();
-                        showControls();
-                        handled = true;
-                        break;
-
-                    case 'ArrowUp':
-                        event.preventDefault();
-                        adjustVolume(0.1);
-                        showShortcutsHint();
-                        showControls();
-                        handled = true;
-                        break;
-
-                    case 'ArrowDown':
-                        event.preventDefault();
-                        adjustVolume(-0.1);
-                        showShortcutsHint();
-                        showControls();
-                        handled = true;
-                        break;
-
-                    case 'f':
-                    case 'F':
-                        if (!event.ctrlKey) {
-                            event.preventDefault();
-                            handleFullscreen();
-                            showShortcutsHint();
-                            showControls();
-                            handled = true;
-                        }
-                        break;
-
-                    case 's':
-                    case 'S':
-                        event.preventDefault();
-                        toggleSubtitles();
-                        showShortcutsHint();
-                        showControls();
-                        handled = true;
-                        break;
-
-                    case 'n':
-                    case 'N':
-                        event.preventDefault();
-                        toggleSubtitleNavigation();
-                        showShortcutsHint();
-                        showControls();
-                        handled = true;
-                        break;
-
-                    case 'm':
-                    case 'M':
-                        event.preventDefault();
-                        toggleMute();
-                        showShortcutsHint();
-                        showControls();
-                        handled = true;
-                        break;
+                switch (event.key.toLowerCase()) {
+                    case ' ': event.preventDefault(); handlePlayPause(); handled = true; break;
+                    case 'arrowleft': event.preventDefault(); seekBySeconds(event.shiftKey ? -30 : -5); handled = true; break;
+                    case 'arrowright': event.preventDefault(); seekBySeconds(event.shiftKey ? 30 : 5); handled = true; break;
+                    case 'arrowup': event.preventDefault(); adjustVolume(0.1); handled = true; break;
+                    case 'arrowdown': event.preventDefault(); adjustVolume(-0.1); handled = true; break;
+                    case 'f': if (!event.ctrlKey) { event.preventDefault(); handleFullscreen(); handled = true; } break;
+                    case 's': event.preventDefault(); toggleSubtitles(); handled = true; break;
+                    case 'n': event.preventDefault(); toggleSubtitleNavigation(); handled = true; break;
+                    case 'm': event.preventDefault(); toggleMute(); handled = true; break;
                 }
 
-                // Ctrl+F - 聚焦搜索框
                 if (event.ctrlKey && event.key.toLowerCase() === 'f') {
                     event.preventDefault();
-                    if (!subtitleNavVisible) {
-                        toggleSubtitleNavigation();
-                    }
+                    if (!subtitleNavVisible) toggleSubtitleNavigation();
                     setTimeout(() => {
                         subtitleSearchInput.focus();
                         subtitleSearchInput.select();
@@ -1226,42 +1103,17 @@
                 }
 
                 if (handled) {
+                    showShortcutsHint();
+                    showControls();
                     playerContainer.focus();
                 }
             };
-
-            const handleWheel = (event) => {
-                event.preventDefault();
-
-                const delta = event.deltaY > 0 ? -1 : 1;
-
-                if (event.shiftKey) {
-                    const seekAmount = delta * 5;
-                    seekBySeconds(seekAmount);
-                } else {
-                    const volumeAmount = delta * 0.05;
-                    adjustVolume(volumeAmount);
-                }
-
-                showShortcutsHint();
-                showControls();
-            };
-
+            
             const seekBySeconds = (seconds) => {
                 const playerToControl = activePlayerForUI || playerLeft;
                 if (!playerToControl || isNaN(playerToControl.duration())) return;
-
-                const currentTime = playerToControl.currentTime();
-                const newTime = Math.max(0, Math.min(playerToControl.duration(), currentTime + seconds));
-
-                isSeeking = true;
-                if (currentMode === 'both') {
-                    playerLeft.currentTime(newTime);
-                    playerRight.currentTime(newTime);
-                } else {
-                    playerToControl.currentTime(newTime);
-                }
-                setTimeout(() => { isSeeking = false; }, 100);
+                const newTime = Math.max(0, Math.min(playerToControl.duration(), playerToControl.currentTime() + seconds));
+                jumpToTime(newTime);
             };
 
             const adjustVolume = (delta) => {
@@ -1277,120 +1129,84 @@
                     volumeBar.dataset.lastVolume = currentVolume;
                     volumeBar.value = 0;
                 } else {
-                    const lastVolume = volumeBar.dataset.lastVolume || 1;
-                    volumeBar.value = lastVolume;
+                    volumeBar.value = volumeBar.dataset.lastVolume || 1;
                 }
                 handleVolumeChange();
             };
 
-            const loadSubtitles = async (subtitleUrl) => {
+            // --- Subtitle Loading and Parsing ---
+            const loadSubtitlesFromUrl = async (subtitleUrl) => {
                 subtitleStatus.textContent = '加载中...';
                 subtitleStatus.className = 'subtitle-status';
 
-                if (!subtitleUrl) {
+                if (!subtitleUrl || subtitleUrl === '_SUBTITLE_') {
                     subtitles = [];
                     filteredSubtitles = [];
                     subtitleStatus.textContent = '无字幕';
                     subtitleStatus.className = 'subtitle-status';
+                    renderSubtitleNavigation();
                     return;
                 }
 
                 try {
                     const response = await fetch(subtitleUrl);
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const subtitleText = await response.text();
-                    subtitles = parseVTT(subtitleText);
-                    filteredSubtitles = [...subtitles];
-
-                    if (subtitles.length > 0) {
-                        subtitleStatus.textContent = `已加载 ${subtitles.length} 条字幕`;
-                        subtitleStatus.className = 'subtitle-status loaded';
-
-                        if (subtitleNavVisible) {
-                            renderSubtitleNavigation();
-                        }
-                    } else {
-                        subtitleStatus.textContent = '字幕格式错误';
-                        subtitleStatus.className = 'subtitle-status error';
-                    }
+                    processSubtitleText(subtitleText);
                 } catch (error) {
                     subtitles = [];
                     filteredSubtitles = [];
                     subtitleStatus.textContent = '字幕加载失败';
                     subtitleStatus.className = 'subtitle-status error';
+                    console.error("Error loading subtitle from URL:", error);
+                    renderSubtitleNavigation();
                 }
+            };
+            
+            const processSubtitleText = (text) => {
+                subtitles = parseVTT(text);
+                filteredSubtitles = [...subtitles];
+                clearSearch(); // Clear previous search results
+                if (subtitles.length > 0) {
+                    subtitleStatus.textContent = `已加载 ${subtitles.length} 条字幕`;
+                    subtitleStatus.className = 'subtitle-status loaded';
+                } else {
+                    subtitleStatus.textContent = '字幕格式错误';
+                    subtitleStatus.className = 'subtitle-status error';
+                }
+                renderSubtitleNavigation();
+                updateSubtitles();
             };
 
             const parseVTT = (vttText) => {
                 const lines = vttText.split(/\r?\n/);
                 const parsedSubtitles = [];
-                let currentSubtitle = null;
-                let state = 'header';
-
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-
-                    if (line.startsWith('WEBVTT')) {
-                        state = 'header';
-                        continue;
-                    }
-
-                    if (line === '' || line.startsWith('NOTE')) {
-                        if (currentSubtitle && currentSubtitle.text) {
-                            parsedSubtitles.push(currentSubtitle);
-                            currentSubtitle = null;
+                let i = 0;
+                while (i < lines.length) {
+                    if (lines[i].includes('-->')) {
+                        const timeParts = lines[i].split('-->');
+                        const start = parseTimeCode(timeParts[0]);
+                        const end = parseTimeCode(timeParts[1]);
+                        let textLines = [];
+                        i++;
+                        while (i < lines.length && lines[i].trim() !== '') {
+                            textLines.push(lines[i].trim());
+                            i++;
                         }
-                        state = 'header';
-                        continue;
-                    }
-
-                    if (line.includes('-->')) {
-                        if (currentSubtitle && currentSubtitle.text) {
-                            parsedSubtitles.push(currentSubtitle);
-                        }
-
-                        const timeParts = line.split('-->');
-                        if (timeParts.length >= 2) {
-                            const startTime = timeParts[0].trim();
-                            const endParts = timeParts[1].trim().split(/\s+/);
-                            const endTime = endParts[0];
-
-                            currentSubtitle = {
-                                start: parseTimeCode(startTime),
-                                end: parseTimeCode(endTime),
-                                text: ''
-                            };
-                            state = 'cue';
+                        if (textLines.length > 0) {
+                            parsedSubtitles.push({ start, end, text: textLines.join('\n') });
                         }
                     }
-                    else if (currentSubtitle && state === 'cue') {
-                        if (!/^\d+$/.test(line)) {
-                            currentSubtitle.text += (currentSubtitle.text ? '\n' : '') + line;
-                            state = 'text';
-                        }
-                    }
-                    else if (currentSubtitle && state === 'text') {
-                        currentSubtitle.text += '\n' + line;
-                    }
+                    i++;
                 }
-
-                if (currentSubtitle && currentSubtitle.text) {
-                    parsedSubtitles.push(currentSubtitle);
-                }
-
                 return parsedSubtitles;
             };
 
             const parseTimeCode = (timeString) => {
                 try {
-                    const cleanTime = timeString.replace(',', '.');
+                    const cleanTime = timeString.replace(',', '.').trim();
                     const parts = cleanTime.split(':');
                     let seconds = 0;
-
                     if (parts.length === 3) {
                         seconds = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseFloat(parts[2]);
                     } else if (parts.length === 2) {
@@ -1398,8 +1214,7 @@
                     } else if (parts.length === 1) {
                         seconds = parseFloat(parts[0]);
                     }
-
-                    return seconds;
+                    return isNaN(seconds) ? 0 : seconds;
                 } catch (error) {
                     return 0;
                 }
@@ -1410,32 +1225,28 @@
                     subtitleOverlay.classList.remove('visible');
                     return;
                 }
-
                 const currentTime = activePlayerForUI.currentTime();
-                const currentSubtitle = subtitles.find(sub =>
-                    currentTime >= sub.start && currentTime <= sub.end
-                );
-
+                const currentSubtitle = subtitles.find(sub => currentTime >= sub.start && currentTime <= sub.end);
                 if (currentSubtitle) {
-                    subtitleOverlay.textContent = currentSubtitle.text;
+                    subtitleOverlay.innerHTML = currentSubtitle.text.replace(/\n/g, '<br>');
                     subtitleOverlay.classList.add('visible');
                 } else {
                     subtitleOverlay.classList.remove('visible');
                 }
-
                 updateActiveSubtitle();
             };
 
             const toggleSubtitles = () => {
                 subtitlesEnabled = !subtitlesEnabled;
                 subtitleToggleBtn.classList.toggle('active', subtitlesEnabled);
-
                 if (!subtitlesEnabled) {
                     subtitleOverlay.classList.remove('visible');
                 }
             };
 
+            // --- UI Update Functions ---
             const formatTime = (timeInSeconds) => {
+                if (isNaN(timeInSeconds)) timeInSeconds = 0;
                 const minutes = Math.floor(timeInSeconds / 60);
                 const seconds = Math.floor(timeInSeconds % 60);
                 return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
@@ -1444,12 +1255,7 @@
             const updatePlayPauseIcons = (isPaused) => {
                 playIcon.style.display = isPaused ? 'block' : 'none';
                 pauseIcon.style.display = isPaused ? 'none' : 'block';
-
-                if (isPaused) {
-                    showControls();
-                } else {
-                    resetControlsTimer();
-                }
+                if (isPaused) showControls(); else resetControlsTimer();
             };
 
             const updateSeekBarUI = () => {
@@ -1463,7 +1269,6 @@
                 seekBar.value = progress;
                 seekBar.style.background = `linear-gradient(to right, var(--track-progress-bg) ${progress}%, var(--track-bg) ${progress}%)`;
                 currentTimeEl.textContent = formatTime(activePlayerForUI.currentTime());
-
                 updateSubtitles();
             };
 
@@ -1475,13 +1280,12 @@
                 durationEl.textContent = formatTime(activePlayerForUI.duration());
             };
 
+            // --- Player Control Logic ---
             const checkSync = () => {
                 if (currentMode !== 'both' || isSeeking) return;
-
                 const leftTime = playerLeft.currentTime();
                 const rightTime = playerRight.currentTime();
                 const timeDiff = Math.abs(leftTime - rightTime);
-
                 if (timeDiff > SYNC_THRESHOLD) {
                     playerRight.currentTime(leftTime);
                 }
@@ -1493,33 +1297,19 @@
             };
 
             const stopSyncCheck = () => {
-                if (syncCheckInterval) {
-                    clearInterval(syncCheckInterval);
-                    syncCheckInterval = null;
-                }
+                if (syncCheckInterval) clearInterval(syncCheckInterval);
+                syncCheckInterval = null;
             };
 
             const handlePlayPause = () => {
                 const playerToControl = activePlayerForUI || playerLeft;
                 if (!playerToControl || isNaN(playerToControl.duration())) return;
                 const isPaused = playerToControl.paused();
-
                 if (currentMode === 'both') {
-                    if (isPaused) {
-                        playerLeft.play();
-                        playerRight.play();
-                        startSyncCheck();
-                    } else {
-                        playerLeft.pause();
-                        playerRight.pause();
-                        stopSyncCheck();
-                    }
+                    if (isPaused) { playerLeft.play(); playerRight.play(); } 
+                    else { playerLeft.pause(); playerRight.pause(); }
                 } else {
-                    if (isPaused) {
-                        playerToControl.play();
-                    } else {
-                        playerToControl.pause();
-                    }
+                    if (isPaused) playerToControl.play(); else playerToControl.pause();
                 }
             };
 
@@ -1527,25 +1317,15 @@
                 if (!activePlayerForUI || isNaN(activePlayerForUI.duration())) return;
                 isSeeking = true;
                 const newTime = (activePlayerForUI.duration() * seekBar.value) / 100;
-                if (currentMode === 'both') {
-                    playerLeft.currentTime(newTime);
-                    playerRight.currentTime(newTime);
-                } else {
-                    activePlayerForUI.currentTime(newTime);
-                }
-                setTimeout(() => { isSeeking = false; }, 100);
+                jumpToTime(newTime);
             };
 
             const handleVolumeChange = () => {
                 const newVolume = volumeBar.value;
                 playerLeft.volume(newVolume);
-                if (currentMode !== 'right') {
-                    playerLeft.muted(newVolume == 0);
-                }
-                if (currentMode === 'right') {
-                    playerRight.volume(newVolume);
-                    playerRight.muted(newVolume == 0);
-                }
+                playerRight.volume(newVolume);
+                playerLeft.muted(currentMode === 'right' || newVolume == 0);
+                playerRight.muted(currentMode !== 'right' || newVolume == 0);
             };
 
             const handleRateChange = () => {
@@ -1565,7 +1345,6 @@
             const setMode = (newMode) => {
                 if (currentMode === newMode) return;
                 currentMode = newMode;
-
                 stopSyncCheck();
 
                 if (activePlayerForUI) activePlayerForUI.off(['timeupdate', 'durationchange', 'play', 'pause']);
@@ -1576,82 +1355,66 @@
                 playerArea.className = 'player-area';
                 playerArea.classList.add(`mode-${newMode}`);
 
-                if (newMode === 'right') {
-                    activePlayerForUI = playerRight;
-                    playerRight.muted(volumeBar.value == 0);
-                    playerLeft.muted(true);
-                } else {
-                    activePlayerForUI = playerLeft;
-                    playerLeft.muted(volumeBar.value == 0);
-                    if (newMode === 'both') {
-                        playerRight.muted(true);
-                    }
-                }
+                activePlayerForUI = (newMode === 'right') ? playerRight : playerLeft;
+                
+                handleVolumeChange(); // Update mute states based on new mode
 
                 const syncFrom = (newMode === 'right') ? playerLeft : playerRight;
-                const syncTo = activePlayerForUI;
-                if (syncFrom && syncTo && !isNaN(syncFrom.currentTime())) {
-                    syncTo.currentTime(syncFrom.currentTime());
+                if (syncFrom && activePlayerForUI && !isNaN(syncFrom.currentTime())) {
+                    activePlayerForUI.currentTime(syncFrom.currentTime());
                 }
-                updatePlayPauseIcons(syncTo ? syncTo.paused() : true);
-
-                if (activePlayerForUI) {
-                    activePlayerForUI.on('timeupdate', updateSeekBarUI);
-                    activePlayerForUI.on('durationchange', updateDurationUI);
-                    activePlayerForUI.on('play', () => {
-                        updatePlayPauseIcons(false);
-                        if (currentMode === 'both') startSyncCheck();
-                    });
-                    activePlayerForUI.on('pause', () => {
-                        updatePlayPauseIcons(true);
-                        stopSyncCheck();
-                    });
-                }
+                
+                updatePlayPauseIcons(activePlayerForUI ? activePlayerForUI.paused() : true);
+                
+                activePlayerForUI.on('timeupdate', updateSeekBarUI);
+                activePlayerForUI.on('durationchange', updateDurationUI);
+                activePlayerForUI.on('play', () => {
+                    updatePlayPauseIcons(false);
+                    if (currentMode === 'both') startSyncCheck();
+                });
+                activePlayerForUI.on('pause', () => {
+                    updatePlayPauseIcons(true);
+                    stopSyncCheck();
+                });
 
                 updateDurationUI();
                 updateSeekBarUI();
             };
 
-            const initializePlayers = async () => {
+            const initializeApp = async () => {
                 playerLeft.volume(1);
                 playerRight.volume(1);
-                playerRight.muted(true);
-
                 activePlayerForUI = playerLeft;
+                handleVolumeChange(); // Set initial mute states
 
-                await loadSubtitles('_SUBTITLE_');
+                await loadSubtitlesFromUrl('_SUBTITLE_');
 
-                if (activePlayerForUI) {
-                    activePlayerForUI.on('timeupdate', updateSeekBarUI);
-                    activePlayerForUI.on('durationchange', updateDurationUI);
-                    activePlayerForUI.on('play', () => {
-                        updatePlayPauseIcons(false);
-                        if (currentMode === 'both') startSyncCheck();
-                    });
-                    activePlayerForUI.on('pause', () => {
-                        updatePlayPauseIcons(true);
-                        stopSyncCheck();
-                    });
-                }
+                activePlayerForUI.on('timeupdate', updateSeekBarUI);
+                activePlayerForUI.on('durationchange', updateDurationUI);
+                activePlayerForUI.on('play', () => {
+                    updatePlayPauseIcons(false);
+                    if (currentMode === 'both') startSyncCheck();
+                });
+                activePlayerForUI.on('pause', () => {
+                    updatePlayPauseIcons(true);
+                    stopSyncCheck();
+                });
 
                 updatePlayPauseIcons(true);
                 updateDurationUI();
                 updateSeekBarUI();
-
                 subtitleToggleBtn.classList.toggle('active', subtitlesEnabled);
-
                 playerContainer.focus();
                 showControls();
             };
 
-            // 事件绑定
+            // --- Event Listeners ---
             playPauseBtn.addEventListener('click', handlePlayPause);
             seekBar.addEventListener('input', handleSeek);
             volumeBar.addEventListener('input', handleVolumeChange);
             playbackRateSelector.addEventListener('change', handleRateChange);
             fullscreenBtn.addEventListener('click', handleFullscreen);
             subtitleToggleBtn.addEventListener('click', toggleSubtitles);
-
             subtitleNavToggleBtn.addEventListener('click', toggleSubtitleNavigation);
             subtitleNavClose.addEventListener('click', toggleSubtitleNavigation);
 
@@ -1659,52 +1422,36 @@
             document.getElementById('mode-both-btn').addEventListener('click', () => setMode('both'));
             document.getElementById('mode-right-btn').addEventListener('click', () => setMode('right'));
 
-            // 搜索功能事件绑定
-            subtitleSearchInput.addEventListener('input', (event) => {
-                performSearch(event.target.value);
+            // New listeners for local file loading
+            loadLocalSubtitleBtn.addEventListener('click', () => localSubtitleInput.click());
+            localSubtitleInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                subtitleStatus.textContent = '加载中...';
+                subtitleStatus.className = 'subtitle-status';
+                const reader = new FileReader();
+                reader.onload = (e) => processSubtitleText(e.target.result);
+                reader.onerror = () => {
+                    subtitleStatus.textContent = '文件读取失败';
+                    subtitleStatus.className = 'subtitle-status error';
+                };
+                reader.readAsText(file);
+                event.target.value = null; // Allow re-selecting the same file
             });
 
-            searchPrevBtn.addEventListener('click', () => {
-                navigateSearch(-1);
-            });
+            // Search listeners
+            subtitleSearchInput.addEventListener('input', (event) => performSearch(event.target.value));
+            searchPrevBtn.addEventListener('click', () => navigateSearch(-1));
+            searchNextBtn.addEventListener('click', () => navigateSearch(1));
+            searchClearBtn.addEventListener('click', clearSearch);
 
-            searchNextBtn.addEventListener('click', () => {
-                navigateSearch(1);
-            });
-
-            searchClearBtn.addEventListener('click', () => {
-                clearSearch();
-            });
-
+            // Global listeners
             document.addEventListener('keydown', handleKeydown);
-            playerContainer.addEventListener('wheel', handleWheel, { passive: false });
-
-            playerContainer.addEventListener('mousemove', handleMouseMove);
-            playerContainer.addEventListener('mouseleave', handleMouseLeave);
-
-            unifiedControls.addEventListener('mouseenter', () => {
-                isMouseOverControls = true;
-                clearTimeout(controlsTimeout);
-            });
-
-            unifiedControls.addEventListener('mouseleave', () => {
-                isMouseOverControls = false;
-                resetControlsTimer();
-            });
-
-            playbackRateSelector.addEventListener('focus', () => {
-                showControls();
-                clearTimeout(controlsTimeout);
-            });
-
-            playbackRateSelector.addEventListener('blur', () => {
-                resetControlsTimer();
-            });
-
-            playbackRateSelector.addEventListener('mousedown', (event) => {
-                event.stopPropagation();
-            });
-
+            playerContainer.addEventListener('wheel', (e) => { e.preventDefault(); adjustVolume(e.deltaY > 0 ? -0.05 : 0.05); showControls(); }, { passive: false });
+            playerContainer.addEventListener('mousemove', showControls);
+            playerContainer.addEventListener('mouseleave', resetControlsTimer);
+            unifiedControls.addEventListener('mouseenter', () => { isMouseOverControls = true; clearTimeout(controlsTimeout); });
+            unifiedControls.addEventListener('mouseleave', () => { isMouseOverControls = false; resetControlsTimer(); });
             playerContainer.addEventListener('click', (event) => {
                 if (event.target !== playbackRateSelector && event.target !== subtitleSearchInput) {
                     playerContainer.focus();
@@ -1712,9 +1459,10 @@
                 showControls();
             });
 
+            // --- Start the Application ---
             playerLeft.ready(() => {
                 playerRight.ready(() => {
-                    initializePlayers();
+                    initializeApp();
                 });
             });
         });
