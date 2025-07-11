@@ -100,9 +100,9 @@ jobs:
                                       -replace 'Source: "..\\iLearn\\bin\\', 'Source: "..\\bin\\' | Set-Content -Path $issFile
 
       - name: Inno Setup
-        uses: crazy-max/ghaction-innosetup@v2
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
         with:
-          script: ./iLearn/iLearnSetup/build.iss
+          path: ./iLearn/iLearnSetup/build.iss
 
       - name: Archive Installer
         run: |
