@@ -14,6 +14,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nuget/packages
+            !~/.nuget/packages/temp
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -46,6 +56,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nuget/packages
+            !~/.nuget/packages/temp
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -70,58 +90,4 @@ jobs:
         with:
           name: iLearn-Release-${{ github.sha }}
           path: iLearn-Release-${{ github.sha }}.zip
-          retention-days: 30
-
-  build-installer:
-    name: Build Installer
-    runs-on: windows-latest
-    needs: build-release
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Restore dependencies
-        run: dotnet restore ./iLearn
-
-      - name: Build Release (for installer)
-        run: dotnet build ./iLearn --configuration Release --no-restore -v quiet
-
-      - name: Create License file (if not exists)
-        run: |
-          if (!(Test-Path "./iLearn/Assets/License.rtf")) {
-            New-Item -ItemType Directory -Force -Path "./iLearn/Assets"
-            @"
-          {\rtf1\ansi\deff0 {\fonttbl {\f0 Times New Roman;}}
-          \f0\fs24 iLearn Software License Agreement
-          
-          Copyright (c) 2025 Wzy. All rights reserved.
-          
-          This software is provided 'as-is', without any express or implied warranty.
-          }
-          "@ | Out-File -FilePath "./iLearn/Assets/License.rtf" -Encoding ASCII
-          }
-        shell: powershell
-
-
-      - name: Inno Setup
-        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
-        with:
-          path: ./iLearn/iLearnSetup/build.iss
-
-      - name: Archive Installer
-        run: |
-          cd ./iLearn/iLearnSetup/Output
-          7z a -tzip "../../../iLearn-Installer-${{ github.sha }}.zip" *
-
-      - name: Upload Installer Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: iLearn-Installer-${{ github.sha }}
-          path: iLearn-Installer-${{ github.sha }}.zip
           retention-days: 30
