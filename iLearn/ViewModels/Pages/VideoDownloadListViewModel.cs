@@ -140,10 +140,10 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void DownloadSelected()
         {
-            var selectedHdmiVideos = Videos.Where(v => v.IsHdmiSelected && v.ResourceId is not null).ToList();
-            var selectedTeacherVideos = Videos.Where(v => v.IsTeacherSelected && v.ResourceId is not null).ToList();
+            var hdmiSelectedVideos = Videos.Where(v => v.IsHdmiSelected && v.ResourceId is not null).ToList();
+            var teacherSelectedVideos = Videos.Where(v => v.IsTeacherSelected && v.ResourceId is not null).ToList();
 
-            var totalSelectedCount = selectedHdmiVideos.Count + selectedTeacherVideos.Count;
+            var totalSelectedCount = hdmiSelectedVideos.Count + teacherSelectedVideos.Count;
 
             if (totalSelectedCount == 0)
             {
@@ -156,12 +156,12 @@ namespace iLearn.ViewModels.Pages
                 $"正在准备下载 {totalSelectedCount} 个视频文件",
                 ControlAppearance.Success);
 
-            foreach (var video in selectedHdmiVideos)
+            foreach (var video in hdmiSelectedVideos)
             {
                 DownloadVideoAsync(video, "hdmi").ConfigureAwait(false);
             }
 
-            foreach (var video in selectedTeacherVideos)
+            foreach (var video in teacherSelectedVideos)
             {
                 DownloadVideoAsync(video, "teacher").ConfigureAwait(false);
             }
@@ -176,6 +176,8 @@ namespace iLearn.ViewModels.Pages
             try
             {
                 var videoInfo = await _iLearnApiService.GetVideoInfoAsync(video.ResourceId);
+
+                DownloadSubtitle(videoInfo);
 
                 string? url;
                 string? perspectiveSuffix;
@@ -205,6 +207,14 @@ namespace iLearn.ViewModels.Pages
                     $"无法下载视频 {video.LiveRecordName}: {ex.Message}",
                     ControlAppearance.Danger);
             }
+        }
+
+        private void DownloadSubtitle(VideoInfo videoInfo) {
+            var url = videoInfo.PhaseUrl;
+            var fileName = SanitizeFileName(videoInfo.ResourceName) + ".vtt";
+            var folder = Path.Combine(System.Environment.CurrentDirectory, "Downloads", "Subtitles");
+
+            _ = _downloadService.StartDownloadAsync(url, fileName, folder).ConfigureAwait(false);
         }
 
         private string SanitizeFileName(string name)
