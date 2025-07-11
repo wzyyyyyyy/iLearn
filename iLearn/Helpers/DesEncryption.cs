@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace iLearn.Helpers
 {
@@ -17,7 +17,7 @@ namespace iLearn.Helpers
             {
                 for (int j = 0, k = 7; j < 8; j++, k--)
                 {
-                    key[i * 8 + j] = keyByte[8 * k + i];
+                    key[(i * 8) + j] = keyByte[(8 * k) + i];
                 }
             }
 
@@ -65,8 +65,8 @@ namespace iLearn.Helpers
             {
                 for (int j = 7, k = 0; j >= 0; j--, k++)
                 {
-                    ipByte[i * 8 + k] = originalData[j * 8 + pairs[i].Item1];
-                    ipByte[i * 8 + k + 32] = originalData[j * 8 + pairs[i].Item2];
+                    ipByte[(i * 8) + k] = originalData[(j * 8) + pairs[i].Item1];
+                    ipByte[(i * 8) + k + 32] = originalData[(j * 8) + pairs[i].Item2];
                 }
             }
             return ipByte;
@@ -77,12 +77,12 @@ namespace iLearn.Helpers
             var epByte = new byte[48];
             for (int i = 0; i < 8; i++)
             {
-                epByte[i * 6 + 0] = rightData[i == 0 ? 31 : i * 4 - 1];
-                epByte[i * 6 + 1] = rightData[i * 4];
-                epByte[i * 6 + 2] = rightData[i * 4 + 1];
-                epByte[i * 6 + 3] = rightData[i * 4 + 2];
-                epByte[i * 6 + 4] = rightData[i * 4 + 3];
-                epByte[i * 6 + 5] = rightData[i == 7 ? 0 : i * 4 + 4];
+                epByte[(i * 6) + 0] = rightData[i == 0 ? 31 : (i * 4) - 1];
+                epByte[(i * 6) + 1] = rightData[i * 4];
+                epByte[(i * 6) + 2] = rightData[(i * 4) + 1];
+                epByte[(i * 6) + 3] = rightData[(i * 4) + 2];
+                epByte[(i * 6) + 4] = rightData[(i * 4) + 3];
+                epByte[(i * 6) + 5] = rightData[i == 7 ? 0 : (i * 4) + 4];
             }
             return epByte;
         }
@@ -162,14 +162,14 @@ namespace iLearn.Helpers
 
             for (int m = 0; m < 8; m++)
             {
-                var i = expandByte[m * 6] * 2 + expandByte[m * 6 + 5];
-                var j = expandByte[m * 6 + 1] * 8 + expandByte[m * 6 + 2] * 4 + expandByte[m * 6 + 3] * 2 + expandByte[m * 6 + 4];
+                var i = (expandByte[m * 6] * 2) + expandByte[(m * 6) + 5];
+                var j = (expandByte[(m * 6) + 1] * 8) + (expandByte[(m * 6) + 2] * 4) + (expandByte[(m * 6) + 3] * 2) + expandByte[(m * 6) + 4];
 
                 var binaryStr = GetBoxBinary(sBoxes[m][i][j]);
                 sBoxByte[m * 4] = (byte)(binaryStr[0] - '0');
-                sBoxByte[m * 4 + 1] = (byte)(binaryStr[1] - '0');
-                sBoxByte[m * 4 + 2] = (byte)(binaryStr[2] - '0');
-                sBoxByte[m * 4 + 3] = (byte)(binaryStr[3] - '0');
+                sBoxByte[(m * 4) + 1] = (byte)(binaryStr[1] - '0');
+                sBoxByte[(m * 4) + 2] = (byte)(binaryStr[2] - '0');
+                sBoxByte[(m * 4) + 3] = (byte)(binaryStr[3] - '0');
             }
             return sBoxByte;
         }
@@ -211,14 +211,14 @@ namespace iLearn.Helpers
                     for (int j = 0; j < 16; j++)
                     {
                         var pow = 1 << (15 - j);
-                        bt[16 * i + j] = (byte)(k / pow % 2);
+                        bt[(16 * i) + j] = (byte)((k / pow) % 2);
                     }
                 }
                 for (int p = str.Length; p < 4; p++)
                 {
                     for (int q = 0; q < 16; q++)
                     {
-                        bt[16 * p + q] = 0;
+                        bt[(16 * p) + q] = 0;
                     }
                 }
             }
@@ -230,7 +230,7 @@ namespace iLearn.Helpers
                     for (int j = 0; j < 16; j++)
                     {
                         var pow = 1 << (15 - j);
-                        bt[16 * i + j] = (byte)(k / pow % 2);
+                        bt[(16 * i) + j] = (byte)((k / pow) % 2);
                     }
                 }
             }
@@ -245,7 +245,7 @@ namespace iLearn.Helpers
                 var binaryStr = new StringBuilder();
                 for (int j = 0; j < 4; j++)
                 {
-                    binaryStr.Append(byteData[i * 4 + j]);
+                    binaryStr.Append(byteData[(i * 4) + j]);
                 }
                 var value = Convert.ToInt32(binaryStr.ToString(), 2);
                 sb.Append(value.ToString("X"));
