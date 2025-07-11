@@ -44,6 +44,11 @@ namespace iLearn.ViewModels.Windows
                 Content = "下载管理",
                 Icon = new SymbolIcon { Symbol = SymbolRegular.MailArrowDown16 },
                 TargetPageType = typeof(Views.Pages.DownloadManagePage),
+             },
+             new NavigationViewItem(){
+                Content = "本地视频",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.Video16 },
+                TargetPageType = typeof(Views.Pages.LocalVideoPage),
              }
             ];
 
