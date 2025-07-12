@@ -46,43 +46,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶部区域：标题和搜索框 -->
-        <Grid Grid.Row="0" Margin="24,20,24,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- 页面标题 -->
-            <StackPanel Orientation="Vertical">
-                <TextBlock 
-                    Text="本地视频" 
-                    FontSize="32" 
-                    FontWeight="SemiBold" 
-                    VerticalAlignment="Center"/>
-                <TextBlock 
-                    Text="浏览和管理本地下载的视频文件" 
-                    FontSize="14" 
-                    Margin="0,4,0,0"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-            </StackPanel>
-
-            <!-- 搜索框 -->
-            <ui:TextBox 
-                Grid.Column="1" 
-                Width="300"
-                PlaceholderText="搜索本地视频..." 
-                Icon="Search24" 
-                VerticalAlignment="Center"
-                Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}">
-                <b:Interaction.Triggers>
-                    <b:EventTrigger EventName="TextChanged">
-                        <b:InvokeCommandAction Command="{Binding SearchCommand}"/>
-                    </b:EventTrigger>
-                </b:Interaction.Triggers>
-            </ui:TextBox>
-        </Grid>
-
         <!-- 工具栏区域 -->
         <Grid Grid.Row="1" Margin="24,0,24,16">
             <Grid.ColumnDefinitions>
@@ -101,7 +64,20 @@
                          ItemsSource="{Binding FilterOptions}"
                          SelectedItem="{Binding SelectedFilter}"/>
             </StackPanel>
-
+            <!-- 搜索框 -->
+            <ui:TextBox 
+            Grid.Column="1" 
+            Width="300"
+            PlaceholderText="搜索本地视频..." 
+            Icon="Search24" 
+            VerticalAlignment="Center"
+            Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Right">
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="TextChanged">
+                        <b:InvokeCommandAction Command="{Binding SearchCommand}"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+            </ui:TextBox>
             <!-- 刷新按钮 -->
             <ui:Button Grid.Column="2"
                       Command="{Binding LoadLocalVideosCommand}"
