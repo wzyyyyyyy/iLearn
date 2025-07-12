@@ -11,7 +11,8 @@
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d"
-    d:DataContext="{d:DesignInstance viewModels:CoursesViewModel}">
+    d:DataContext="{d:DesignInstance viewModels:CoursesViewModel}"
+    ScrollViewer.CanContentScroll="False">
 
     <Grid>
         <Grid Margin="32">
@@ -73,9 +74,6 @@
             <ScrollViewer Grid.Row="2"
               VerticalScrollBarVisibility="Auto"
               PanningMode="Both">
-                <b:Interaction.Behaviors>
-                    <behaviors:MouseWheelToScrollBehavior />
-                </b:Interaction.Behaviors>
                 <Grid Margin="0,8,0,0" Cursor="">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>

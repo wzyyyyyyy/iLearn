@@ -9,7 +9,8 @@
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance viewModels:MediaViewModel}"
       ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
-      ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+      ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+      ScrollViewer.CanContentScroll="False">
 
     <Page.Resources>
         <Style x:Key="MediaCardStyle" TargetType="ui:Card">

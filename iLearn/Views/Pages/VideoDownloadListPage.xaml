@@ -11,23 +11,8 @@
       ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
       ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       d:DesignHeight="720" d:DesignWidth="1280"
-      d:DataContext="{d:DesignInstance viewModels:VideoDownloadListViewModel}">
-
-    <Page.Resources>
-        <Style x:Key="MediaCardStyle" TargetType="ui:Card">
-            <Setter Property="Margin" Value="0,0,0,12"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}"/>
-            <Setter Property="Focusable" Value="False"/>
-            <!-- 修复滚动问题 -->
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </Page.Resources>
-
+      d:DataContext="{d:DesignInstance viewModels:VideoDownloadListViewModel}"
+      ScrollViewer.CanContentScroll="False">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -100,7 +85,7 @@
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <ui:Card Style="{StaticResource MediaCardStyle}">
+                        <ui:Card>
                             <Grid Focusable="False">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="200"/>

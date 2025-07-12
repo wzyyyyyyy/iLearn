@@ -4,6 +4,7 @@ using System.Windows.Input;
 
 namespace iLearn.Behaviors
 {
+    [Obsolete("use ScrollViewer.CanContentScroll=\"False\" instead")]
     public class MouseWheelToScrollBehavior : Behavior<ScrollViewer>
     {
         protected override void OnAttached()

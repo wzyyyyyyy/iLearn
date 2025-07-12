@@ -11,7 +11,8 @@
       ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
       ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       d:DesignHeight="720" d:DesignWidth="1280"
-      d:DataContext="{d:DesignInstance viewModels:DownloadManageViewModel}">
+      d:DataContext="{d:DesignInstance viewModels:DownloadManageViewModel}"
+      ScrollViewer.CanContentScroll="False">
 
     <Page.Resources>
         <Style x:Key="DownloadCardStyle" TargetType="ui:Card">

@@ -11,7 +11,8 @@
       ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
       ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       d:DesignHeight="450" d:DesignWidth="800"
-      d:DataContext="{d:DesignInstance viewModels:SettingViewModel}">
+      d:DataContext="{d:DesignInstance viewModels:SettingViewModel}"
+      ScrollViewer.CanContentScroll="False">
     <Page.Resources>
         <resources:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
     </Page.Resources>
