@@ -27,6 +27,12 @@ namespace iLearn.Models
 
             if (!File.Exists(filePath))
             {
+                string directory = Path.GetDirectoryName(filePath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
                 Save();
             }
             else

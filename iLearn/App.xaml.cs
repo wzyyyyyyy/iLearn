@@ -58,7 +58,9 @@ namespace iLearn
                 //service
                 services.AddSingleton(sp =>
                 {
-                    string configPath = Path.Combine(AppContext.BaseDirectory, "config.json");
+                    string configPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "iLearn", "config.json");
                     return new AppConfig(configPath);
                 });
                 services.AddSingleton<ILearnApiService>();
