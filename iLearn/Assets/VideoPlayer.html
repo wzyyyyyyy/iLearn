@@ -40,7 +40,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1a2e 50%, var(--bg-primary) 100%);
+            background: var(--bg-primary);
             color: var(--text-primary);
             margin: 0;
             padding: 0;
@@ -118,12 +118,11 @@
             display: flex;
             flex-direction: column;
             flex-grow: 1;
-            background: linear-gradient(145deg, #000000, #1a1a1a);
+            background: #000;
             border-radius: 16px;
             overflow: hidden;
             box-shadow: var(--shadow-heavy);
             border: none;
-            backdrop-filter: blur(20px);
         }
 
         .player-area {
@@ -137,7 +136,8 @@
 
         .video-wrapper {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background: linear-gradient(145deg, #000, #111);
+            /* MODIFIED: Unified video background */
+            background: linear-gradient(145deg, var(--bg-tertiary), #181818);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -148,6 +148,17 @@
             box-shadow: var(--shadow-medium);
             border: none;
         }
+
+        /* Styles for swap animation */
+        .player-area.is-swapping .left-wrapper {
+            transform: translateX(25%) scale(0.7);
+            opacity: 0;
+        }
+        .player-area.is-swapping .right-wrapper {
+            transform: translateX(-25%) scale(0.7);
+            opacity: 0;
+        }
+
 
         .video-js {
             width: 100%;
@@ -217,9 +228,10 @@
 
         #unified-controls {
             display: flex;
-            background: linear-gradient(145deg, rgba(15, 15, 15, 0.95), rgba(25, 25, 25, 0.98));
-            backdrop-filter: blur(15px);
+            /* MODIFIED: Semi-transparent gradient for control bar */
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 70%, transparent 100%);
             padding: 0.6rem 1.5rem;
+            padding-bottom: 1rem; /* Extra padding for better look */
             align-items: center;
             gap: 1rem;
             width: 100%;
@@ -233,7 +245,7 @@
             opacity: 1;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-top: none;
-            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: none;
         }
 
             #unified-controls.hidden {
@@ -249,7 +261,6 @@
             padding: 0.5rem;
             border-radius: 6px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
         }
 
             #play-pause-btn:hover, #fullscreen-btn:hover, #subtitle-toggle-btn:hover, #subtitle-nav-toggle-btn:hover, #load-local-subtitle-btn:hover {
@@ -277,8 +288,6 @@
             background: var(--glass-bg);
             padding: 0.3rem 0.8rem;
             border-radius: 4px;
-            border: none;
-            backdrop-filter: blur(10px);
         }
 
         input[type="range"] {
@@ -351,7 +360,6 @@
             font-size: 0.8rem;
             font-weight: 500;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
             cursor: pointer;
         }
 
@@ -364,6 +372,9 @@
                 outline: none;
                 box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.3);
             }
+            #playback-rate option {
+                background: var(--bg-primary);
+            }
 
         .subtitle-status {
             font-size: 0.75rem;
@@ -373,8 +384,6 @@
             background: var(--glass-bg);
             padding: 0.2rem 0.5rem;
             border-radius: 3px;
-            border: none;
-            backdrop-filter: blur(10px);
         }
 
             .subtitle-status.loaded {
@@ -399,7 +408,6 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
             z-index: 20;
-            backdrop-filter: blur(10px);
             border: none;
             box-shadow: var(--shadow-medium);
             line-height: 1.4;
@@ -591,7 +599,6 @@
             background: var(--glass-bg);
             padding: 0.2rem 0.4rem;
             border-radius: 3px;
-            border: none;
         }
 
         .subtitle-text {
@@ -717,17 +724,18 @@
             <button id="mode-left-btn" class="mode-btn">仅左侧</button>
             <button id="mode-both-btn" class="mode-btn active">双视频</button>
             <button id="mode-right-btn" class="mode-btn">仅右侧</button>
+            <button id="swap-btn" class="mode-btn">交换视频</button>
         </div>
 
         <div class="player-container" tabindex="0">
             <div id="player-area" class="player-area mode-both">
                 <div class="left-wrapper video-wrapper">
-                    <video id="video-left" class="video-js" preload="auto" poster="https://placehold.co/1920x1080/000000/FFFFFF?text=Left+Video">
+                    <video id="video-left" class="video-js" preload="auto" poster="https://placehold.co/1920x1080/282828/FFFFFF?text=Left+Video">
                         <source src="_LEFTVIDEO_" type="video/mp4">
                     </video>
                 </div>
                 <div class="right-wrapper video-wrapper">
-                    <video id="video-right" class="video-js" preload="auto" poster="https://placehold.co/1920x1080/333333/FFFFFF?text=Right+Video">
+                    <video id="video-right" class="video-js" preload="auto" poster="https://placehold.co/1920x1080/282828/FFFFFF?text=Right+Video">
                         <source src="_RIGHTVIDEO_" type="video/mp4">
                     </video>
                 </div>
@@ -757,7 +765,6 @@
                     <option value="3">3.0x</option>
                 </select>
                 
-                <!-- New button to load local subtitles -->
                 <button id="load-local-subtitle-btn" title="加载本地字幕文件 (.vtt)">
                     <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-8-8-8 8h4v6zm-4 2h14v2H5v-2z"></path></svg>
                 </button>
@@ -801,6 +808,7 @@
             const playerContainer = document.querySelector('.player-container');
             const playerArea = document.getElementById('player-area');
             const modeButtons = document.querySelectorAll('.mode-btn');
+            const swapBtn = document.getElementById('swap-btn'); 
             const playPauseBtn = document.getElementById('play-pause-btn');
             const playIcon = document.getElementById('play-icon');
             const pauseIcon = document.getElementById('pause-icon');
@@ -820,7 +828,6 @@
             const subtitleNavClose = document.getElementById('subtitle-nav-close');
             const subtitleList = document.getElementById('subtitle-list');
             
-            // --- New Elements for Local Subtitle Loading ---
             const loadLocalSubtitleBtn = document.getElementById('load-local-subtitle-btn');
             const localSubtitleInput = document.getElementById('local-subtitle-input');
 
@@ -854,6 +861,7 @@
             const SYNC_THRESHOLD = 0.1;
             const SYNC_CHECK_INTERVAL = 200;
             const CONTROLS_HIDE_DELAY = 3000;
+            const SWAP_ANIMATION_DURATION = 400; // Corresponds to CSS transition duration
 
             // --- Player Initialization ---
             playerLeft = videojs('video-left', { controls: false, fluid: true });
@@ -1381,6 +1389,63 @@
                 updateSeekBarUI();
             };
 
+            // MODIFIED: Function to swap video sources with animation
+            const swapVideos = () => {
+                // Prevent starting a new swap while one is in progress
+                if (playerArea.classList.contains('is-swapping')) {
+                    return;
+                }
+
+                const wasPaused = playerLeft.paused();
+                const currentTime = playerLeft.currentTime();
+
+                // 1. Add class to trigger the "out" animation
+                playerArea.classList.add('is-swapping');
+
+                // 2. Use a timeout that matches the CSS transition duration
+                setTimeout(() => {
+                    // 3. Swap the video sources and posters
+                    const leftSrc = playerLeft.currentSrc();
+                    const rightSrc = playerRight.currentSrc();
+                    const leftPoster = playerLeft.poster();
+                    const rightPoster = playerRight.poster();
+
+                    playerLeft.src({ src: rightSrc, type: 'video/mp4' });
+                    playerRight.src({ src: leftSrc, type: 'video/mp4' });
+
+                    playerLeft.poster(rightPoster);
+                    playerRight.poster(leftPoster);
+
+                    // 4. Load the new sources
+                    playerLeft.load();
+                    playerRight.load();
+
+                    // A function to run after both players are ready
+                    const onPlayersReady = () => {
+                        // Restore time and play state
+                        jumpToTime(currentTime);
+                        if (!wasPaused) {
+                            playerLeft.play();
+                            playerRight.play();
+                        }
+                        // 5. Remove the class to trigger the "in" animation
+                        playerArea.classList.remove('is-swapping');
+                    };
+
+                    // Wait for both players to be ready with the new source
+                    let readyCount = 0;
+                    const checkReady = () => {
+                        readyCount++;
+                        if (readyCount === 2) {
+                            onPlayersReady();
+                        }
+                    };
+                    playerLeft.ready(checkReady);
+                    playerRight.ready(checkReady);
+
+                }, SWAP_ANIMATION_DURATION);
+            };
+
             const initializeApp = async () => {
                 playerLeft.volume(1);
                 playerRight.volume(1);
@@ -1417,12 +1482,12 @@
             subtitleToggleBtn.addEventListener('click', toggleSubtitles);
             subtitleNavToggleBtn.addEventListener('click', toggleSubtitleNavigation);
             subtitleNavClose.addEventListener('click', toggleSubtitleNavigation);
+            swapBtn.addEventListener('click', swapVideos); 
 
             document.getElementById('mode-left-btn').addEventListener('click', () => setMode('left'));
             document.getElementById('mode-both-btn').addEventListener('click', () => setMode('both'));
             document.getElementById('mode-right-btn').addEventListener('click', () => setMode('right'));
 
-            // New listeners for local file loading
             loadLocalSubtitleBtn.addEventListener('click', () => localSubtitleInput.click());
             localSubtitleInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
@@ -1436,7 +1501,7 @@
                     subtitleStatus.className = 'subtitle-status error';
                 };
                 reader.readAsText(file);
-                event.target.value = null; // Allow re-selecting the same file
+                event.target.value = null; 
             });
 
             // Search listeners
