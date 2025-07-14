@@ -6,7 +6,8 @@
       xmlns:local="clr-namespace:iLearn.Views.Pages"
       xmlns:resources="clr-namespace:iLearn.Resources"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-      xmlns:viewModels="clr-namespace:iLearn.ViewModels.Pages" 
+      xmlns:viewModels="clr-namespace:iLearn.ViewModels.Pages"
+      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
       mc:Ignorable="d" 
       ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
       ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -50,7 +51,7 @@
                         </Grid.ColumnDefinitions>
                         <ui:TextBox
                             Grid.Column="0"
-                            Text="{Binding DownloadPath}"
+                            Text="{Binding DownloadPath,Mode=TwoWay}"
                             IsReadOnly="True"
                             MaxWidth="400"
                             Margin="0,0,8,0" />
@@ -91,7 +92,13 @@
                         MinWidth="120"
                         Minimum="1"
                         Maximum="10"
-                        Value="{Binding MaxConcurrentDownloads}" />
+                        Value="{Binding MaxConcurrentDownloads,Mode=TwoWay}">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="ValueChanged">
+                                <i:InvokeCommandAction Command="{Binding MaxConcurrentDownloadsValueChangedCommand}" PassEventArgsToCommand="True" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </ui:NumberBox>
                 </ui:CardControl>
 
                 <ui:CardControl Margin="0,0,0,12" Icon="{ui:SymbolIcon Branch24}">
@@ -115,7 +122,13 @@
                         MinWidth="120"
                         Minimum="1"
                         Maximum="32"
-                        Value="{Binding ChunkCount}" />
+                        Value="{Binding ChunkCount,Mode=TwoWay}">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="ValueChanged">
+                                <i:InvokeCommandAction Command="{Binding ChunkCountValueChangedCommand}" PassEventArgsToCommand="True" />
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </ui:NumberBox>
                 </ui:CardControl>
 
                 <ui:CardControl Margin="0,0,0,12" Icon="{ui:SymbolIcon Gauge24}">
@@ -140,9 +153,9 @@
                             MinWidth="200"
                             Minimum="0"
                             Maximum="100"
-                            Value="{Binding SpeedLimitMBps}"
+                            Value="{Binding SpeedLimitMBps,Mode=TwoWay}"
                             TickFrequency="1"
-                            IsSnapToTickEnabled="True" />
+                            IsSnapToTickEnabled="True" Cursor="" />
                         <ui:TextBlock
                             VerticalAlignment="Center"
                             Text="{Binding SpeedLimitMBps, StringFormat={}{0:F1} MB/s}" />

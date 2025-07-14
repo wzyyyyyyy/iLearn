@@ -5,6 +5,9 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
+using MessageBox = System.Windows.MessageBox;
+using MessageBoxButton = System.Windows.MessageBoxButton;
 
 namespace iLearn.ViewModels.Pages
 {
@@ -95,6 +98,18 @@ namespace iLearn.ViewModels.Pages
                 _appConfig.DownloadPath = value;
                 _appConfig.Save();
             }
+        }
+
+        [RelayCommand]
+        private void MaxConcurrentDownloadsValueChanged(NumberBoxValueChangedEventArgs args)
+        {
+            OnMaxConcurrentDownloadsChanged((int)args.NewValue);
+        }
+
+        [RelayCommand]
+        private void ChunkCountValueChanged(NumberBoxValueChangedEventArgs args)
+        {
+            OnChunkCountChanged((int)args.NewValue);
         }
 
         [RelayCommand]

@@ -9,29 +9,34 @@ namespace iLearn.Services
     {
         public IEnumerable<DownloadItem> ActiveDownloads => _activeDownloads.Values;
 
+        private readonly AppConfig _appConfig;
+
         private readonly ConcurrentDictionary<string, DownloadItem> _activeDownloads = new();
         private readonly ConcurrentDictionary<string, DownloadService> _downloaders = new();
         private readonly Queue<(string url, string fileName, string outputPath)> _downloadQueue = new();
         private readonly object _queueLock = new object();
         private SemaphoreSlim _semaphore;
-        private int _maxConcurrentDownloads = 3;
+        private int _maxConcurrentDownloads;
 
-        private readonly DownloadConfiguration _config = new()
+        private readonly DownloadConfiguration _config;
+
+        public VideoDownloadService(AppConfig appConfig)
         {
-            ChunkCount = 8,
-            ParallelDownload = true,
-            Timeout = 600000,
-            BufferBlockSize = 10240,
-            MaxTryAgainOnFailover = 20,
-            MaximumBytesPerSecond = 0, // 不限速
-            RequestConfiguration = {
+            _appConfig = appConfig;
+            _maxConcurrentDownloads = _appConfig.MaxConcurrentDownloads;
+            _config = new()
+            {
+                ChunkCount = _appConfig.ChunkCount,
+                ParallelDownload = true,
+                Timeout = 600000,
+                BufferBlockSize = 10240,
+                MaxTryAgainOnFailover = 20,
+                MaximumBytesPerSecond = _appConfig.SpeedLimitBytesPerSecond, // 不限速
+                RequestConfiguration = {
                 Accept = "*/*",
                 Timeout = 200000
-            }
-        };
-
-        public VideoDownloadService()
-        {
+                }
+            };
             _semaphore = new SemaphoreSlim(_maxConcurrentDownloads);
         }
 
