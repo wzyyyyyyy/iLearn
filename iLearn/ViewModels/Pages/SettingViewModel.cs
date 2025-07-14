@@ -146,6 +146,13 @@ namespace iLearn.ViewModels.Pages
         }
 
         [RelayCommand]
+        private async Task OpenEasterEgg()
+        {
+            EasterEggController easterEggController = new();
+            easterEggController.Launch();
+        }
+
+        [RelayCommand]
         private async Task CheckForUpdates()
         {
             try

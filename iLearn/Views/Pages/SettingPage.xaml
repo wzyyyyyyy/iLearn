@@ -246,9 +246,16 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="开发者" />
                             <TextBlock
-                                Grid.Column="1"
-                                Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                Text="Github@wzyyyyyyy" />
+                     Grid.Column="1"
+                     Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                     Text="Github@wzyyyyyyy"
+                     Cursor="Hand">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="MouseLeftButtonDown">
+                                        <i:InvokeCommandAction Command="{Binding OpenEasterEggCommand}" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                            </TextBlock>
                         </Grid>
                         <Grid Margin="16,0,16,16">
                             <Grid.ColumnDefinitions>

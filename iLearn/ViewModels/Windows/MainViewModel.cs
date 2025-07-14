@@ -2,6 +2,9 @@
 using iLearn.Services;
 using System.Collections.ObjectModel;
 using Wpf.Ui.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
 
 namespace iLearn.ViewModels.Windows
 {
@@ -12,9 +15,6 @@ namespace iLearn.ViewModels.Windows
 
         [ObservableProperty]
         private UserInfo? _currentUser;
-
-        [ObservableProperty]
-        private string _welcomeMessage = "晚上好";
 
         [ObservableProperty]
         private ObservableCollection<object> _menuItems = [
@@ -73,17 +73,6 @@ namespace iLearn.ViewModels.Windows
         public MainViewModel(ILearnApiService iLearnApiService)
         {
             _iLearnApiService = iLearnApiService ?? throw new ArgumentNullException(nameof(iLearnApiService));
-
-            // 初始化用户信息
-            InitializeUserInfoAsync();
-        }
-
-        private async Task InitializeUserInfoAsync()
-        {
-            CurrentUser = await _iLearnApiService.GetUserInfo();
-
-            WelcomeMessage = $"{CurrentUser.Msg}, {CurrentUser.StudentName}";
-
         }
     }
 }
