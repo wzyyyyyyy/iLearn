@@ -13,6 +13,7 @@ namespace iLearn.ViewModels.Pages
     {
         private readonly VideoDownloadService _downloadService;
         private readonly ISnackbarService _snackbarService;
+        private readonly AppConfig _appConfig;
         private readonly DispatcherTimer _refreshTimer;
 
         [ObservableProperty]
@@ -38,10 +39,12 @@ namespace iLearn.ViewModels.Pages
 
         public DownloadManageViewModel(
             VideoDownloadService downloadService,
-            ISnackbarService snackbarService)
+            ISnackbarService snackbarService,
+            AppConfig appConfig)
         {
             _downloadService = downloadService;
             _snackbarService = snackbarService;
+            _appConfig = appConfig;
             Downloads = new ObservableCollection<DownloadItem>();
 
             // 设置定时器定期刷新下载状态
@@ -213,12 +216,7 @@ namespace iLearn.ViewModels.Pages
         {
             try
             {
-                var folder = Path.Combine(Environment.CurrentDirectory, "Downloads");
-                if (!Directory.Exists(folder))
-                {
-                    Directory.CreateDirectory(folder);
-                }
-                Process.Start("explorer.exe", folder);
+                Process.Start("explorer.exe", _appConfig.DownloadPath);
             }
             catch (Exception ex)
             {
