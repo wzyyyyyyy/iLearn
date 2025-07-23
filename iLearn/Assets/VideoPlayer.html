@@ -1147,15 +1147,6 @@
                 subtitleStatus.textContent = '加载中...';
                 subtitleStatus.className = 'subtitle-status';
 
-                if (!subtitleUrl || subtitleUrl === '_SUBTITLE_') {
-                    subtitles = [];
-                    filteredSubtitles = [];
-                    subtitleStatus.textContent = '无字幕';
-                    subtitleStatus.className = 'subtitle-status';
-                    renderSubtitleNavigation();
-                    return;
-                }
-
                 try {
                     const response = await fetch(subtitleUrl);
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
