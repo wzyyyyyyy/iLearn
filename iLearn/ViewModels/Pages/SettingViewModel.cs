@@ -142,7 +142,7 @@ namespace iLearn.ViewModels.Pages
             MaxConcurrentDownloads = 3;
             ChunkCount = 8;
             SpeedLimitMBps = 0;
-            DownloadPath = Path.Combine(Environment.CurrentDirectory, "Downloads");
+            DownloadPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "iLearnVideo");
         }
 
         [RelayCommand]
