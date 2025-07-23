@@ -212,7 +212,8 @@ namespace iLearn.ViewModels.Pages
             }
         }
 
-        private void DownloadSubtitle(VideoInfo videoInfo) {
+        private void DownloadSubtitle(VideoInfo videoInfo)
+        {
             var url = videoInfo.PhaseUrl;
             var fileName = SanitizeFileName(videoInfo.ResourceName) + ".vtt";
             var folder = Path.Combine(_appConfig.DownloadPath, "Subtitles");

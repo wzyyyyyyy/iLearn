@@ -1,5 +1,4 @@
 ﻿using Polly;
-using System.Net;
 using System.Net.Http;
 
 namespace iLearn.Helpers
@@ -18,9 +17,9 @@ namespace iLearn.Helpers
     public class RetryHandler(HttpMessageHandler innerHandler = null) : DelegatingHandler(innerHandler ?? new HttpClientHandler())
     {
         private readonly IAsyncPolicy<HttpResponseMessage> _retryPolicy = Policy
-            .Handle<HttpRequestException>() 
-            .Or<TaskCanceledException>() 
-            .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode) 
+            .Handle<HttpRequestException>()
+            .Or<TaskCanceledException>()
+            .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
             .WaitAndRetryAsync(
                 retryCount: 5,
                 sleepDurationProvider: retryAttempt =>

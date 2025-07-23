@@ -2,7 +2,6 @@
 using iLearn.Services;
 using Microsoft.Win32;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;

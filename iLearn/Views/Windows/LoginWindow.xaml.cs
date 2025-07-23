@@ -4,7 +4,6 @@ using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
-using Wpf.Ui.Extensions;
 
 namespace iLearn.Views.Windows;
 

@@ -1,6 +1,5 @@
 ﻿using iLearn.ViewModels.Pages;
 using Wpf.Ui.Abstractions.Controls;
-using Wpf.Ui.Controls;
 
 namespace iLearn.Views.Pages
 {

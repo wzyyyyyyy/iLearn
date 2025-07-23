@@ -1,4 +1,3 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -55,7 +54,7 @@ namespace iLearn.Models
         {
             switch (Perspective)
             {
-                case "HDMI": 
+                case "HDMI":
                     {
                         var path = FullPath.Replace("_HDMI.mp4", "_教师.mp4");
 
@@ -68,7 +67,7 @@ namespace iLearn.Models
                             return null;
                         }
                     }
-                case "教师视角": 
+                case "教师视角":
                     {
                         var path = FullPath.Replace("_教师.mp4", "_HDMI.mp4");
 
@@ -81,11 +80,12 @@ namespace iLearn.Models
                             return null;
                         }
                     }
-                default: 
-                    { 
+                default:
+                    {
                         return null;
                     }
-            };
+            }
+            ;
         }
 
         public static LocalVideoFile FromFileName(string filePath)
@@ -108,11 +108,11 @@ namespace iLearn.Models
                 video.CourseName = match.Groups[1].Value;
                 video.Type = match.Groups[2].Value;
 
-                string datePart = match.Groups[3].Value; 
-                string startHourPart = match.Groups[4].Value; 
+                string datePart = match.Groups[3].Value;
+                string startHourPart = match.Groups[4].Value;
                 string startMinutePart = match.Groups[5].Value;
-                string endHourPart = match.Groups[6].Value;   
-                string endMinutePart = match.Groups[7].Value; 
+                string endHourPart = match.Groups[6].Value;
+                string endMinutePart = match.Groups[7].Value;
 
                 video.Perspective = match.Groups[8].Value;
 

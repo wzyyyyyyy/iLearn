@@ -2,7 +2,6 @@
 using iLearn.Helpers.Messages;
 using iLearn.Models;
 using iLearn.Services;
-using iLearn.ViewModels.Windows;
 using System.Collections.ObjectModel;
 using System.IO;
 using Wpf.Ui;
@@ -102,7 +101,7 @@ namespace iLearn.ViewModels.Pages
             process.StartInfo = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = tempFile,
-                UseShellExecute = true 
+                UseShellExecute = true
             };
             process.Start();
         }
