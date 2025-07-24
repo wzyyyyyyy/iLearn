@@ -68,7 +68,6 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void JoinCourse()
         {
-            System.Windows.MessageBox.Show("sb");
             _windowsManagerService.Show<JoinCourseViewModel>();
         }
 
