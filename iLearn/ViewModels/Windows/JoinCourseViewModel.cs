@@ -57,6 +57,12 @@ namespace iLearn.ViewModels.Windows
         private void LoadData()
         {
             AvailableCourses = new(_courseDateService.GetLocalCourseDatas());
+            
+            if (AvailableCourses.Count == 0)
+            {
+                System.Windows.MessageBox.Show("很抱歉，为保护信息安全，Action编译不支持此功能", "提示");
+            }
+
             ApplyFiltersAndPagination();
         }
 
