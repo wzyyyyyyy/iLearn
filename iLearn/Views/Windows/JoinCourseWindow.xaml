@@ -1,0 +1,267 @@
+﻿<ui:FluentWindow 
+    x:Class="iLearn.Views.Windows.JoinCourseWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:iLearn.ViewModels.Windows"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+    mc:Ignorable="d"
+    Width="900"
+    Height="700"
+    WindowStartupLocation="CenterScreen"  
+    WindowCornerPreference="Round"  
+    ExtendsContentIntoTitleBar="True"  
+    WindowBackdropType="Mica" 
+    d:DataContext="{d:DesignInstance viewModels:JoinCourseViewModel}"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <ui:TitleBar  
+        VerticalAlignment="Top"  
+        Margin="0,0,0,0" />
+        <!-- Title Bar -->
+        <Grid Grid.Row="0" Margin="24,32,24,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal">
+                <ui:SymbolIcon Symbol="BookAdd20" 
+                             FontSize="24" 
+                             Margin="0,0,12,0"
+                             VerticalAlignment="Center"/>
+                <TextBlock Text="添加课程" 
+                         FontSize="24" 
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <ui:Button Grid.Column="1"
+                     HorizontalAlignment="Right"
+                     Appearance="Secondary"
+                     Command="{Binding RefreshCoursesCommand}"
+                     ToolTip="Refresh course list">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="ArrowClockwise16" Margin="0,0,8,0"/>
+                    <TextBlock Text="刷新"/>
+                </StackPanel>
+            </ui:Button>
+        </Grid>
+
+        <!-- Search Bar -->
+        <Grid Grid.Row="1" Margin="24,0,24,16">
+            <ui:TextBox 
+                Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                PlaceholderText="Search"
+                FontSize="14">
+                <ui:TextBox.Icon>
+                    <ui:SymbolIcon Symbol="Search16"/>
+                </ui:TextBox.Icon>
+            </ui:TextBox>
+        </Grid>
+
+        <!-- Course List -->
+        <Grid Grid.Row="2" Margin="24,0,24,16">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <Grid>
+                    <!-- Course List -->
+                    <DataGrid ItemsSource="{Binding PagedCourses}"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserDeleteRows="False"
+                            IsReadOnly="True"
+                            GridLinesVisibility="Horizontal"
+                            HeadersVisibility="Column"
+                            SelectionMode="Single"
+                            RowHeaderWidth="0"
+                            FontSize="13"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            ScrollViewer.HorizontalScrollBarVisibility="Auto">
+
+                        <b:Interaction.Triggers>
+                            <b:EventTrigger EventName="MouseDoubleClick">
+                                <b:InvokeCommandAction Command="{Binding JoinCourseCommand}" 
+                                                     CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            </b:EventTrigger>
+                        </b:Interaction.Triggers>
+
+                        <DataGrid.Columns>
+                            <!-- Course Code -->
+                            <DataGridTextColumn Header="课程码" 
+                                              Binding="{Binding CourseId}" 
+                                              Width="100"
+                                              MinWidth="80"/>
+
+                            <!-- Course Name -->
+                            <DataGridTextColumn Header="课程名" 
+                                              Binding="{Binding CourseName}" 
+                                              Width="200"
+                                              MinWidth="150"/>
+
+                            <!-- Teacher -->
+                            <DataGridTextColumn Header="教师" 
+                                              Binding="{Binding TeacherName}" 
+                                              Width="120"
+                                              MinWidth="100"/>
+
+                            <!-- Term -->
+                            <DataGridTextColumn Header="学期" 
+                                              Binding="{Binding Term}" 
+                                              Width="100"
+                                              MinWidth="80"/>
+
+                            <!-- Section -->
+                            <DataGridTextColumn Header="课序号" 
+                                              Binding="{Binding SectionId}" 
+                                              Width="80"
+                                              MinWidth="60"/>
+
+                            <!-- Schedule -->
+                            <DataGridTextColumn Header="上课时间" 
+                                              Binding="{Binding Schedule}" 
+                                              Width="*"
+                                              MinWidth="150"/>
+
+                            <!-- Action Button -->
+                            <DataGridTemplateColumn Width="80" MinWidth="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ui:Button Content="添加"
+                                                 Appearance="Primary"
+                                                 FontSize="12"
+                                                 Padding="8,4"
+                                                 Command="{Binding DataContext.JoinCourseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                 CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Height" Value="40"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+
+                    <!-- Empty State -->
+                    <StackPanel HorizontalAlignment="Center" 
+                              VerticalAlignment="Center"
+                              Visibility="{Binding PagedCourses.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                        <ui:SymbolIcon Symbol="BookSearch24" 
+                                     FontSize="48" 
+                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                     Margin="0,0,0,16"/>
+                        <TextBlock Text="No matching courses found" 
+                                 FontSize="16"
+                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                 HorizontalAlignment="Center"/>
+                        <TextBlock Text="Try using different search keywords" 
+                                 FontSize="12"
+                                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                 HorizontalAlignment="Center"
+                                 Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Pagination Controls -->
+        <Grid Grid.Row="3" Margin="24,0,24,24" Visibility="{Binding HasMultiplePages, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Pagination Info -->
+            <TextBlock Grid.Column="0" 
+                     Text="{Binding PaginationInfo}"
+                     VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     FontSize="12"/>
+
+            <!-- Pagination Buttons -->
+            <StackPanel Grid.Column="1" 
+                      Orientation="Horizontal" 
+                      HorizontalAlignment="Center">
+
+                <!-- First Page Button -->
+                <ui:Button Appearance="Secondary"
+                         Command="{Binding FirstPageCommand}"
+                         IsEnabled="{Binding CanGoToPreviousPage}"
+                         ToolTip="First page"
+                         Padding="8,4"
+                         FontSize="12">
+                    <ui:SymbolIcon Symbol="ChevronDoubleLeft16"/>
+                </ui:Button>
+
+                <!-- Previous Page Button -->
+                <ui:Button Appearance="Secondary"
+                         Command="{Binding PreviousPageCommand}"
+                         IsEnabled="{Binding CanGoToPreviousPage}"
+                         ToolTip="Previous page"
+                         Padding="8,4"
+                         FontSize="12">
+                    <ui:SymbolIcon Symbol="ChevronLeft16"/>
+                </ui:Button>
+
+                <!-- Page Info -->
+                <Border Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                      CornerRadius="4"
+                      Padding="12,4"
+                      VerticalAlignment="Center">
+                    <TextBlock FontSize="12" 
+                             Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+                        <Run Text="{Binding CurrentPage}"/>
+                        <Run Text="/" />
+                        <Run Text="{Binding TotalPages}"/>
+                    </TextBlock>
+                </Border>
+
+                <!-- Next Page Button -->
+                <ui:Button Appearance="Secondary"
+                         Command="{Binding NextPageCommand}"
+                         IsEnabled="{Binding CanGoToNextPage}"
+                         ToolTip="Next page"
+                         Padding="8,4"
+                         FontSize="12">
+                    <ui:SymbolIcon Symbol="ChevronRight16"/>
+                </ui:Button>
+
+                <!-- Last Page Button -->
+                <ui:Button Appearance="Secondary"
+                         Command="{Binding LastPageCommand}"
+                         IsEnabled="{Binding CanGoToNextPage}"
+                         ToolTip="Last page"
+                         Padding="8,4"
+                         FontSize="12">
+                    <ui:SymbolIcon Symbol="ChevronDoubleRight16"/>
+                </ui:Button>
+            </StackPanel>
+
+            <!-- Page Size Info -->
+            <TextBlock Grid.Column="2" 
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Center"
+                     Text="{Binding PageSize, StringFormat='每页 {0} 项'}"
+                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     FontSize="12"/>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

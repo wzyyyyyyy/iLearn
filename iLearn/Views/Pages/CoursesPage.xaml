@@ -48,15 +48,8 @@
                                 <b:InvokeCommandAction Command="{Binding TermSelectionChangedCommand}" />
                             </b:EventTrigger>
                         </b:Interaction.Triggers>
-                        </ComboBox>
+                    </ComboBox>
                 </ui:Card>
-
-                <ui:TextBox Grid.Column="2" 
-                           PlaceholderText="请输入课程码" 
-                           Text="{Binding CourseCode, Mode=TwoWay}"
-                           Width="200"
-                           Margin="0,0,10,0"
-                           VerticalAlignment="Center"/>
 
                 <ui:Button Grid.Column="3"
                            Appearance="Primary"
@@ -65,7 +58,7 @@
                            Padding="12,5">
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="Add12" Margin="0,0,8,0"/>
-                        <TextBlock Text="加入课程"/>
+                        <TextBlock Text="添加课程"/>
                     </StackPanel>
                 </ui:Button>
             </Grid>

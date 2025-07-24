@@ -361,4 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
 /iLearnSetup/output
+/iLearn/Assets/CourseDate.db

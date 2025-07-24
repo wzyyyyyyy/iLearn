@@ -38,6 +38,10 @@ namespace iLearn
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<MainViewModel>();
 
+                // Join Course window
+                services.AddTransient<JoinCourseWindow>();
+                services.AddTransient<JoinCourseViewModel>();
+
                 //Pages
                 services.AddSingleton<CoursesPage>();
                 services.AddSingleton<CoursesViewModel>();
@@ -67,6 +71,7 @@ namespace iLearn
                 services.AddSingleton<ISnackbarService, SnackbarService>();
                 services.AddSingleton<IContentDialogService, ContentDialogService>();
                 services.AddSingleton<VideoDownloadService>();
+                services.AddSingleton<CourseDateService>();
 
                 services.AddSingleton(sp =>
                 {
@@ -82,6 +87,11 @@ namespace iLearn
                             var win = sp.GetRequiredService<MainWindow>();
                             win.Show();
                         },
+                        [typeof(JoinCourseViewModel)] = () =>
+                        {
+                            var win = sp.GetRequiredService<JoinCourseWindow>();
+                            win.ShowDialog();
+                        }
                     };
 
                     var closeActions = new Dictionary<Type, Action>();

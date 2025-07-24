@@ -3,6 +3,7 @@ using iLearn.Helpers.Messages;
 using iLearn.Models;
 using iLearn.Services;
 using iLearn.Views.Pages;
+using iLearn.ViewModels.Windows;
 using System.Collections.ObjectModel;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
@@ -20,18 +21,17 @@ namespace iLearn.ViewModels.Pages
         [ObservableProperty]
         private ObservableCollection<ClassInfo> _myCourses;
 
-        [ObservableProperty]
-        private string _courseCode = string.Empty;
-
         private readonly ILearnApiService _ilearnApiService;
         private readonly ISnackbarService _snackbarService;
         private readonly INavigationService _navigationService;
+        private readonly WindowsManagerService _windowsManagerService;
 
-        public CoursesViewModel(ILearnApiService ilearnApiService, ISnackbarService snackbarService, INavigationService navigationService)
+        public CoursesViewModel(ILearnApiService ilearnApiService, ISnackbarService snackbarService, INavigationService navigationService, WindowsManagerService windowsManagerService)
         {
             _ilearnApiService = ilearnApiService ?? throw new ArgumentNullException(nameof(ilearnApiService));
             _snackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
             _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+            _windowsManagerService = windowsManagerService ?? throw new ArgumentNullException(nameof(windowsManagerService));
             Init().ConfigureAwait(false);
         }
 
@@ -68,46 +68,8 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void JoinCourse()
         {
-            if (string.IsNullOrWhiteSpace(CourseCode))
-            {
-                _snackbarService.Show(
-                "错误",
-                "请输入课程码",
-                ControlAppearance.Caution,
-                new SymbolIcon(SymbolRegular.CalendarError16),
-                TimeSpan.FromSeconds(3)
-                );
-                return;
-            }
-
-            _ilearnApiService.JoinCourse(CourseCode)
-                .ContinueWith(task =>
-                {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        if (!task.IsCompletedSuccessfully)
-                        {
-                            _snackbarService.Show(
-                             "错误",
-                             "加入失败！",
-                            ControlAppearance.Caution,
-                            new SymbolIcon(SymbolRegular.CalendarError16),
-                            TimeSpan.FromSeconds(3)
-                            );
-                        }
-                        else
-                        {
-                            _snackbarService.Show(
-                            "Info",
-                            task.Result,
-                           ControlAppearance.Info,
-                           new SymbolIcon(SymbolRegular.Connected16),
-                           TimeSpan.FromSeconds(3)
-                           );
-                        }
-                        Init();
-                    });
-                });
+            System.Windows.MessageBox.Show("sb");
+            _windowsManagerService.Show<JoinCourseViewModel>();
         }
 
         [RelayCommand]
