@@ -8,8 +8,10 @@
     xmlns:viewModels="clr-namespace:iLearn.ViewModels.Windows"
     xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
     mc:Ignorable="d"
-    Width="900"
-    Height="700"
+    Width="1100"
+    Height="750"
+    MinWidth="800"
+    MinHeight="600"
     WindowStartupLocation="CenterScreen"  
     WindowCornerPreference="Round"  
     ExtendsContentIntoTitleBar="True"  
@@ -17,75 +19,196 @@
     d:DataContext="{d:DesignInstance viewModels:JoinCourseViewModel}"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+
+    <Window.Resources>
+        <!-- 自定义样式资源 -->
+        <Style x:Key="ModernDataGridStyle" TargetType="DataGrid">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource DividerStrokeColorDefaultBrush}"/>
+            <Setter Property="RowBackground" Value="Transparent"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SubtleFillColorTransparentBrush}"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="CanUserResizeColumns" Value="True"/>
+            <Setter Property="CanUserSortColumns" Value="True"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="RowHeaderWidth" Value="0"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <!-- DataGrid 行样式 -->
+        <Style x:Key="ModernDataGridRowStyle" TargetType="DataGridRow">
+            <Setter Property="MinHeight" Value="48"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentFillColorSelectedTextBackgroundBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- DataGrid 列头样式 -->
+        <Style x:Key="ModernDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource LayerFillColorDefaultBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerStrokeColorDefaultBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <!-- DataGrid 单元格样式 -->
+        <Style x:Key="ModernDataGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 带ToolTip的TextBlock样式 -->
+        <Style x:Key="TextBlockWithTooltipStyle" TargetType="TextBlock">
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 卡片样式容器 -->
+        <Style x:Key="CardContainerStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="{DynamicResource SystemBaseLowColor}" 
+                                    BlurRadius="8" 
+                                    ShadowDepth="2" 
+                                    Opacity="0.1"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <ui:TitleBar  
-        VerticalAlignment="Top"  
-        Margin="0,0,0,0" />
-        <!-- Title Bar -->
-        <Grid Grid.Row="0" Margin="24,32,24,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Horizontal">
-                <ui:SymbolIcon Symbol="BookAdd20" 
-                             FontSize="24" 
-                             Margin="0,0,12,0"
-                             VerticalAlignment="Center"/>
-                <TextBlock Text="添加课程" 
-                         FontSize="24" 
-                         FontWeight="SemiBold"
-                         VerticalAlignment="Center"/>
-            </StackPanel>
+        <!-- 标题栏 -->
+        <ui:TitleBar Grid.Row="0" 
+                    VerticalAlignment="Top"  
+                    Margin="0,0,0,0" />
 
-            <ui:Button Grid.Column="1"
-                     HorizontalAlignment="Right"
-                     Appearance="Secondary"
-                     Command="{Binding RefreshCoursesCommand}"
-                     ToolTip="Refresh course list">
-                <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="ArrowClockwise16" Margin="0,0,8,0"/>
-                    <TextBlock Text="刷新"/>
+        <!-- 标题区域 -->
+        <Border Grid.Row="1" 
+                Style="{StaticResource CardContainerStyle}"
+                Margin="24,32,24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
+                            CornerRadius="8"
+                            Padding="8"
+                            Margin="0,0,16,0">
+                        <ui:SymbolIcon Symbol="BookAdd20" 
+                                     FontSize="24" 
+                                     Foreground="White"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="添加课程" 
+                                 FontSize="24" 
+                                 FontWeight="SemiBold"
+                                 Margin="0,0,0,4"/>
+                        <TextBlock Text="浏览并添加您想要学习的课程"
+                                 FontSize="13"
+                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
                 </StackPanel>
-            </ui:Button>
-        </Grid>
 
-        <!-- Search Bar -->
-        <Grid Grid.Row="1" Margin="24,0,24,16">
+                <ui:Button Grid.Column="2"
+                         Appearance="Secondary"
+                         Command="{Binding RefreshCoursesCommand}"
+                         ToolTip="刷新课程列表"
+                         Padding="12,8">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="ArrowClockwise16" Margin="0,0,8,0"/>
+                        <TextBlock Text="刷新"/>
+                    </StackPanel>
+                </ui:Button>
+            </Grid>
+        </Border>
+
+        <!-- 搜索栏 -->
+        <Border Grid.Row="2" 
+                Style="{StaticResource CardContainerStyle}"
+                Margin="24,0,24,16">
             <ui:TextBox 
                 Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                PlaceholderText="Search"
-                FontSize="14">
+                PlaceholderText="搜索课程名称、教师或课程码..."
+                FontSize="14"
+                MinHeight="40">
                 <ui:TextBox.Icon>
                     <ui:SymbolIcon Symbol="Search16"/>
                 </ui:TextBox.Icon>
             </ui:TextBox>
-        </Grid>
+        </Border>
 
-        <!-- Course List -->
-        <Grid Grid.Row="2" Margin="24,0,24,16">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                <Grid>
-                    <!-- Course List -->
+        <!-- 课程列表 -->
+        <Border Grid.Row="3" 
+                Style="{StaticResource CardContainerStyle}"
+                Margin="24,0,24,16"
+                Padding="0">
+            <Grid>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                            HorizontalScrollBarVisibility="Auto"
+                            Background="Transparent">
                     <DataGrid ItemsSource="{Binding PagedCourses}"
-                            AutoGenerateColumns="False"
-                            CanUserAddRows="False"
-                            CanUserDeleteRows="False"
-                            IsReadOnly="True"
-                            GridLinesVisibility="Horizontal"
-                            HeadersVisibility="Column"
-                            SelectionMode="Single"
-                            RowHeaderWidth="0"
-                            FontSize="13"
-                            ScrollViewer.VerticalScrollBarVisibility="Auto"
-                            ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                            Style="{StaticResource ModernDataGridStyle}"
+                            RowStyle="{StaticResource ModernDataGridRowStyle}"
+                            ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeaderStyle}"
+                            CellStyle="{StaticResource ModernDataGridCellStyle}">
 
                         <b:Interaction.Triggers>
                             <b:EventTrigger EventName="MouseDoubleClick">
@@ -95,173 +218,251 @@
                         </b:Interaction.Triggers>
 
                         <DataGrid.Columns>
-                            <!-- Course Code -->
+                            <!-- 课程码 -->
                             <DataGridTextColumn Header="课程码" 
-                                              Binding="{Binding CourseId}" 
-                                              Width="100"
-                                              MinWidth="80"/>
-
-                            <!-- Course Name -->
-                            <DataGridTextColumn Header="课程名" 
-                                              Binding="{Binding CourseName}" 
-                                              Width="200"
-                                              MinWidth="150"/>
-
-                            <!-- Teacher -->
-                            <DataGridTextColumn Header="教师" 
-                                              Binding="{Binding TeacherName}" 
                                               Width="120"
-                                              MinWidth="100"/>
+                                              MinWidth="100">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="CourseId"/>
+                                </DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockWithTooltipStyle}">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <!-- Term -->
+                            <!-- 课程名 -->
+                            <DataGridTextColumn Header="课程名称" 
+                                              Width="2*"
+                                              MinWidth="200">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="CourseName"/>
+                                </DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockWithTooltipStyle}">
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- 教师 -->
+                            <DataGridTextColumn Header="任课教师" 
+                                              Width="1.2*"
+                                              MinWidth="120">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="TeacherName"/>
+                                </DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockWithTooltipStyle}"/>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- 学期 -->
                             <DataGridTextColumn Header="学期" 
-                                              Binding="{Binding Term}" 
-                                              Width="100"
-                                              MinWidth="80"/>
+                                              Width="1*"
+                                              MinWidth="100">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="Term"/>
+                                </DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockWithTooltipStyle}"/>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <!-- Section -->
+                            <!-- 课序号 -->
                             <DataGridTextColumn Header="课序号" 
-                                              Binding="{Binding SectionId}" 
-                                              Width="80"
-                                              MinWidth="60"/>
+                                              Width="0.8*"
+                                              MinWidth="80">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="SectionId"/>
+                                </DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockWithTooltipStyle}">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <!-- Schedule -->
+                            <!-- 上课时间 -->
                             <DataGridTextColumn Header="上课时间" 
-                                              Binding="{Binding Schedule}" 
-                                              Width="*"
-                                              MinWidth="150"/>
+                                              Width="2.5*"
+                                              MinWidth="220">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="Schedule"/>
+                                </DataGridTextColumn.Binding>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource TextBlockWithTooltipStyle}">
+                                        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        <Setter Property="TextWrapping" Value="Wrap"/>
+                                        <Setter Property="MaxHeight" Value="60"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
-                            <!-- Action Button -->
-                            <DataGridTemplateColumn Width="80" MinWidth="80">
+                            <!-- 操作按钮 -->
+                            <DataGridTemplateColumn Header="操作" 
+                                                  Width="100" 
+                                                  MinWidth="100"
+                                                  CanUserResize="False">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <ui:Button Content="添加"
+                                        <ui:Button Content="添加课程"
                                                  Appearance="Primary"
                                                  FontSize="12"
-                                                 Padding="8,4"
+                                                 Padding="12,6"
+                                                 Margin="4,2"
                                                  Command="{Binding DataContext.JoinCourseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                 CommandParameter="{Binding}"/>
+                                                 CommandParameter="{Binding}">
+                                        </ui:Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
-
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow">
-                                <Setter Property="Height" Value="40"/>
-                                <Setter Property="Cursor" Value="Hand"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.RowStyle>
                     </DataGrid>
+                </ScrollViewer>
 
-                    <!-- Empty State -->
-                    <StackPanel HorizontalAlignment="Center" 
-                              VerticalAlignment="Center"
-                              Visibility="{Binding PagedCourses.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                <!-- 空状态提示 -->
+                <StackPanel HorizontalAlignment="Center" 
+                          VerticalAlignment="Center"
+                          Visibility="{Binding PagedCourses.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                    <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
+                            CornerRadius="32"
+                            Width="64"
+                            Height="64"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,24">
                         <ui:SymbolIcon Symbol="BookSearch24" 
-                                     FontSize="48" 
-                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                     Margin="0,0,0,16"/>
-                        <TextBlock Text="No matching courses found" 
-                                 FontSize="16"
+                                     FontSize="32" 
+                                     Foreground="White"/>
+                    </Border>
+                    <TextBlock Text="未找到匹配的课程" 
+                             FontSize="18"
+                             FontWeight="SemiBold"
+                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                             HorizontalAlignment="Center"
+                             Margin="0,0,0,8"/>
+                    <TextBlock Text="尝试使用不同的搜索关键词或刷新课程列表" 
+                             FontSize="14"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                             HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 分页控制 -->
+        <Border Grid.Row="4" 
+                Style="{StaticResource CardContainerStyle}"
+                Margin="24,0,24,24" 
+                Visibility="{Binding HasMultiplePages, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 分页信息 -->
+                <StackPanel Grid.Column="0" 
+                          Orientation="Horizontal"
+                          VerticalAlignment="Center">
+                    <ui:SymbolIcon Symbol="Info16" 
+                                 FontSize="14"
                                  Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                 HorizontalAlignment="Center"/>
-                        <TextBlock Text="Try using different search keywords" 
-                                 FontSize="12"
-                                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                 HorizontalAlignment="Center"
-                                 Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Grid>
-            </ScrollViewer>
-        </Grid>
+                                 Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding PaginationInfo}"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                             FontSize="13"/>
+                </StackPanel>
 
-        <!-- Pagination Controls -->
-        <Grid Grid.Row="3" Margin="24,0,24,24" Visibility="{Binding HasMultiplePages, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+                <!-- 分页按钮 -->
+                <StackPanel Grid.Column="1" 
+                          Orientation="Horizontal" 
+                          HorizontalAlignment="Center">
 
-            <!-- Pagination Info -->
-            <TextBlock Grid.Column="0" 
-                     Text="{Binding PaginationInfo}"
-                     VerticalAlignment="Center"
-                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                     FontSize="12"/>
+                    <!-- 首页按钮 -->
+                    <ui:Button Appearance="Secondary"
+                             Command="{Binding FirstPageCommand}"
+                             IsEnabled="{Binding CanGoToPreviousPage}"
+                             ToolTip="首页"
+                             Padding="10,6"
+                             Margin="2"
+                             FontSize="12">
+                        <ui:SymbolIcon Symbol="ChevronDoubleLeft16"/>
+                    </ui:Button>
 
-            <!-- Pagination Buttons -->
-            <StackPanel Grid.Column="1" 
-                      Orientation="Horizontal" 
-                      HorizontalAlignment="Center">
+                    <!-- 上一页按钮 -->
+                    <ui:Button Appearance="Secondary"
+                             Command="{Binding PreviousPageCommand}"
+                             IsEnabled="{Binding CanGoToPreviousPage}"
+                             ToolTip="上一页"
+                             Padding="10,6"
+                             Margin="2"
+                             FontSize="12">
+                        <ui:SymbolIcon Symbol="ChevronLeft16"/>
+                    </ui:Button>
 
-                <!-- First Page Button -->
-                <ui:Button Appearance="Secondary"
-                         Command="{Binding FirstPageCommand}"
-                         IsEnabled="{Binding CanGoToPreviousPage}"
-                         ToolTip="First page"
-                         Padding="8,4"
-                         FontSize="12">
-                    <ui:SymbolIcon Symbol="ChevronDoubleLeft16"/>
-                </ui:Button>
+                    <!-- 页码信息 -->
+                    <Border Background="{DynamicResource AccentFillColorDefaultBrush}"
+                          CornerRadius="6"
+                          Padding="16,8"
+                          Margin="8,2"
+                          VerticalAlignment="Center">
+                        <TextBlock FontSize="13" 
+                                 FontWeight="SemiBold"
+                                 Foreground="White">
+                            <Run Text="{Binding CurrentPage}"/>
+                            <Run Text=" / " />
+                            <Run Text="{Binding TotalPages}"/>
+                        </TextBlock>
+                    </Border>
 
-                <!-- Previous Page Button -->
-                <ui:Button Appearance="Secondary"
-                         Command="{Binding PreviousPageCommand}"
-                         IsEnabled="{Binding CanGoToPreviousPage}"
-                         ToolTip="Previous page"
-                         Padding="8,4"
-                         FontSize="12">
-                    <ui:SymbolIcon Symbol="ChevronLeft16"/>
-                </ui:Button>
+                    <!-- 下一页按钮 -->
+                    <ui:Button Appearance="Secondary"
+                             Command="{Binding NextPageCommand}"
+                             IsEnabled="{Binding CanGoToNextPage}"
+                             ToolTip="下一页"
+                             Padding="10,6"
+                             Margin="2"
+                             FontSize="12">
+                        <ui:SymbolIcon Symbol="ChevronRight16"/>
+                    </ui:Button>
 
-                <!-- Page Info -->
-                <Border Background="{DynamicResource SubtleFillColorSecondaryBrush}"
-                      CornerRadius="4"
-                      Padding="12,4"
-                      VerticalAlignment="Center">
-                    <TextBlock FontSize="12" 
-                             Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-                        <Run Text="{Binding CurrentPage}"/>
-                        <Run Text="/" />
-                        <Run Text="{Binding TotalPages}"/>
-                    </TextBlock>
-                </Border>
+                    <!-- 末页按钮 -->
+                    <ui:Button Appearance="Secondary"
+                             Command="{Binding LastPageCommand}"
+                             IsEnabled="{Binding CanGoToNextPage}"
+                             ToolTip="末页"
+                             Padding="10,6"
+                             Margin="2"
+                             FontSize="12">
+                        <ui:SymbolIcon Symbol="ChevronDoubleRight16"/>
+                    </ui:Button>
+                </StackPanel>
 
-                <!-- Next Page Button -->
-                <ui:Button Appearance="Secondary"
-                         Command="{Binding NextPageCommand}"
-                         IsEnabled="{Binding CanGoToNextPage}"
-                         ToolTip="Next page"
-                         Padding="8,4"
-                         FontSize="12">
-                    <ui:SymbolIcon Symbol="ChevronRight16"/>
-                </ui:Button>
-
-                <!-- Last Page Button -->
-                <ui:Button Appearance="Secondary"
-                         Command="{Binding LastPageCommand}"
-                         IsEnabled="{Binding CanGoToNextPage}"
-                         ToolTip="Last page"
-                         Padding="8,4"
-                         FontSize="12">
-                    <ui:SymbolIcon Symbol="ChevronDoubleRight16"/>
-                </ui:Button>
-            </StackPanel>
-
-            <!-- Page Size Info -->
-            <TextBlock Grid.Column="2" 
-                     HorizontalAlignment="Right"
-                     VerticalAlignment="Center"
-                     Text="{Binding PageSize, StringFormat='每页 {0} 项'}"
-                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                     FontSize="12"/>
-        </Grid>
+                <!-- 每页显示数量 -->
+                <StackPanel Grid.Column="2" 
+                          Orientation="Horizontal"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Center">
+                    <TextBlock Text="每页显示："
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                             FontSize="13"
+                             VerticalAlignment="Center"
+                             Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding PageSize}"
+                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                             FontSize="13"
+                             FontWeight="SemiBold"
+                             VerticalAlignment="Center"
+                             Margin="0,0,4,0"/>
+                    <TextBlock Text="项"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                             FontSize="13"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </ui:FluentWindow>
