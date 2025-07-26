@@ -2,11 +2,10 @@
 using iLearn.Helpers.Messages;
 using iLearn.Models;
 using iLearn.Services;
-using iLearn.Views.Pages;
 using iLearn.ViewModels.Windows;
+using iLearn.Views.Pages;
 using System.Collections.ObjectModel;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 
 namespace iLearn.ViewModels.Pages
 {

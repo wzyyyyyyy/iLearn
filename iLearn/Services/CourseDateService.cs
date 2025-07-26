@@ -1,12 +1,6 @@
 ﻿using iLearn.Models;
 using LiteDB;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace iLearn.Services
 {
@@ -14,7 +8,7 @@ namespace iLearn.Services
     {
         private readonly LiteDatabase? _db;
 
-        public CourseDateService() 
+        public CourseDateService()
         {
             var uri = new Uri("pack://application:,,,/Assets/CourseDate.db");
             var localPath = Path.Combine(
