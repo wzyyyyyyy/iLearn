@@ -18,7 +18,8 @@
     WindowBackdropType="Mica" 
     d:DataContext="{d:DesignInstance viewModels:JoinCourseViewModel}"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
-    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ScrollViewer.CanContentScroll="False">
 
     <Window.Resources>
         <!-- 自定义样式资源 -->

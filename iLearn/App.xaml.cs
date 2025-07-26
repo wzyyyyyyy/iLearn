@@ -90,7 +90,7 @@ namespace iLearn
                         [typeof(JoinCourseViewModel)] = () =>
                         {
                             var win = sp.GetRequiredService<JoinCourseWindow>();
-                            win.ShowDialog();
+                            win.Show();
                         }
                     };
 
