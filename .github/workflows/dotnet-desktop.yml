@@ -30,13 +30,13 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore iLearn.sln
 
       - name: Build Debug
-        run: dotnet build --configuration Debug --no-restore -v quiet
+        run: dotnet build iLearn.sln --configuration Debug --no-restore -v quiet
 
       - name: Publish Debug
-        run: dotnet publish --configuration Debug --runtime win-x64 --output ./publish/debug
+        run: dotnet publish iLearn.sln --configuration Debug --runtime win-x64 --output ./publish/debug
 
       - name: Archive Debug
         run: |
@@ -72,13 +72,13 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore iLearn.sln
 
       - name: Build Release
-        run: dotnet build --configuration Release --no-restore -v quiet
+        run: dotnet build iLearn.sln --configuration Release --no-restore -v quiet
 
       - name: Publish Release
-        run: dotnet publish --configuration Release --runtime win-x64 --output ./publish/release
+        run: dotnet publish iLearn.sln --configuration Release --runtime win-x64 --output ./publish/release
 
       - name: Archive Release
         run: |
