@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using iLearn.Helpers;
+using iLearn.Helpers.Extensions;
 using iLearn.Models;
 using System.Net;
 using System.Net.Http;
@@ -10,7 +11,7 @@ namespace iLearn.Services
 {
     public class ILearnApiService
     {
-        private RetryHttpClient httpClient;
+        private HttpClient httpClient;
         private const string CAS_URL = "https://cas.jlu.edu.cn/tpass/login";
         private CookieContainer CookieContainer;
         public bool Logined { get; private set; } = false;
@@ -29,7 +30,7 @@ namespace iLearn.Services
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             };
 
-            httpClient = new RetryHttpClient(handler)
+            httpClient = new HttpClient(handler)
             {
                 Timeout = TimeSpan.FromSeconds(30)
             };
@@ -45,7 +46,7 @@ namespace iLearn.Services
 
             Init();
 
-            var casResponse = await httpClient.GetAsync($"{CAS_URL}?service=https://jwcidentity.jlu.edu.cn/iplat-pass-jlu/thirdLogin/jlu/login");
+            var casResponse = await httpClient.GetWithRetryAsync($"{CAS_URL}?service=https://jwcidentity.jlu.edu.cn/iplat-pass-jlu/thirdLogin/jlu/login");
             casResponse.EnsureSuccessStatusCode();
             var casHtml = await casResponse.Content.ReadAsStringAsync();
             var casDoc = new HtmlDocument();
@@ -72,7 +73,7 @@ namespace iLearn.Services
                 };
 
             var formContent = new FormUrlEncodedContent(formParams);
-            var casTicketResponse = await httpClient.PostAsync($"{CAS_URL}?service=https://jwcidentity.jlu.edu.cn/iplat-pass-jlu/thirdLogin/jlu/login", formContent);
+            var casTicketResponse = await httpClient.PostWithRetryAsync($"{CAS_URL}?service=https://jwcidentity.jlu.edu.cn/iplat-pass-jlu/thirdLogin/jlu/login", formContent);
 
             var htmlTicket = await casTicketResponse.Content.ReadAsStringAsync();
             var ticketDoc = new HtmlDocument();
@@ -81,7 +82,7 @@ namespace iLearn.Services
             // iLearn登录流程
             var ts0 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var ilearnGetNonceUrl0 = $"https://ilearn.jlu.edu.cn/cas-server/login?service=https://ilearntec.jlu.edu.cn/&get-lt=true&callback=jsonpcallback&n={ts0 + 1}&_={ts0}";
-            var ilearnGetNonceResp0 = await httpClient.GetAsync(ilearnGetNonceUrl0);
+            var ilearnGetNonceResp0 = await httpClient.GetWithRetryAsync(ilearnGetNonceUrl0);
             ilearnGetNonceResp0.EnsureSuccessStatusCode();
 
             var responseText0 = await ilearnGetNonceResp0.Content.ReadAsStringAsync();
@@ -112,7 +113,7 @@ namespace iLearn.Services
                 $"_eventId=submit&" +
                 $"_={ts}";
 
-            var ilearnGetNonceResp = await httpClient.GetAsync(ilearnGetNonceUrl);
+            var ilearnGetNonceResp = await httpClient.GetWithRetryAsync(ilearnGetNonceUrl);
             ilearnGetNonceResp.EnsureSuccessStatusCode();
 
             var responseText = await ilearnGetNonceResp.Content.ReadAsStringAsync();
@@ -121,8 +122,8 @@ namespace iLearn.Services
 
             // 完成登录
             var ssoUrl = $"https://ilearn.jlu.edu.cn/iplat/ssoservice?ssoservice=https://ilearntec.jlu.edu.cn/&ticket={GetStringFromJson(ilearnCasReturn, "ticket")}";
-            await httpClient.GetAsync(ssoUrl);
-            _ = await httpClient.GetAsync("https://ilearntec.jlu.edu.cn/coursecenter/main/index");
+            await httpClient.GetWithRetryAsync(ssoUrl);
+            _ = await httpClient.GetWithRetryAsync("https://ilearntec.jlu.edu.cn/coursecenter/main/index");
 
             Logined = true;
 
@@ -132,7 +133,7 @@ namespace iLearn.Services
         public async Task<List<TermInfo>> GetTermsAsync()
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
-            var response = await httpClient.PostAsync("https://ilearntec.jlu.edu.cn/studycenter/platform/common/termList", new StringContent(""));
+            var response = await httpClient.PostWithRetryAsync("https://ilearntec.jlu.edu.cn/studycenter/platform/common/termList", new StringContent(""));
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return TermInfo.Parse(json);
@@ -141,7 +142,7 @@ namespace iLearn.Services
         public async Task<List<ClassInfo>> GetClassesAsync(string year, string term)
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
-            var response = await httpClient.GetAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/classroom/myClassroom?termYear={year}&term={term}");
+            var response = await httpClient.GetWithRetryAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/classroom/myClassroom?termYear={year}&term={term}");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return ClassInfo.Parse(json);
@@ -150,7 +151,7 @@ namespace iLearn.Services
         public async Task<List<LiveAndRecordInfo>> GetLiveAndRecordInfoAsync(string termId, string classId)
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
-            var response = await httpClient.GetAsync($"https://ilearntec.jlu.edu.cn/coursecenter/liveAndRecord/getLiveAndRecordInfoList?memberId=&termId={termId}&roomType=0&identity=2&liveStatus=0&submitStatus=0&weekNum=&dayNum=&timeRange=&teachClassId={classId}");
+            var response = await httpClient.GetWithRetryAsync($"https://ilearntec.jlu.edu.cn/coursecenter/liveAndRecord/getLiveAndRecordInfoList?memberId=&termId={termId}&roomType=0&identity=2&liveStatus=0&submitStatus=0&weekNum=&dayNum=&timeRange=&teachClassId={classId}");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return LiveAndRecordInfo.Parse(json);
@@ -161,9 +162,9 @@ namespace iLearn.Services
             if (!Logined)
                 throw new InvalidOperationException("Not logged in.");
 
-            await httpClient.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/zhwk/selectLanguageExists?resourceId={resourceId}");
+            await httpClient.GetWithRetryAsync($"https://ilearnres.jlu.edu.cn/resource-center/zhwk/selectLanguageExists?resourceId={resourceId}");
 
-            var response = await httpClient.GetAsync($"https://ilearnres.jlu.edu.cn/resource-center/videoclass/videoClassInfo?resourceId={resourceId}");
+            var response = await httpClient.GetWithRetryAsync($"https://ilearnres.jlu.edu.cn/resource-center/videoclass/videoClassInfo?resourceId={resourceId}");
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -173,7 +174,7 @@ namespace iLearn.Services
         public async Task<string> JoinCourse(string courseId)
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
-            var response = await httpClient.GetAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/classroom/joinClassroom?classroomCode={courseId}");
+            var response = await httpClient.GetWithRetryAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/classroom/joinClassroom?classroomCode={courseId}");
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(json);
@@ -185,7 +186,7 @@ namespace iLearn.Services
         public async Task<UserInfo> GetUserInfo()
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
-            var response = await httpClient.PostAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/public/getUserInfo", new StringContent(""));
+            var response = await httpClient.PostWithRetryAsync($"https://ilearntec.jlu.edu.cn/studycenter/platform/public/getUserInfo", new StringContent(""));
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
             return UserInfo.Parse(json);

@@ -156,7 +156,7 @@ namespace iLearn.ViewModels.Pages
         {
             try
             {
-                HttpClient httpClient = new();
+                using HttpClient httpClient = new();
                 var request = await httpClient.GetAsync("https://raw.githubusercontent.com/wzyyyyyyy/iLearn/refs/heads/master/iLearn/Assets/version.txt");
                 request.EnsureSuccessStatusCode();
                 var latestVersion = await request.Content.ReadAsStringAsync();
