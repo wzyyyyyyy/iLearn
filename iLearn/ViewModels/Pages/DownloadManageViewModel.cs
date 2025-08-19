@@ -125,9 +125,9 @@ namespace iLearn.ViewModels.Pages
         }
 
         [RelayCommand]
-        private async Task ResumeAllDownloads()
+        private void ResumeAllDownloads()
         {
-            await _downloadService.ResumeAllDownloadsAsync();
+            _downloadService.ResumeAllDownloads();
             ShowSnackbar("全部开始", "已恢复所有暂停的下载任务", ControlAppearance.Success);
         }
 
