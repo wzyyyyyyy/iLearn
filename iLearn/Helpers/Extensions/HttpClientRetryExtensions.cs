@@ -1,11 +1,6 @@
 ﻿using Polly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace iLearn.Helpers.Extensions
 {
@@ -14,7 +9,7 @@ namespace iLearn.Helpers.Extensions
         private static readonly IAsyncPolicy<HttpResponseMessage> DefaultRetryPolicy = Policy
             .Handle<HttpRequestException>()
             .Or<TaskCanceledException>()
-            .Or<SocketException>() 
+            .Or<SocketException>()
             .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
             .WaitAndRetryAsync(
                 retryCount: 5,
@@ -22,7 +17,7 @@ namespace iLearn.Helpers.Extensions
                     TimeSpan.FromMilliseconds(Math.Pow(4, retryAttempt)) +
                     TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)));
 
-        
+
         public static async Task<HttpResponseMessage> SendWithRetryAsync(
             this HttpClient httpClient,
             HttpRequestMessage request,

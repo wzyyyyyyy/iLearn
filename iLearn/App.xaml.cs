@@ -72,6 +72,12 @@ namespace iLearn
                 services.AddSingleton<IContentDialogService, ContentDialogService>();
                 services.AddSingleton<VideoDownloadService>();
                 services.AddSingleton<CourseDateService>();
+                services.AddSingleton<AutoUpdateService>(sp =>
+                {
+                    System.Windows.Forms.Application.EnableVisualStyles();
+                    System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+                    return new AutoUpdateService("https://raw.githubusercontent.com/wzyyyyyyy/iLearn/refs/heads/master/iLearn/Assets/VersionInfo.xml");
+                });
 
                 services.AddSingleton(sp =>
                 {
