@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using iLearn.Models;
 using iLearn.Services;
 using System.Collections.ObjectModel;
@@ -10,12 +12,6 @@ namespace iLearn.ViewModels.Windows
     {
         [ObservableProperty]
         private string _searchQuery = string.Empty;
-
-        [ObservableProperty]
-        private ObservableCollection<LocalCourseData> _availableCourses = new();
-
-        [ObservableProperty]
-        private ObservableCollection<LocalCourseData> _filteredCourses = new();
 
         [ObservableProperty]
         private ObservableCollection<LocalCourseData> _pagedCourses = new();
@@ -47,17 +43,7 @@ namespace iLearn.ViewModels.Windows
         private readonly ISnackbarService _snackbarService;
         private readonly CourseDateService _courseDateService;
         private readonly ILearnApiService _ilearnApiService;
-
-        private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
-        private CancellationTokenSource? _currentOperationCts;
-        private readonly object _dataLock = new object();
-
-        private List<LocalCourseData> _allCoursesCache = new();
-        private Dictionary<string, List<LocalCourseData>> _searchCache = new();
-        private string _lastSearchQuery = string.Empty;
-
-        private Timer? _searchTimer;
-        private readonly object _searchLock = new object();
+        private CancellationTokenSource? _searchCancellationTokenSource;
 
         public JoinCourseViewModel(ISnackbarService snackbarService, CourseDateService courseDateService, ILearnApiService ilearnApiService)
         {
@@ -65,260 +51,72 @@ namespace iLearn.ViewModels.Windows
             _courseDateService = courseDateService ?? throw new ArgumentNullException(nameof(courseDateService));
             _ilearnApiService = ilearnApiService ?? throw new ArgumentNullException(nameof(ilearnApiService));
 
-            _ = LoadDataAsync();
+            _ = Task.Run(InitializeAsync);
         }
 
-        private async Task LoadDataAsync()
+        private async Task InitializeAsync()
         {
-            await _operationSemaphore.WaitAsync();
-            try
-            {
-                IsLoading = true;
-                _currentOperationCts?.Cancel();
-                _currentOperationCts = new CancellationTokenSource();
-                var token = _currentOperationCts.Token;
-
-                var courses = await Task.Run(() =>
-                {
-                    token.ThrowIfCancellationRequested();
-                    return _courseDateService.GetLocalCourseDatas().ToList();
-                }, token);
-
-                if (token.IsCancellationRequested) return;
-
-                lock (_dataLock)
-                {
-                    _allCoursesCache = courses;
-                    _searchCache.Clear();
-                    _lastSearchQuery = string.Empty;
-                }
-
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    if (!token.IsCancellationRequested)
-                    {
-                        AvailableCourses.Clear();
-                        _ = ApplyFiltersAndPaginationAsync();
-                    }
-                }, System.Windows.Threading.DispatcherPriority.Normal, token);
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                    _snackbarService.Show(
-                        "加载失败",
-                        $"无法加载课程数据：{ex.Message}",
-                        ControlAppearance.Caution,
-                        new SymbolIcon(SymbolRegular.ErrorCircle16),
-                        TimeSpan.FromSeconds(5))
-                );
-            }
-            finally
-            {
-                IsLoading = false;
-                _operationSemaphore.Release();
-            }
-        }
-
-        private async Task ApplyFiltersAndPaginationAsync()
-        {
-            if (IsSearching) return;
-
-            await _operationSemaphore.WaitAsync();
-            try
-            {
-                IsSearching = true;
-                _currentOperationCts?.Cancel();
-                _currentOperationCts = new CancellationTokenSource();
-                var token = _currentOperationCts.Token;
-
-                var currentQuery = SearchQuery?.Trim() ?? string.Empty;
-                var currentPage = CurrentPage;
-                var pageSize = PageSize;
-
-                var (pagedItems, totalCourses, totalPages, paginationInfo) =
-                    await Task.Run(() => ProcessDataInBackground(currentQuery, currentPage, pageSize, token), token);
-
-                if (token.IsCancellationRequested) return;
-
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    if (!token.IsCancellationRequested)
-                    {
-                        UpdateObservableCollection(PagedCourses, pagedItems);
-
-                        TotalCourses = totalCourses;
-                        TotalPages = totalPages;
-                        PaginationInfo = paginationInfo;
-
-                        if (CurrentPage > TotalPages && TotalPages > 0)
-                        {
-                            CurrentPage = TotalPages;
-                        }
-                        else if (CurrentPage < 1)
-                        {
-                            CurrentPage = 1;
-                        }
-                    }
-                }, System.Windows.Threading.DispatcherPriority.Normal, token);
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                    _snackbarService.Show(
-                        "处理失败",
-                        $"数据处理出错：{ex.Message}",
-                        ControlAppearance.Caution,
-                        new SymbolIcon(SymbolRegular.ErrorCircle16),
-                        TimeSpan.FromSeconds(3))
-                );
-            }
-            finally
-            {
-                IsSearching = false;
-                _operationSemaphore.Release();
-            }
-        }
-
-        private (List<LocalCourseData> pagedItems, int totalCourses, int totalPages, string paginationInfo)
-            ProcessDataInBackground(string searchQuery, int currentPage, int pageSize, CancellationToken token)
-        {
-            token.ThrowIfCancellationRequested();
-
-            List<LocalCourseData> filteredItems;
-
-            lock (_dataLock)
-            {
-                if (string.IsNullOrWhiteSpace(searchQuery))
-                {
-                    filteredItems = _allCoursesCache;
-                }
-                else
-                {
-                    var cacheKey = searchQuery.ToLowerInvariant();
-                    if (!_searchCache.TryGetValue(cacheKey, out filteredItems))
-                    {
-                        var query = cacheKey;
-                        filteredItems = _allCoursesCache.AsParallel()
-                            .Where(course =>
-                                (course.CourseName?.ToLowerInvariant().Contains(query) == true) ||
-                                (course.CourseId?.ToLowerInvariant().Contains(query) == true) ||
-                                (course.TeacherName?.ToLowerInvariant().Contains(query) == true) ||
-                                (course.Term?.ToLowerInvariant().Contains(query) == true))
-                            .ToList();
-
-                        if (_searchCache.Count > 100)
-                        {
-                            _searchCache.Clear();
-                        }
-                        _searchCache[cacheKey] = filteredItems;
-                    }
-                }
-            }
-
-            token.ThrowIfCancellationRequested();
-
-            var totalCourses = filteredItems.Count;
-            var totalPages = totalCourses == 0 ? 1 : (int)Math.Ceiling((double)totalCourses / pageSize);
-
-            if (currentPage > totalPages && totalPages > 0)
-                currentPage = totalPages;
-            else if (currentPage < 1)
-                currentPage = 1;
-
-            var pagedItems = filteredItems
-                .Skip((currentPage - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            token.ThrowIfCancellationRequested();
-
-            string paginationInfo;
-            if (totalCourses == 0)
-            {
-                paginationInfo = "没有找到课程";
-            }
-            else
-            {
-                int startItem = (currentPage - 1) * pageSize + 1;
-                int endItem = Math.Min(currentPage * pageSize, totalCourses);
-                paginationInfo = $"显示 {startItem}-{endItem} 项，共 {totalCourses:N0} 项";
-            }
-
-            return (pagedItems, totalCourses, totalPages, paginationInfo);
-        }
-
-        private static void UpdateObservableCollection<T>(ObservableCollection<T> collection, IList<T> newItems)
-        {
-            if (collection.Count == 0)
-            {
-                foreach (var item in newItems)
-                {
-                    collection.Add(item);
-                }
-                return;
-            }
-
-            if (newItems.Count == 0)
-            {
-                collection.Clear();
-                return;
-            }
-
-            collection.Clear();
-            foreach (var item in newItems)
-            {
-                collection.Add(item);
-            }
+            await LoadCoursesAsync();
         }
 
         [RelayCommand]
         private async Task SearchAsync()
         {
+            _searchCancellationTokenSource?.Cancel();
+            _searchCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _searchCancellationTokenSource.Token;
+
+            IsSearching = true;
             CurrentPage = 1;
-            await ApplyFiltersAndPaginationAsync();
+
+            try
+            {
+                await LoadCoursesAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Search was cancelled, do nothing
+            }
+            finally
+            {
+                IsSearching = false;
+            }
         }
 
         [RelayCommand]
         private async Task FirstPageAsync()
         {
-            if (CurrentPage > 1)
-            {
-                CurrentPage = 1;
-                await ApplyFiltersAndPaginationAsync();
-            }
+            if (CurrentPage == 1) return;
+            
+            CurrentPage = 1;
+            await LoadCoursesAsync();
         }
 
         [RelayCommand]
         private async Task PreviousPageAsync()
         {
-            if (CurrentPage > 1)
-            {
-                CurrentPage--;
-                await ApplyFiltersAndPaginationAsync();
-            }
+            if (CurrentPage <= 1) return;
+            
+            CurrentPage--;
+            await LoadCoursesAsync();
         }
 
         [RelayCommand]
         private async Task NextPageAsync()
         {
-            if (CurrentPage < TotalPages)
-            {
-                CurrentPage++;
-                await ApplyFiltersAndPaginationAsync();
-            }
+            if (CurrentPage >= TotalPages) return;
+            
+            CurrentPage++;
+            await LoadCoursesAsync();
         }
 
         [RelayCommand]
         private async Task LastPageAsync()
         {
-            if (CurrentPage < TotalPages)
-            {
-                CurrentPage = TotalPages;
-                await ApplyFiltersAndPaginationAsync();
-            }
+            if (CurrentPage == TotalPages) return;
+            
+            CurrentPage = TotalPages;
+            await LoadCoursesAsync();
         }
 
         [RelayCommand]
@@ -326,66 +124,177 @@ namespace iLearn.ViewModels.Windows
         {
             if (course == null) return;
 
-            SelectedCourse = course;
-            var inviteCode = GenerateInviteCode(course);
-
             try
             {
-                await Task.Run(async () => await _ilearnApiService.JoinCourse(inviteCode));
+                IsLoading = true;
 
-                await Application.Current.Dispatcher.InvokeAsync(() =>
+                _snackbarService.Show(
+                    "正在加入课程",
+                    $"正在加入课程: {course.CourseName}",
+                    ControlAppearance.Info,
+                    new SymbolIcon(SymbolRegular.BookAdd24),
+                    TimeSpan.FromSeconds(2)
+                );
+
+                var result = await _ilearnApiService.JoinCourse(course.CourseId);
+
+                if (!string.IsNullOrEmpty(result))
+                {
                     _snackbarService.Show(
                         "加入成功",
-                        $"已成功加入课程：{course.CourseName}",
+                        $"成功加入课程: {course.CourseName}",
                         ControlAppearance.Success,
-                        new SymbolIcon(SymbolRegular.CheckmarkCircle16),
-                        TimeSpan.FromSeconds(3))
-                );
+                        new SymbolIcon(SymbolRegular.CheckmarkCircle24),
+                        TimeSpan.FromSeconds(3)
+                    );
+                }
+                else
+                {
+                    _snackbarService.Show(
+                        "加入失败",
+                        "课程加入失败，请稍后重试",
+                        ControlAppearance.Caution,
+                        new SymbolIcon(SymbolRegular.ErrorCircle24),
+                        TimeSpan.FromSeconds(3)
+                    );
+                }
             }
             catch (Exception ex)
             {
-                await Application.Current.Dispatcher.InvokeAsync(() =>
-                    _snackbarService.Show(
-                        "加入失败",
-                        $"无法加入课程：{course.CourseName}\n{ex.Message}",
-                        ControlAppearance.Caution,
-                        new SymbolIcon(SymbolRegular.ErrorCircle16),
-                        TimeSpan.FromSeconds(5))
+                _snackbarService.Show(
+                    "加入失败",
+                    $"加入课程时发生错误: {ex.Message}",
+                    ControlAppearance.Danger,
+                    new SymbolIcon(SymbolRegular.ErrorCircle24),
+                    TimeSpan.FromSeconds(5)
                 );
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
         [RelayCommand]
         private async Task RefreshCoursesAsync()
         {
-            await LoadDataAsync();
+            SearchQuery = string.Empty;
+            CurrentPage = 1;
+            await LoadCoursesAsync();
 
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-                _snackbarService.Show(
-                    "刷新完成",
-                    "课程列表已更新",
-                    ControlAppearance.Info,
-                    new SymbolIcon(SymbolRegular.ArrowClockwise16),
-                    TimeSpan.FromSeconds(2)
-                )
+            _snackbarService.Show(
+                "刷新完成",
+                "课程列表已刷新",
+                ControlAppearance.Success,
+                new SymbolIcon(SymbolRegular.ArrowSync24),
+                TimeSpan.FromSeconds(2)
             );
         }
 
-        private static string GenerateInviteCode(LocalCourseData localCourseData)
+        private async Task LoadCoursesAsync(CancellationToken cancellationToken = default)
         {
-            return $"{localCourseData.Term}{localCourseData.CourseId}{localCourseData.SectionId}";
+            try
+            {
+                IsLoading = true;
+                
+                var skip = (CurrentPage - 1) * PageSize;
+                List<LocalCourseData> courses;
+                int totalCount;
+
+                await Task.Run(() =>
+                {
+                    if (string.IsNullOrWhiteSpace(SearchQuery))
+                    {
+                        courses = _courseDateService.GetLocalCourseDatas(skip, PageSize);
+                        totalCount = _courseDateService.GetCoursesCount();
+                    }
+                    else
+                    {
+                        courses = _courseDateService.SearchCourses(SearchQuery, skip, PageSize);
+                        totalCount = _courseDateService.GetSearchResultsCount(SearchQuery);
+                    }
+
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        PagedCourses.Clear();
+                        foreach (var course in courses)
+                        {
+                            PagedCourses.Add(course);
+                        }
+
+                        TotalCourses = totalCount;
+                        TotalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / PageSize));
+                        
+                        if (CurrentPage > TotalPages)
+                        {
+                            CurrentPage = TotalPages;
+                        }
+
+                        UpdatePaginationInfo();
+                    });
+                }, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _snackbarService.Show(
+                    "加载失败",
+                    $"加载课程列表时发生错误: {ex.Message}",
+                    ControlAppearance.Danger,
+                    new SymbolIcon(SymbolRegular.ErrorCircle24),
+                    TimeSpan.FromSeconds(5)
+                );
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void UpdatePaginationInfo()
+        {
+            if (TotalCourses == 0)
+            {
+                PaginationInfo = "没有找到课程";
+            }
+            else
+            {
+                var startIndex = (CurrentPage - 1) * PageSize + 1;
+                var endIndex = Math.Min(CurrentPage * PageSize, TotalCourses);
+                PaginationInfo = $"第 {startIndex}-{endIndex} 项，共 {TotalCourses} 项 (第 {CurrentPage} 页，共 {TotalPages} 页)";
+            }
         }
 
         partial void OnSearchQueryChanged(string value)
         {
-            lock (_searchLock)
+            _searchCancellationTokenSource?.Cancel();
+            _searchCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _searchCancellationTokenSource.Token;
+
+            _ = Task.Run(async () =>
             {
-                _searchTimer?.Dispose();
-                _searchTimer = new Timer(async _ =>
+                try
                 {
-                    await SearchAsync();
-                }, null, TimeSpan.FromMilliseconds(200), Timeout.InfiniteTimeSpan);
-            }
+                    await Task.Delay(300, cancellationToken);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await App.Current.Dispatcher.InvokeAsync(async () =>
+                        {
+                            CurrentPage = 1;
+                            await LoadCoursesAsync(cancellationToken);
+                        });
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+
+                }
+            });
         }
 
         public bool CanGoToPreviousPage => CurrentPage > 1;
@@ -397,6 +306,7 @@ namespace iLearn.ViewModels.Windows
             OnPropertyChanged(nameof(CanGoToPreviousPage));
             OnPropertyChanged(nameof(CanGoToNextPage));
             OnPropertyChanged(nameof(HasMultiplePages));
+            UpdatePaginationInfo();
         }
 
         partial void OnTotalPagesChanged(int value)
@@ -404,6 +314,12 @@ namespace iLearn.ViewModels.Windows
             OnPropertyChanged(nameof(CanGoToPreviousPage));
             OnPropertyChanged(nameof(CanGoToNextPage));
             OnPropertyChanged(nameof(HasMultiplePages));
+            UpdatePaginationInfo();
+        }
+
+        partial void OnTotalCoursesChanged(int value)
+        {
+            UpdatePaginationInfo();
         }
 
         public void Dispose()
@@ -416,10 +332,9 @@ namespace iLearn.ViewModels.Windows
         {
             if (disposing)
             {
-                _currentOperationCts?.Cancel();
-                _currentOperationCts?.Dispose();
-                _searchTimer?.Dispose();
-                _operationSemaphore?.Dispose();
+                _searchCancellationTokenSource?.Cancel();
+                _searchCancellationTokenSource?.Dispose();
+                _courseDateService?.Dispose();
             }
         }
 
