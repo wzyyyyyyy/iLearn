@@ -24,14 +24,16 @@ namespace iLearn.ViewModels.Pages
         private readonly ISnackbarService _snackbarService;
         private readonly INavigationService _navigationService;
         private readonly WindowsManagerService _windowsManagerService;
+        private readonly AutoUpdateService _autoUpdateService;
 
-        public CoursesViewModel(ILearnApiService ilearnApiService, ISnackbarService snackbarService, INavigationService navigationService, WindowsManagerService windowsManagerService)
+        public CoursesViewModel(ILearnApiService ilearnApiService, ISnackbarService snackbarService, INavigationService navigationService, WindowsManagerService windowsManagerService, AutoUpdateService autoUpdateService)
         {
             _ilearnApiService = ilearnApiService ?? throw new ArgumentNullException(nameof(ilearnApiService));
             _snackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
             _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
             _windowsManagerService = windowsManagerService ?? throw new ArgumentNullException(nameof(windowsManagerService));
             Init().ConfigureAwait(false);
+            _autoUpdateService = autoUpdateService;
         }
 
         private async Task Init()
@@ -52,6 +54,7 @@ namespace iLearn.ViewModels.Pages
             {
                 await LoadCoursesAsync(SelectedTerm);
             }
+
         }
 
         private async Task LoadCoursesAsync(TermInfo term)

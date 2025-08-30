@@ -1,12 +1,10 @@
-﻿using iLearn.Models;
+﻿using AutoUpdaterDotNET;
+using iLearn.Models;
 using iLearn.Services;
 using Microsoft.Win32;
 using System.IO;
-using System.Net.Http;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
-using MessageBox = System.Windows.MessageBox;
-using MessageBoxButton = System.Windows.MessageBoxButton;
 
 namespace iLearn.ViewModels.Pages
 {
@@ -14,6 +12,7 @@ namespace iLearn.ViewModels.Pages
     {
         private readonly AppConfig _appConfig;
         private readonly VideoDownloadService _downloadService;
+        private readonly AutoUpdateService _autoUpdateService;
         private string _theme = GetCurrentTheme();
 
         [ObservableProperty]
@@ -37,10 +36,11 @@ namespace iLearn.ViewModels.Pages
         [ObservableProperty]
         private string _downloadPath = string.Empty;
 
-        public SettingViewModel(AppConfig appConfig, VideoDownloadService downloadService)
+        public SettingViewModel(AppConfig appConfig, VideoDownloadService downloadService, AutoUpdateService autoUpdateService)
         {
             _appConfig = appConfig;
             _downloadService = downloadService;
+            _autoUpdateService = autoUpdateService;
 
             MaxConcurrentDownloads = _appConfig.MaxConcurrentDownloads;
             ChunkCount = _appConfig.ChunkCount;
@@ -152,31 +152,11 @@ namespace iLearn.ViewModels.Pages
         }
 
         [RelayCommand]
-        private async Task CheckForUpdates()
+        private void CheckForUpdates()
         {
-            try
-            {
-                using HttpClient httpClient = new();
-                var request = await httpClient.GetAsync("https://raw.githubusercontent.com/wzyyyyyyy/iLearn/refs/heads/master/iLearn/Assets/version.txt");
-                request.EnsureSuccessStatusCode();
-                var latestVersion = await request.Content.ReadAsStringAsync();
-
-                if (string.IsNullOrWhiteSpace(latestVersion) || latestVersion == GetAppVersion())
-                {
-                    MessageBox.Show("您当前使用的已经是最新版本。", "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
-
-                MessageBox.Show($"发现新版本:{latestVersion}", "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"检查更新失败: {ex.Message}", "检查更新", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            }
+            LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            AutoUpdater.InstalledVersion = new Version(0, 0, 0, 0); // 强制检查更新
+            AutoUpdater.Start("https://raw.githubusercontent.com/wzyyyyyyy/iLearn/refs/heads/master/iLearn/Assets/VersionInfo.xml");
         }
 
         private static string GetCurrentTheme()

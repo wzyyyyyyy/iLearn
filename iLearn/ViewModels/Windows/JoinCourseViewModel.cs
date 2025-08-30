@@ -14,7 +14,7 @@ namespace iLearn.ViewModels.Windows
         private string _searchQuery = string.Empty;
 
         [ObservableProperty]
-        private ObservableCollection<LocalCourseData> _pagedCourses = new();
+        private ObservableCollection<LocalCourseData> _pagedCourses = [];
 
         [ObservableProperty]
         private LocalCourseData? _selectedCourse;

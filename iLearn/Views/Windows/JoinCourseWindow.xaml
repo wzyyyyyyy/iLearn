@@ -209,7 +209,8 @@
                             Style="{StaticResource ModernDataGridStyle}"
                             RowStyle="{StaticResource ModernDataGridRowStyle}"
                             ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeaderStyle}"
-                            CellStyle="{StaticResource ModernDataGridCellStyle}">
+                            CellStyle="{StaticResource ModernDataGridCellStyle}"
+                            ScrollViewer.CanContentScroll="False">
 
                         <b:Interaction.Triggers>
                             <b:EventTrigger EventName="MouseDoubleClick">
