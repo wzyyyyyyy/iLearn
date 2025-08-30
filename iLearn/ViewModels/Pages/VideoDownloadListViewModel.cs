@@ -47,7 +47,7 @@ namespace iLearn.ViewModels.Pages
             _snackbarService = snackbarService;
             _appConfig = appConfig;
 
-            Videos = new ObservableCollection<LiveAndRecordInfo>(liveAndRecordInfos ?? new List<LiveAndRecordInfo>());
+            Videos = new ObservableCollection<LiveAndRecordInfo>(liveAndRecordInfos ?? []);
 
             foreach (var video in Videos)
             {
@@ -104,47 +104,50 @@ namespace iLearn.ViewModels.Pages
 
         private void OnVideoPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(LiveAndRecordInfo.IsHdmiSelected))
+            switch (e.PropertyName)
             {
-                _isUpdatingAllSelected = true;
+                case nameof(LiveAndRecordInfo.IsHdmiSelected):
+                    _isUpdatingAllSelected = true;
 
-                try
-                {
-                    var allHdmiSelected = Videos.All(v => v.IsHdmiSelected);
-                    if (IsAllHdmiSelected != allHdmiSelected)
+                    try
                     {
-                        IsAllHdmiSelected = allHdmiSelected;
+                        var allHdmiSelected = Videos.All(v => v.IsHdmiSelected);
+                        if (IsAllHdmiSelected != allHdmiSelected)
+                        {
+                            IsAllHdmiSelected = allHdmiSelected;
+                        }
                     }
-                }
-                finally
-                {
-                    _isUpdatingAllSelected = false;
-                }
-            }
-            else if (e.PropertyName == nameof(LiveAndRecordInfo.IsTeacherSelected))
-            {
-                _isUpdatingAllSelected = true;
+                    finally
+                    {
+                        _isUpdatingAllSelected = false;
+                    }
 
-                try
-                {
-                    var allTeacherSelected = Videos.All(v => v.IsTeacherSelected);
-                    if (IsAllTeacherSelected != allTeacherSelected)
+                    break;
+                case nameof(LiveAndRecordInfo.IsTeacherSelected):
+                    _isUpdatingAllSelected = true;
+
+                    try
                     {
-                        IsAllTeacherSelected = allTeacherSelected;
+                        var allTeacherSelected = Videos.All(v => v.IsTeacherSelected);
+                        if (IsAllTeacherSelected != allTeacherSelected)
+                        {
+                            IsAllTeacherSelected = allTeacherSelected;
+                        }
                     }
-                }
-                finally
-                {
-                    _isUpdatingAllSelected = false;
-                }
+                    finally
+                    {
+                        _isUpdatingAllSelected = false;
+                    }
+
+                    break;
             }
         }
 
         [RelayCommand]
         private void DownloadSelected()
         {
-            var hdmiSelectedVideos = Videos.Where(v => v.IsHdmiSelected && v.ResourceId is not null).ToList();
-            var teacherSelectedVideos = Videos.Where(v => v.IsTeacherSelected && v.ResourceId is not null).ToList();
+            var hdmiSelectedVideos = Videos.Where(v => v is { IsHdmiSelected: true, ResourceId: not null }).ToList();
+            var teacherSelectedVideos = Videos.Where(v => v is { IsTeacherSelected: true, ResourceId: not null }).ToList();
 
             var totalSelectedCount = hdmiSelectedVideos.Count + teacherSelectedVideos.Count;
 
@@ -223,14 +226,7 @@ namespace iLearn.ViewModels.Pages
 
         private string SanitizeFileName(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                return "未命名";
-
-            foreach (var c in Path.GetInvalidFileNameChars())
-            {
-                name = name.Replace(c, '_');
-            }
-            return name;
+            return string.IsNullOrWhiteSpace(name) ? "未命名" : Path.GetInvalidFileNameChars().Aggregate(name, (current, c) => current.Replace(c, '_'));
         }
 
         private void ShowSnackbar(string title, string message, ControlAppearance appearance)

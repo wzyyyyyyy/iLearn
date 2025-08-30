@@ -62,13 +62,9 @@ namespace iLearn.ViewModels.Pages
         {
             var activeDownloads = _downloadService.ActiveDownloads.ToList();
 
-            foreach (var download in activeDownloads)
+            foreach (var download in from download in activeDownloads let existingItem = Downloads.FirstOrDefault(d => d.Url == download.Url) where existingItem == null select download)
             {
-                var existingItem = Downloads.FirstOrDefault(d => d.Url == download.Url);
-                if (existingItem == null)
-                {
-                    Downloads.Add(download);
-                }
+                Downloads.Add(download);
             }
 
             SortDownloadsByStatus();
@@ -104,9 +100,8 @@ namespace iLearn.ViewModels.Pages
             }
         }
 
-        private int GetStatusSortOrder(string status)
-        {
-            return status switch
+        private int GetStatusSortOrder(string status) =>
+            status switch
             {
                 "Failed" => 0,        // 下载失败
                 "Downloading" => 1,   // 正在下载
@@ -115,7 +110,6 @@ namespace iLearn.ViewModels.Pages
                 "Completed" => 4,     // 已完成
                 _ => 5                // 其他状态
             };
-        }
 
         [RelayCommand]
         private void PauseAllDownloads()
@@ -192,7 +186,7 @@ namespace iLearn.ViewModels.Pages
         {
             try
             {
-                if (item != null && item.Status == "Completed" && File.Exists(item.OutputPath))
+                if (item is { Status: "Completed" } && File.Exists(item.OutputPath))
                 {
                     Process.Start(new ProcessStartInfo
                     {
