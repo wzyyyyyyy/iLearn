@@ -33,7 +33,7 @@ namespace iLearn.Services
                 ParallelDownload = true,
                 Timeout = 600000,
                 BufferBlockSize = 10240,
-                MaxTryAgainOnFailover = 20,
+                MaxTryAgainOnFailure = 10,
                 MaximumBytesPerSecond = Math.Max(0, _appConfig.SpeedLimitBytesPerSecond),
                 RequestConfiguration = new RequestConfiguration
                 {
