@@ -3,6 +3,7 @@ using iLearn.Models;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.IO;
+using System.Threading.Tasks.Dataflow;
 
 namespace iLearn.Services
 {
@@ -249,10 +250,12 @@ namespace iLearn.Services
                     ResetItemSpeed(item);
                 }
 
+                Task.Delay(1000).ContinueWith((_)=>File.Delete(item.OutputPath));
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                MessageBox.Show(e.Message);
                 return false;
             }
         }
