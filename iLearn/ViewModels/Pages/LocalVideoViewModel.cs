@@ -90,10 +90,7 @@ namespace iLearn.ViewModels.Pages
                         var videoFiles = Directory.GetFiles(downloadsPath, "*.*", SearchOption.AllDirectories)
                             .Where(file => videoExtensions.Contains(Path.GetExtension(file).ToLower()));
 
-                        foreach (var file in videoFiles)
-                        {
-                            videos.Add(LocalVideoFile.FromFileName(file));
-                        }
+                        videos.AddRange(videoFiles.Select(LocalVideoFile.FromFileName));
                     }
 
                     App.Current.Dispatcher.Invoke(() =>

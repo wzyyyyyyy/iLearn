@@ -67,19 +67,12 @@ namespace iLearn.Models
                             return null;
                         }
                     }
-                case "教师视角":
-                    {
-                        var path = FullPath.Replace("_教师.mp4", "_HDMI.mp4");
+                case "教师":
+                {
+                    var path = FullPath.Replace("_教师.mp4", "_HDMI.mp4");
 
-                        if (File.Exists(path))
-                        {
-                            return FromFileName(path);
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    }
+                    return File.Exists(path) ? FromFileName(path) : null;
+                }
                 default:
                     {
                         return null;
