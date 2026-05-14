@@ -365,5 +365,6 @@ FodyWeavers.xsd
 /iLearnSetup/output
 /.idea/.idea.iLearn/.idea
 /.claude
-/iLearn.Tests
 /CLAUDE.md
+/iLearn.Tests/bin
+/iLearn.Tests/obj
