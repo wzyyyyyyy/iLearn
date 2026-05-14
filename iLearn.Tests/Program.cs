@@ -19,7 +19,6 @@ var argWechat = args.Length > 1 ? args[1] : null;
 Console.WriteLine("── Step1: LoginStep1Async ──");
 var step1Result = await api.LoginStep1Async(username, password);
 Console.WriteLine($"结果: {step1Result}");
-Console.WriteLine($"诊断: {api.LastDebugInfo ?? "(无)"}");
 
 if (step1Result != LoginStepResult.NeedWechatCode)
 {
@@ -65,7 +64,6 @@ if (string.IsNullOrWhiteSpace(captcha))
 Console.WriteLine($"\n── RequestWechatCodeAsync(code={captcha}) ──");
 var r = await api.RequestWechatCodeAsync(captcha);
 Console.WriteLine($"结果: {r}");
-Console.WriteLine($"诊断: {api.LastDebugInfo ?? "(无)"}");
 
 if (r == ILearnApiService.WechatCodeRequestResult.Success)
 {
@@ -82,7 +80,6 @@ if (r == ILearnApiService.WechatCodeRequestResult.Success)
         Console.WriteLine($"\n── LoginStep2Async(code={captcha}, wx={wx}) ──");
         var s2 = await api.LoginStep2Async(captcha, wx);
         Console.WriteLine($"结果: {s2}");
-        Console.WriteLine($"诊断: {api.LastDebugInfo ?? "(无)"}");
         Console.WriteLine($"Logined: {api.Logined}");
 
         if (s2 == LoginStepResult.Success)
