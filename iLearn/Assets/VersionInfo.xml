@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<item>
+	<version>1.1.2.0</version>
+	<url>https://github.com/wzyyyyyyy/iLearn/releases/download/v1.1.1/iLearn-SetUp-1.1.1.exe</url>
+	<changelog>https://github.com/wzyyyyyyy/iLearn/releases/tag/v1.1.1</changelog>
+	<mandatory>false</mandatory>
+	<checksum algorithm="SHA256">c1d6d3b78360c9706484d8495a1da4f91e3be8ec2c73d3f42933af62c814586a</checksum>
+</item>

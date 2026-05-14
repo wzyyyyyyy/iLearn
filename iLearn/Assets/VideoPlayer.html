@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双视频同步播放器</title>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <style>
+        :root {
+            /* 核心色板 - 深空灰与霓虹蓝 */
+            /* 由于俺不会html，本播放器完全由ai生成 */
+            --bg-app: #0f1115;
+            --bg-panel: #181b21;
+            --bg-glass: rgba(24, 27, 33, 0.85);
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --accent: #8b5cf6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-light: rgba(255, 255, 255, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+            
+            /* 尺寸变量 */
+            --header-height: 60px;
+            --footer-height: 80px;
+            --radius-md: 12px;
+            --radius-sm: 6px;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === 顶部导航栏 === */
+        .app-header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-light);
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        .app-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .mode-switcher {
+            display: flex;
+            background: rgba(0,0,0,0.3);
+            padding: 4px;
+            border-radius: 8px;
+            gap: 4px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 16px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn:hover { color: var(--text-main); }
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+
+        .action-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-light);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .action-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+
+        /* === 主视频区域 === */
+        .stage-container {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: #000;
+            padding: 20px;
+            transition: padding 0.3s ease;
+        }
+
+        .video-group {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 视频容器样式 */
+        .video-wrapper {
+            position: relative;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            background: #000;
+            flex: 1;
+            height: 100%;
+            display: flex; /* 确保videojs填充 */
+            flex-direction: column;
+            border: 1px solid var(--border-light);
+            transition: all 0.5s ease;
+        }
+
+        /* Video.js 覆盖样式 */
+        .video-js {
+            width: 100% !important;
+            height: 100% !important;
+            background-color: #000;
+        }
+        .video-js .vjs-tech {
+            object-fit: contain; /* 保持比例，不拉伸 */
+        }
+        .video-js .vjs-big-play-button {
+            background: rgba(59, 130, 246, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            margin-left: -30px;
+            margin-top: -30px;
+        }
+
+        /* 布局模式逻辑 */
+        .video-group.mode-left .right-wrapper,
+        .video-group.mode-right .left-wrapper {
+            flex: 0;
+            width: 0;
+            min-width: 0;
+            opacity: 0;
+            margin: 0;
+            border: none;
+            overflow: hidden;
+        }
+        
+        /* 交换动画类 */
+        .video-group.is-swapping .left-wrapper { transform: translateX(50%) scale(0.8); opacity: 0.5; }
+        .video-group.is-swapping .right-wrapper { transform: translateX(-50%) scale(0.8); opacity: 0.5; }
+
+        /* === 字幕覆盖层 === */
+        #subtitle-overlay {
+            position: absolute;
+            bottom: 40px; /* 稍微抬高，避免被控制栏遮挡 */
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: #ffd700;
+            font-size: clamp(16px, 2.5vw, 28px);
+            font-weight: 600;
+            text-shadow: 
+                2px 2px 0 #000,
+                -1px -1px 0 #000,  
+                1px -1px 0 #000,
+                -1px 1px 0 #000,
+                1px 1px 0 #000;
+            z-index: 10;
+            pointer-events: none;
+            padding: 4px 12px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 4px;
+            max-width: 80%;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: pre-wrap;
+        }
+        #subtitle-overlay.visible { opacity: 1; }
+
+        /* === 底部控制栏 (悬浮式) === */
+        .controls-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1000px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 12px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            z-index: 30;
+            opacity: 1;
+        }
+
+        .controls-container.hidden {
+            transform: translateX(-50%) translateY(120%);
+            opacity: 0;
+        }
+
+        /* 进度条行 */
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .time-text {
+            font-family: 'Monaco', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            min-width: 90px;
+            text-align: right;
+        }
+
+        /* 自定义 Range Input */
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: transparent;
+            height: 4px;
+            border-radius: 2px;
+            cursor: pointer;
+            flex-grow: 1;
+        }
+        
+        /* 进度条轨道 */
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+        /* 进度条滑块 */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+            margin-top: -4px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            transition: transform 0.2s;
+        }
+        input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.3); }
+
+        /* 按钮行 */
+        .buttons-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .left-controls, .right-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); color: var(--primary); }
+        .icon-btn.active { color: var(--primary); position: relative; }
+        .icon-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+        .icon-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        /* 音量条特殊样式 */
+        #volume-bar { width: 80px; flex-grow: 0; }
+        
+        /* 倍速选择器 */
+        .rate-select {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-light);
+            color: var(--text-muted);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .rate-select:hover { color: var(--text-main); border-color: var(--text-muted); }
+
+        /* === 侧边字幕栏 === */
+        .subtitle-panel {
+            position: fixed;
+            top: var(--header-height);
+            right: 0;
+            bottom: 0;
+            width: 320px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border-light);
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 25;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.3);
+        }
+        .subtitle-panel.visible { transform: translateX(0); }
+
+        .sub-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+        }
+        .sub-header h3 { margin: 0; font-size: 1rem; color: var(--text-main); }
+        
+        .sub-search-box {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .search-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-light);
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .search-input:focus { border-color: var(--primary); }
+
+        .sub-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+        
+        .sub-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            gap: 10px;
+        }
+        .sub-item:hover { background: rgba(255,255,255,0.03); }
+        .sub-item.active { background: rgba(59, 130, 246, 0.15); border-left: 3px solid var(--primary); }
+        .sub-item-time { font-family: monospace; color: var(--text-muted); font-size: 0.75rem; min-width: 45px; }
+        .sub-item-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.4; }
+        
+        /* 搜索高亮 */
+        .highlight { background: rgba(255, 215, 0, 0.3); color: #ffd700; border-radius: 2px; }
+
+        /* === 提示与消息 === */
+        .toast-message {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: var(--bg-glass);
+            border: 1px solid var(--primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--primary-hover);
+            opacity: 0;
+            transition: 0.3s;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .toast-message.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .shortcut-hint {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            background: rgba(0,0,0,0.6);
+            padding: 8px;
+            border-radius: 6px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .shortcut-hint.visible { opacity: 1; }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .app-header { padding: 0 1rem; }
+            .subtitle-panel { width: 100%; top: auto; height: 50vh; transform: translateY(100%); bottom: 0; border-left: none; border-top: 1px solid var(--border-light); }
+            .subtitle-panel.visible { transform: translateY(0); }
+            .controls-container { width: 96%; padding: 10px; bottom: 10px; }
+            .time-text { font-size: 0.7rem; min-width: 70px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部栏 -->
+    <header class="app-header">
+        <div class="app-title"></div>
+        
+        <div class="mode-switcher">
+            <button class="mode-btn" data-mode="left">左屏</button>
+            <button class="mode-btn active" data-mode="both">双屏</button>
+            <button class="mode-btn" data-mode="right">右屏</button>
+        </div>
+
+        <div class="header-actions">
+            <button id="swap-btn" class="action-btn" title="交换视频位置">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+                <span>交换</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 消息提示 -->
+    <div id="toast" class="toast-message">操作成功</div>
+    <div id="shortcuts-hint" class="shortcut-hint">
+        快捷键: 空格(播放) ←→(快进) ↑↓(音量) S(字幕) F(全屏)
+    </div>
+
+    <!-- 主舞台 -->
+    <div class="stage-container" id="stage-container" tabindex="0">
+        <div id="video-group" class="video-group mode-both">
+            <!-- 左视频 -->
+            <div class="video-wrapper left-wrapper">
+                <video id="video-left" class="video-js vjs-fluid" preload="auto">
+                    <!-- 默认视频源，为了演示 -->
+                    <source src="_RIGHTVIDEO_" type="video/mp4">
+                    <p class="vjs-no-js">请启用 JavaScript 以播放视频。</p>
+                </video>
+            </div>
+            
+            <!-- 右视频 -->
+            <div class="video-wrapper right-wrapper">
+                <video id="video-right" class="video-js vjs-fluid" preload="auto" muted>
+                    <source src="_LEFTVIDEO_" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <!-- 字幕覆盖 -->
+        <div id="subtitle-overlay"></div>
+
+        <!-- 悬浮控制栏 -->
+        <div id="controls" class="controls-container">
+            <!-- 进度行 -->
+            <div class="progress-row">
+                <span id="current-time" class="time-text">00:00</span>
+                <input type="range" id="seek-bar" value="0" step="0.1" min="0" max="100">
+                <span id="duration" class="time-text">00:00</span>
+            </div>
+
+            <!-- 按钮行 -->
+            <div class="buttons-row">
+                <div class="left-controls">
+                    <button id="play-btn" class="icon-btn" title="播放/暂停 (空格)">
+                        <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </button>
+                    
+                    <div style="display:flex; align-items:center;">
+                        <button id="mute-btn" class="icon-btn" title="静音 (M)">
+                            <svg id="icon-vol-high" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                            <svg id="icon-vol-mute" viewBox="0 0 24 24" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+                        </button>
+                        <input type="range" id="volume-bar" min="0" max="1" step="0.05" value="1">
+                    </div>
+
+                    <span style="width:1px; height:20px; background:rgba(255,255,255,0.2); margin:0 8px;"></span>
+
+                    <span id="subtitle-status" style="font-size:0.75rem; color:var(--text-muted);">无字幕</span>
+                </div>
+
+                <div class="right-controls">
+                    <select id="playback-rate" class="rate-select" title="播放速度">
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1.0x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2.0x</option>
+                    </select>
+
+                    <button id="sub-toggle-btn" class="icon-btn" title="显示/隐藏字幕 (S)">
+                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>
+                    </button>
+                    
+                    <button id="sub-list-btn" class="icon-btn" title="字幕列表 (N)">
+                        <svg viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/></svg>
+                    </button>
+
+                    <button id="upload-sub-btn" class="icon-btn" title="加载本地 .vtt 字幕">
+                        <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-8-8-8 8h4zm-4 2h14v2H5z"/></svg>
+                    </button>
+                    <input type="file" id="sub-file-input" accept=".vtt" style="display:none">
+
+                    <button id="fullscreen-btn" class="icon-btn" title="全屏 (F)">
+                        <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 字幕侧边栏 -->
+    <div id="subtitle-panel" class="subtitle-panel">
+        <div class="sub-header">
+            <h3>字幕导航</h3>
+            <button id="close-sub-panel" class="icon-btn" style="padding:4px;"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+        </div>
+        <div class="sub-search-box">
+            <input type="text" id="sub-search" class="search-input" placeholder="搜索字幕内容...">
+        </div>
+        <div id="sub-list-container" class="sub-list">
+            <div style="padding:20px; text-align:center; color:#666; font-size:0.9rem;">暂无字幕，请点击上传按钮加载 .vtt 文件</div>
+        </div>
+    </div>
+
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+        // === 配置与状态 ===
+        const state = {
+            mode: 'both',
+            isSwapped: false,
+            isPlaying: false,
+            subtitles: [],
+            isSubVisible: true,
+            activeSubIndex: -1,
+            playerLeft: null,
+            playerRight: null,
+            syncThreshold: 0.15, // 秒
+            syncInterval: null
+        };
+
+        // === DOM 元素 ===
+        const els = {
+            container: document.getElementById('stage-container'),
+            videoGroup: document.getElementById('video-group'),
+            controls: document.getElementById('controls'),
+            overlay: document.getElementById('subtitle-overlay'),
+            subtitlePanel: document.getElementById('subtitle-panel'),
+            seekBar: document.getElementById('seek-bar'),
+            currentTime: document.getElementById('current-time'),
+            duration: document.getElementById('duration'),
+            playBtn: document.getElementById('play-btn'),
+            playIcon: document.getElementById('icon-play'),
+            pauseIcon: document.getElementById('icon-pause'),
+            subList: document.getElementById('sub-list-container'),
+            subStatus: document.getElementById('subtitle-status'),
+            subSearch: document.getElementById('sub-search'),
+            toast: document.getElementById('toast'),
+            shortcuts: document.getElementById('shortcuts-hint')
+        };
+
+        // === 初始化播放器 ===
+        function initPlayers() {
+            const options = { controls: false, fluid: true, playsinline: true };
+            
+            state.playerLeft = videojs('video-left', options);
+            state.playerRight = videojs('video-right', { ...options, muted: true });
+
+            // 确保播放器就绪后绑定事件
+            Promise.all([
+                new Promise(r => state.playerLeft.ready(r)),
+                new Promise(r => state.playerRight.ready(r))
+            ]).then(() => {
+                bindPlayerEvents();
+                showToast("播放器就绪");
+                showShortcuts();
+
+                loadRemoteSubtitle('_SUBTITLE_'); 
+            });
+        }
+
+        // === 加载远程字幕辅助函数 ===
+        function loadRemoteSubtitle(url) {
+            if (!url) return;
+            fetch(url)
+                .then(response => response.text())
+                .then(text => {
+                    try {
+                        state.subtitles = parseVTT(text);
+                        renderSubtitleList();
+                        els.subStatus.innerText = `已加载: 默认字幕`;
+                        els.subStatus.style.color = 'var(--primary)';
+                        document.getElementById('sub-toggle-btn').classList.add('active');
+                        showToast(`成功加载默认字幕`);
+                    } catch (err) {
+                        console.error(err);
+                        showToast("默认字幕解析失败");
+                    }
+                })
+                .catch(err => {
+                    console.error('字幕加载失败:', err);
+                    showToast("无法加载默认字幕");
+                });
+        }
+
+        // === 核心逻辑：事件绑定 ===
+        function bindPlayerEvents() {
+            // 以左侧播放器为主（或当前非静音的那个）
+            const mainPlayer = state.playerLeft;
+
+            mainPlayer.on('timeupdate', () => {
+                updateProgress();
+                updateSubtitleDisplay();
+            });
+
+            mainPlayer.on('durationchange', updateDuration);
+            mainPlayer.on('play', () => updatePlayState(true));
+            mainPlayer.on('pause', () => updatePlayState(false));
+            mainPlayer.on('ended', () => updatePlayState(false));
+
+            // 开始同步循环
+            state.syncInterval = setInterval(syncPlayers, 200);
+        }
+
+        // === 同步逻辑 ===
+        function syncPlayers() {
+            if (state.mode !== 'both' || !state.isPlaying) return;
+
+            const t1 = state.playerLeft.currentTime();
+            const t2 = state.playerRight.currentTime();
+
+            // 如果误差超过阈值，强制右侧同步左侧
+            if (Math.abs(t1 - t2) > state.syncThreshold) {
+                // 只有当两者都在播放且并未在缓冲时才硬同步，避免死循环
+                if (!state.playerLeft.seeking() && !state.playerRight.seeking()) {
+                    state.playerRight.currentTime(t1);
+                }
+            }
+        }
+
+        // === UI 更新 ===
+        function updateProgress() {
+            const player = state.playerLeft;
+            const current = player.currentTime();
+            const dur = player.duration() || 1;
+            
+            els.currentTime.innerText = formatTime(current);
+            // 更新滑块位置
+            const percent = (current / dur) * 100;
+            els.seekBar.value = percent;
+            
+            // 更新滑块背景渐变
+            els.seekBar.style.background = `linear-gradient(to right, var(--primary) ${percent}%, rgba(255,255,255,0.2) ${percent}%)`;
+        }
+
+        function updateDuration() {
+            const dur = state.playerLeft.duration();
+            els.duration.innerText = formatTime(dur);
+        }
+
+        function updatePlayState(playing) {
+            state.isPlaying = playing;
+            els.playIcon.style.display = playing ? 'none' : 'block';
+            els.pauseIcon.style.display = playing ? 'block' : 'none';
+            
+            // 同步播放状态
+            if (state.mode === 'both') {
+                if (playing) {
+                    state.playerLeft.play().catch(()=>{});
+                    state.playerRight.play().catch(()=>{});
+                } else {
+                    state.playerLeft.pause();
+                    state.playerRight.pause();
+                }
+            }
+        }
+
+        // === 控制功能 ===
+        function togglePlay() {
+            if (state.playerLeft.paused()) {
+                state.playerLeft.play();
+            } else {
+                state.playerLeft.pause();
+            }
+        }
+
+        function seek(percent) {
+            const dur = state.playerLeft.duration();
+            const time = (percent / 100) * dur;
+            state.playerLeft.currentTime(time);
+            if (state.mode === 'both') state.playerRight.currentTime(time);
+        }
+
+        function setVolume(val) {
+            state.playerLeft.volume(val);
+            state.playerRight.volume(val); // 即使右侧静音，也同步音量值以便解除静音时使用
+            
+            // 更新图标
+            const iconHigh = document.getElementById('icon-vol-high');
+            const iconMute = document.getElementById('icon-vol-mute');
+            if (val == 0) {
+                iconHigh.style.display = 'none';
+                iconMute.style.display = 'block';
+            } else {
+                iconHigh.style.display = 'block';
+                iconMute.style.display = 'none';
+            }
+        }
+
+        function toggleMute() {
+            const volBar = document.getElementById('volume-bar');
+            if (state.playerLeft.muted() || state.playerLeft.volume() === 0) {
+                state.playerLeft.muted(false);
+                if (state.mode === 'left' || state.mode === 'both') state.playerRight.muted(true); // 保持右侧静音
+                const lastVol = volBar.dataset.lastVol || 0.5;
+                state.playerLeft.volume(lastVol);
+                volBar.value = lastVol;
+            } else {
+                volBar.dataset.lastVol = state.playerLeft.volume();
+                state.playerLeft.muted(true);
+                volBar.value = 0;
+            }
+            setVolume(volBar.value);
+        }
+
+        // === 模式切换 ===
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const mode = e.target.dataset.mode;
+                switchMode(mode);
+                
+                // 更新按钮状态
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+
+        function switchMode(mode) {
+            state.mode = mode;
+            els.videoGroup.className = `video-group mode-${mode}`;
+            
+            // 声音逻辑：双屏模式下默认静音右侧，单屏模式下开启对应侧声音
+            if (mode === 'left') {
+                state.playerLeft.muted(false);
+                state.playerRight.muted(true);
+            } else if (mode === 'right') {
+                state.playerLeft.muted(true);
+                state.playerRight.muted(false);
+            } else {
+                state.playerLeft.muted(false);
+                state.playerRight.muted(true);
+                // 强制同步一次
+                state.playerRight.currentTime(state.playerLeft.currentTime());
+            }
+            showToast(`已切换至: ${mode === 'both' ? '双屏' : mode === 'left' ? '左屏' : '右屏'}`);
+        }
+
+        // === 交换视频 ===
+        document.getElementById('swap-btn').addEventListener('click', () => {
+            els.videoGroup.classList.add('is-swapping');
+            setTimeout(() => {
+                const srcL = state.playerLeft.currentSrc();
+                const srcR = state.playerRight.currentSrc();
+                const curTime = state.playerLeft.currentTime();
+                const wasPlaying = !state.playerLeft.paused();
+
+                state.playerLeft.src({ type: 'video/mp4', src: srcR });
+                state.playerRight.src({ type: 'video/mp4', src: srcL });
+
+                // 恢复状态
+                state.playerLeft.currentTime(curTime);
+                state.playerRight.currentTime(curTime);
+                
+                if(wasPlaying) {
+                    state.playerLeft.play();
+                    state.playerRight.play();
+                }
+
+                els.videoGroup.classList.remove('is-swapping');
+                state.isSwapped = !state.isSwapped;
+                showToast("视频源已交换");
+            }, 500);
+        });
+
+        // === 字幕处理 ===
+        function parseVTT(content) {
+            const lines = content.split(/\r?\n/);
+            const items = [];
+            let current = null;
+
+            // 简单的解析器: 寻找 "00:00:00.000 --> 00:00:05.000" 模式
+            const timeRegex = /(\d{2}:\d{2}:\d{2}[.,]\d{3})\s-->\s(\d{2}:\d{2}:\d{2}[.,]\d{3})/;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                const match = line.match(timeRegex);
+
+                if (match) {
+                    if (current) items.push(current);
+                    current = {
+                        start: parseTime(match[1]),
+                        end: parseTime(match[2]),
+                        text: []
+                    };
+                } else if (current && line !== '' && !line.match(/^\d+$/)) { // 排除纯序号
+                    current.text.push(line);
+                }
+            }
+            if (current) items.push(current);
+            return items;
+        }
+
+        function parseTime(timeStr) {
+            const parts = timeStr.replace(',', '.').split(':');
+            return (parseFloat(parts[0]) * 3600) + (parseFloat(parts[1]) * 60) + parseFloat(parts[2]);
+        }
+
+        function updateSubtitleDisplay() {
+            if (!state.isSubVisible || state.subtitles.length === 0) {
+                els.overlay.classList.remove('visible');
+                return;
+            }
+
+            const now = state.playerLeft.currentTime();
+            // 查找当前字幕
+            const sub = state.subtitles.find(s => now >= s.start && now <= s.end);
+
+            if (sub) {
+                els.overlay.textContent = sub.text.join('\n');
+                els.overlay.classList.add('visible');
+                highlightSubListItem(sub);
+            } else {
+                els.overlay.classList.remove('visible');
+            }
+        }
+
+        // 本地字幕加载
+        document.getElementById('upload-sub-btn').addEventListener('click', () => {
+            document.getElementById('sub-file-input').click();
+        });
+
+        document.getElementById('sub-file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    state.subtitles = parseVTT(evt.target.result);
+                    renderSubtitleList();
+                    els.subStatus.innerText = `已加载: ${file.name}`;
+                    els.subStatus.style.color = 'var(--primary)';
+                    document.getElementById('sub-toggle-btn').classList.add('active');
+                    showToast(`成功加载 ${state.subtitles.length} 条字幕`);
+                } catch (err) {
+                    console.error(err);
+                    showToast("字幕解析失败");
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // 渲染字幕列表 (侧边栏)
+        function renderSubtitleList(filter = "") {
+            els.subList.innerHTML = "";
+            const list = filter 
+                ? state.subtitles.filter(s => s.text.some(t => t.toLowerCase().includes(filter.toLowerCase())))
+                : state.subtitles;
+
+            if (list.length === 0) {
+                els.subList.innerHTML = `<div style="padding:20px;text-align:center;color:#666">未找到匹配内容</div>`;
+                return;
+            }
+
+            // 使用 DocumentFragment 优化性能
+            const fragment = document.createDocumentFragment();
+            list.forEach((sub, index) => {
+                const div = document.createElement('div');
+                div.className = 'sub-item';
+                div.dataset.start = sub.start;
+                // 添加高亮逻辑
+                let textContent = sub.text.join(' ');
+                if (filter) {
+                    const reg = new RegExp(`(${filter})`, 'gi');
+                    textContent = textContent.replace(reg, '<span class="highlight">$1</span>');
+                }
+
+                div.innerHTML = `
+                    <div class="sub-item-time">${formatTime(sub.start)}</div>
+                    <div class="sub-item-text">${textContent}</div>
+                `;
+                div.addEventListener('click', () => {
+                    state.playerLeft.currentTime(sub.start);
+                    if (state.mode === 'both') state.playerRight.currentTime(sub.start);
+                    state.playerLeft.play();
+                });
+                fragment.appendChild(div);
+            });
+            els.subList.appendChild(fragment);
+        }
+
+        // 高亮当前字幕列表项
+        function highlightSubListItem(sub) {
+            // 简单实现：由于列表很长，不建议每次都遍历 DOM
+            // 实际生产中应结合 data-index 优化
+            // 这里为了演示，仅在侧边栏打开时查找
+            if (!els.subtitlePanel.classList.contains('visible')) return;
+            
+            // 移除旧高亮
+            const active = els.subList.querySelector('.active');
+            if (active) active.classList.remove('active');
+
+            // 查找新高亮 (根据时间戳)
+            // 注意：这里用时间戳匹配可能不严谨，应该给每个字幕加 ID，但为了简单...
+            const items = Array.from(els.subList.children);
+            const target = items.find(item => Math.abs(parseFloat(item.dataset.start) - sub.start) < 0.1);
+            
+            if (target) {
+                target.classList.add('active');
+                target.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
+
+        // 字幕搜索
+        els.subSearch.addEventListener('input', (e) => {
+            renderSubtitleList(e.target.value);
+        });
+
+        // 字幕开关
+        document.getElementById('sub-toggle-btn').addEventListener('click', (e) => {
+            state.isSubVisible = !state.isSubVisible;
+            e.currentTarget.classList.toggle('active', state.isSubVisible);
+            updateSubtitleDisplay();
+            showToast(state.isSubVisible ? "字幕已开启" : "字幕已隐藏");
+        });
+
+        // 字幕侧边栏开关
+        const toggleSubPanel = () => {
+            els.subtitlePanel.classList.toggle('visible');
+            const btn = document.getElementById('sub-list-btn');
+            btn.classList.toggle('active', els.subtitlePanel.classList.contains('visible'));
+            if (state.subtitles.length > 0 && els.subList.children.length <= 1) {
+                renderSubtitleList(); // 初次打开渲染
+            }
+        };
+        document.getElementById('sub-list-btn').addEventListener('click', toggleSubPanel);
+        document.getElementById('close-sub-panel').addEventListener('click', toggleSubPanel);
+
+
+        // === 辅助功能 ===
+        
+        // 自动隐藏控制栏
+        let hideControlsTimer;
+        const resetControlTimer = () => {
+            els.controls.classList.remove('hidden');
+            clearTimeout(hideControlsTimer);
+            hideControlsTimer = setTimeout(() => {
+                if (state.isPlaying && !els.controls.matches(':hover')) {
+                    els.controls.classList.add('hidden');
+                }
+            }, 3000);
+        };
+        els.container.addEventListener('mousemove', resetControlTimer);
+        els.container.addEventListener('click', resetControlTimer);
+
+        // 格式化时间
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }
+
+        // 显示 Toast
+        function showToast(msg) {
+            els.toast.innerText = msg;
+            els.toast.classList.add('visible');
+            setTimeout(() => els.toast.classList.remove('visible'), 2000);
+        }
+
+        function showShortcuts() {
+            els.shortcuts.classList.add('visible');
+            setTimeout(() => els.shortcuts.classList.remove('visible'), 5000);
+        }
+
+        // 全屏
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                els.container.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // 监听滑块事件
+        els.seekBar.addEventListener('input', (e) => seek(e.target.value));
+        els.playBtn.addEventListener('click', togglePlay);
+        document.getElementById('volume-bar').addEventListener('input', (e) => setVolume(e.target.value));
+        document.getElementById('mute-btn').addEventListener('click', toggleMute);
+        document.getElementById('playback-rate').addEventListener('change', (e) => {
+            const rate = parseFloat(e.target.value);
+            state.playerLeft.playbackRate(rate);
+            state.playerRight.playbackRate(rate);
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return; // 输入框时不触发
+
+            switch(e.code) {
+                case 'Space': 
+                    e.preventDefault(); togglePlay(); break;
+                case 'ArrowRight': 
+                    seek((state.playerLeft.currentTime() + 5) / state.playerLeft.duration() * 100); showToast("+5s"); break;
+                case 'ArrowLeft': 
+                    seek((state.playerLeft.currentTime() - 5) / state.playerLeft.duration() * 100); showToast("-5s"); break;
+                case 'ArrowUp': 
+                    setVolume(Math.min(1, state.playerLeft.volume() + 0.1)); document.getElementById('volume-bar').value = state.playerLeft.volume(); break;
+                case 'ArrowDown': 
+                    setVolume(Math.max(0, state.playerLeft.volume() - 0.1)); document.getElementById('volume-bar').value = state.playerLeft.volume(); break;
+                case 'KeyF': 
+                    document.getElementById('fullscreen-btn').click(); break;
+                case 'KeyS': 
+                    document.getElementById('sub-toggle-btn').click(); break;
+                case 'KeyN':
+                    toggleSubPanel(); break;
+                case 'KeyM':
+                    toggleMute(); break;
+            }
+        });
+
+        // 启动
+        initPlayers();
+
+    </script>
+</body>
+</html>

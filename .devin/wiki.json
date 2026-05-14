@@ -1,0 +1,303 @@
+{
+  "repo_notes": [
+    {
+      "content": ""
+    }
+  ],
+  "pages": [
+    {
+      "title": "iLearn Desktop Client Overview",
+      "purpose": "Introduce the iLearn desktop application, its purpose as an unofficial client for 学在吉大 platform, key features, and high-level architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Getting Started",
+      "purpose": "Guide users through installation, initial setup, and first launch of the application",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Installation",
+      "purpose": "Detailed installation instructions covering both guided installer and portable versions, version management, and auto-update system",
+      "parent": "Getting Started",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Building from Source",
+      "purpose": "Instructions for developers to clone, build, and run the application from source code, including build pipeline and environment setup",
+      "parent": "Getting Started",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "First Launch & Authentication",
+      "purpose": "Guide users through first-time authentication, remember me/auto-login features, and initial configuration",
+      "parent": "Getting Started",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Application Architecture",
+      "purpose": "Comprehensive overview of the application's architecture, design patterns, and structural organization",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Application Lifecycle & Host",
+      "purpose": "Deep dive into application startup, lifecycle management, IHost configuration, and service registration",
+      "parent": "Application Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "MVVM Pattern Implementation",
+      "purpose": "Explain the Model-View-ViewModel pattern usage, ViewModels, data binding, and commands throughout the application",
+      "parent": "Application Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Dependency Injection System",
+      "purpose": "Document the dependency injection setup, service registration patterns, and singleton vs transient lifetimes",
+      "parent": "Application Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Configuration Management",
+      "purpose": "Explain the AppConfig system, JSON persistence, encrypted password storage, and settings propagation",
+      "parent": "Application Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Core Features",
+      "purpose": "Overview of the main user-facing features and workflows in the application",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Authentication & Session Management",
+      "purpose": "Detailed documentation of the multi-step CAS authentication flow, session cookies, and credential management",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Course Management",
+      "purpose": "Overview of course browsing, searching, and enrollment features",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Browsing & Viewing Courses",
+      "purpose": "Document the CoursesViewModel, term selection, course listing, and navigation to media pages",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Joining New Courses",
+      "purpose": "Explain the course search system, local database caching, pagination, and enrollment workflow",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Video Download System",
+      "purpose": "Comprehensive documentation of the video download architecture and capabilities",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Download Service Architecture",
+      "purpose": "Deep dive into VideoDownloadService internals: queueing, concurrency control, chunking, retry logic, and speed limiting",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Download Management UI",
+      "purpose": "Document the download management interface, progress tracking, pause/resume/cancel operations, and status monitoring",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Local Video Playback",
+      "purpose": "Explain the local video player system, dual-video synchronization, filename conventions, and partner video discovery",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Dual-Video Player Features",
+      "purpose": "Document the HTML5 video player capabilities: dual synchronization, playback controls, keyboard shortcuts, and mode switching",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Subtitle System",
+      "purpose": "Explain subtitle parsing (VTT format), display synchronization, search functionality, and clickable timeline navigation",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Settings & Preferences",
+      "purpose": "Document all application settings, their effects, and how to configure download parameters, themes, and update checks",
+      "parent": "Core Features",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "API Integration",
+      "purpose": "Comprehensive documentation of external API communication, authentication flows, and network resilience",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "ILearn API Service",
+      "purpose": "Document the ILearnApiService class, its methods, endpoints, and data models for course and video information",
+      "parent": "API Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "HTTP Retry Mechanism",
+      "purpose": "Explain the HttpClientRetryExtensions, exponential backoff strategy, request cloning, and transient failure handling",
+      "parent": "API Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Multi-Step CAS Authentication",
+      "purpose": "Detailed walkthrough of the three-phase authentication process: CAS login, iLearn CAS token exchange, and SSO completion",
+      "parent": "API Integration",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Services & Infrastructure",
+      "purpose": "Documentation of core services that power the application's functionality",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Video Download Service",
+      "purpose": "Complete reference for VideoDownloadService API, lifecycle, event handling, and resource management",
+      "parent": "Services & Infrastructure",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Course Database Service",
+      "purpose": "Document the CourseDateService, LiteDB integration, local course caching, and search capabilities",
+      "parent": "Services & Infrastructure",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Auto-Update Service",
+      "purpose": "Explain the AutoUpdater.NET integration, version checking, update manifest (VersionInfo.xml), and update flow",
+      "parent": "Services & Infrastructure",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    }
+  ]
+}
