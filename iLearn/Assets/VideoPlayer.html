@@ -7,162 +7,236 @@
     <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <style>
         :root {
-            /* 核心色板 - 深空灰与霓虹蓝 */
-            /* 由于俺不会html，本播放器完全由ai生成 */
-            --bg-app: #0f1115;
-            --bg-panel: #181b21;
-            --bg-glass: rgba(24, 27, 33, 0.85);
-            --primary: #3b82f6;
-            --primary-hover: #60a5fa;
-            --accent: #8b5cf6;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border-light: rgba(255, 255, 255, 0.1);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
-            
-            /* 尺寸变量 */
-            --header-height: 60px;
-            --footer-height: 80px;
-            --radius-md: 12px;
+            --bg-deep: #090b10;
+            --bg-base: #11141d;
+            --bg-elevated: #181c28;
+            --bg-glass: rgba(16, 19, 29, 0.92);
+            --primary: #4f8cf7;
+            --primary-soft: rgba(79, 140, 247, 0.18);
+            --accent: #a78bfa;
+            --gold: #f5b642;
+            --text: #e8eaf0;
+            --text-secondary: #9ba0b2;
+            --text-muted: #5f6578;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --radius-lg: 14px;
+            --radius-md: 10px;
             --radius-sm: 6px;
+            --radius-xs: 4px;
+            --shadow-xl: 0 24px 40px -8px rgba(0,0,0,0.6);
+            --shadow-lg: 0 12px 24px -6px rgba(0,0,0,0.5);
+            --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
         }
 
-        * { box-sizing: border-box; outline: none; }
-        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-app);
-            color: var(--text-main);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        /* === 顶部导航栏 === */
+        /* ═══════════════ 顶部栏 ═══════════════ */
         .app-header {
-            height: var(--header-height);
+            height: 56px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 2rem;
-            background: var(--bg-panel);
-            border-bottom: 1px solid var(--border-light);
+            padding: 0 24px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
             flex-shrink: 0;
-            z-index: 20;
+            z-index: 30;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .app-logo {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .app-logo svg { width: 18px; height: 18px; fill: white; }
 
         .app-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 0.5px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: var(--text);
+        }
+        .app-subtitle {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-left: 2px;
         }
 
-        .mode-switcher {
+        .header-center {
             display: flex;
-            background: rgba(0,0,0,0.3);
-            padding: 4px;
-            border-radius: 8px;
-            gap: 4px;
+            background: rgba(255,255,255,0.04);
+            padding: 3px;
+            border-radius: 9px;
+            gap: 2px;
+            border: 1px solid var(--border);
         }
 
         .mode-btn {
             background: transparent;
             border: none;
-            color: var(--text-muted);
-            padding: 6px 16px;
-            font-size: 0.85rem;
-            border-radius: 6px;
+            color: var(--text-secondary);
+            padding: 6px 18px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            border-radius: 7px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
+            position: relative;
         }
-
-        .mode-btn:hover { color: var(--text-main); }
+        .mode-btn:hover { color: var(--text); }
         .mode-btn.active {
             background: var(--primary);
-            color: white;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(79, 140, 247, 0.35);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .action-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-light);
-            color: var(--text-main);
-            padding: 6px 12px;
-            border-radius: 6px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 7px 14px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            font-weight: 500;
             display: flex;
             align-items: center;
             gap: 6px;
-            transition: 0.2s;
+            transition: all 0.2s ease;
         }
-        .action-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+        .action-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--border-hover);
+            color: var(--text);
+        }
+        .action-btn svg { width: 15px; height: 15px; opacity: 0.7; }
+        .action-btn:hover svg { opacity: 1; }
 
-        /* === 主视频区域 === */
+        /* ═══════════════ 主舞台 ═══════════════ */
         .stage-container {
-            flex-grow: 1;
+            flex: 1;
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
             background: #000;
-            padding: 20px;
-            transition: padding 0.3s ease;
+            padding: 16px;
+            outline: none;
         }
 
         .video-group {
             display: flex;
             width: 100%;
             height: 100%;
-            gap: 20px;
+            gap: 16px;
             justify-content: center;
             align-items: center;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 视频容器样式 */
         .video-wrapper {
             position: relative;
-            border-radius: var(--radius-md);
+            border-radius: var(--radius-lg);
             overflow: hidden;
             box-shadow: var(--shadow-xl);
             background: #000;
             flex: 1;
             height: 100%;
-            display: flex; /* 确保videojs填充 */
+            display: flex;
             flex-direction: column;
-            border: 1px solid var(--border-light);
-            transition: all 0.5s ease;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Video.js 覆盖样式 */
+        .video-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius-lg);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .video-label {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(8px);
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            padding: 4px 14px;
+            border-radius: 20px;
+            z-index: 5;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
         .video-js {
             width: 100% !important;
             height: 100% !important;
-            background-color: #000;
+            background: #000 !important;
         }
-        .video-js .vjs-tech {
-            object-fit: contain; /* 保持比例，不拉伸 */
-        }
+        .video-js .vjs-tech { object-fit: contain; }
         .video-js .vjs-big-play-button {
-            background: rgba(59, 130, 246, 0.9);
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            line-height: 60px;
-            margin-left: -30px;
-            margin-top: -30px;
+            background: rgba(79, 140, 247, 0.9) !important;
+            border: none !important;
+            border-radius: 50% !important;
+            width: 68px !important;
+            height: 68px !important;
+            line-height: 68px !important;
+            margin-left: -34px !important;
+            margin-top: -34px !important;
+            transition: all 0.2s ease !important;
+            font-size: 28px !important;
+        }
+        .video-js .vjs-big-play-button:hover {
+            background: var(--primary) !important;
+            transform: scale(1.06);
+        }
+        .video-js .vjs-loading-spinner {
+            border-color: var(--primary) !important;
         }
 
-        /* 布局模式逻辑 */
+        /* 布局模式 */
         .video-group.mode-left .right-wrapper,
         .video-group.mode-right .left-wrapper {
             flex: 0;
@@ -173,110 +247,190 @@
             border: none;
             overflow: hidden;
         }
-        
-        /* 交换动画类 */
-        .video-group.is-swapping .left-wrapper { transform: translateX(50%) scale(0.8); opacity: 0.5; }
-        .video-group.is-swapping .right-wrapper { transform: translateX(-50%) scale(0.8); opacity: 0.5; }
 
-        /* === 字幕覆盖层 === */
+        .video-group.is-swapping .left-wrapper {
+            animation: swapLeft 0.4s ease;
+        }
+        .video-group.is-swapping .right-wrapper {
+            animation: swapRight 0.4s ease;
+        }
+        @keyframes swapLeft {
+            50% { transform: translateX(30%) scale(0.9); opacity: 0.3; }
+        }
+        @keyframes swapRight {
+            50% { transform: translateX(-30%) scale(0.9); opacity: 0.3; }
+        }
+
+        /* ═══════════════ 加载遮罩 ═══════════════ */
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            background: rgba(0,0,0,0.8);
+            z-index: 50;
+            border-radius: var(--radius-lg);
+            transition: opacity 0.3s;
+        }
+        .loading-overlay.fade-out { opacity: 0; pointer-events: none; }
+
+        .loading-spinner {
+            width: 48px; height: 48px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* ═══════════════ 缓冲指示器 ═══════════════ */
+        .buffer-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            background: rgba(0,0,0,0.75);
+            border-radius: 24px;
+            z-index: 40;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+        .buffer-indicator.show { display: flex; }
+        .buffer-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: pulse 1.2s ease infinite; }
+        .buffer-dot:nth-child(2) { animation-delay: 0.2s; }
+        .buffer-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse {
+            0%, 60% { opacity: 0.3; transform: scale(0.8); }
+            30% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* ═══════════════ 字幕覆盖 ═══════════════ */
         #subtitle-overlay {
             position: absolute;
-            bottom: 40px; /* 稍微抬高，避免被控制栏遮挡 */
+            bottom: 110px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
-            color: #ffd700;
-            font-size: clamp(16px, 2.5vw, 28px);
+            color: #fff;
+            font-size: clamp(15px, 2.2vw, 26px);
             font-weight: 600;
-            text-shadow: 
-                2px 2px 0 #000,
-                -1px -1px 0 #000,  
-                1px -1px 0 #000,
-                -1px 1px 0 #000,
-                1px 1px 0 #000;
+            text-shadow:
+                0 0 8px rgba(0,0,0,0.9),
+                0 2px 4px rgba(0,0,0,0.8);
             z-index: 10;
             pointer-events: none;
-            padding: 4px 12px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 4px;
-            max-width: 80%;
+            padding: 6px 18px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 6px;
+            max-width: 85%;
             opacity: 0;
             transition: opacity 0.2s;
-            white-space: pre-wrap;
+            line-height: 1.5;
         }
         #subtitle-overlay.visible { opacity: 1; }
 
-        /* === 底部控制栏 (悬浮式) === */
+        /* ═══════════════ 底部控制栏 ═══════════════ */
         .controls-container {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 90%;
-            max-width: 1000px;
+            width: 92%;
+            max-width: 1100px;
             background: var(--bg-glass);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-light);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 12px 24px;
+            padding: 10px 20px 12px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
+            gap: 6px;
+            box-shadow: 0 8px 36px rgba(0,0,0,0.55);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 30;
-            opacity: 1;
         }
-
-        .controls-container.hidden {
-            transform: translateX(-50%) translateY(120%);
+        .controls-container.collapsed {
+            transform: translateX(-50%) translateY(130%);
             opacity: 0;
         }
 
-        /* 进度条行 */
+        /* 进度条 */
         .progress-row {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-
         .time-text {
-            font-family: 'Monaco', monospace;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            min-width: 90px;
-            text-align: right;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            min-width: 44px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
         }
 
-        /* 自定义 Range Input */
         input[type="range"] {
             -webkit-appearance: none;
             background: transparent;
-            height: 4px;
-            border-radius: 2px;
+            height: 5px;
             cursor: pointer;
-            flex-grow: 1;
+            flex: 1;
+            position: relative;
         }
-        
-        /* 进度条轨道 */
         input[type="range"]::-webkit-slider-runnable-track {
-            height: 4px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 2px;
+            height: 5px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.12);
         }
-        /* 进度条滑块 */
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 12px;
-            width: 12px;
+            height: 15px;
+            width: 15px;
             border-radius: 50%;
-            background: var(--primary);
-            margin-top: -4px;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-            transition: transform 0.2s;
+            background: #fff;
+            margin-top: -5px;
+            box-shadow: 0 0 10px rgba(79, 140, 247, 0.5), 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.15s ease;
+            opacity: 0;
         }
-        input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.3); }
+        .controls-container:hover input[type="range"]::-webkit-slider-thumb,
+        .controls-container.dragging input[type="range"]::-webkit-slider-thumb { opacity: 1; }
+        input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.25); }
+
+        /* 章节标记 */
+        .chapter-marks {
+            position: absolute;
+            top: -4px;
+            left: 0; right: 0;
+            height: 13px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .chapter-dot {
+            position: absolute;
+            top: 0;
+            width: 3px; height: 100%;
+            background: var(--gold);
+            border-radius: 2px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .controls-container:hover .chapter-dot { opacity: 0.9; }
 
         /* 按钮行 */
         .buttons-row {
@@ -284,11 +438,10 @@
             align-items: center;
             justify-content: space-between;
         }
-
         .left-controls, .right-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .icon-btn {
@@ -296,255 +449,474 @@
             border: none;
             cursor: pointer;
             padding: 8px;
-            border-radius: 50%;
-            color: var(--text-main);
+            border-radius: 8px;
+            color: var(--text-secondary);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.2s;
+            transition: all 0.2s ease;
+            position: relative;
         }
-        .icon-btn:hover { background: rgba(255,255,255,0.1); color: var(--primary); }
-        .icon-btn.active { color: var(--primary); position: relative; }
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+        }
+        .icon-btn.active { color: var(--primary); }
         .icon-btn.active::after {
             content: '';
             position: absolute;
-            bottom: 4px;
-            width: 4px;
-            height: 4px;
+            bottom: 2px;
+            width: 4px; height: 4px;
             background: var(--primary);
             border-radius: 50%;
         }
-        .icon-btn svg { width: 20px; height: 20px; fill: currentColor; }
+        .icon-btn svg { width: 20px; height: 20px; fill: currentColor; transition: transform 0.2s ease; }
+        .icon-btn:active svg { transform: scale(0.9); }
 
-        /* 音量条特殊样式 */
-        #volume-bar { width: 80px; flex-grow: 0; }
-        
-        /* 倍速选择器 */
-        .rate-select {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border-light);
-            color: var(--text-muted);
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
+        .divider {
+            width: 1px; height: 20px;
+            background: rgba(255,255,255,0.1);
+            margin: 0 4px;
         }
-        .rate-select:hover { color: var(--text-main); border-color: var(--text-muted); }
 
-        /* === 侧边字幕栏 === */
+        #volume-bar { width: 80px; flex: none; }
+
+        .rate-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-mono);
+            min-width: 48px;
+            text-align: center;
+        }
+        .rate-btn:hover { color: var(--text); border-color: var(--border-hover); }
+
+        #subtitle-status {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            padding: 0 6px;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ═══════════════ 提示浮层 ═══════════════ */
+        .toast-bar {
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-16px);
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--text);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 60;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast-bar.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--primary);
+            flex-shrink: 0;
+        }
+
+        /* ═══════════════ 字幕侧边栏 ═══════════════ */
         .subtitle-panel {
             position: fixed;
-            top: var(--header-height);
+            top: 56px;
             right: 0;
             bottom: 0;
-            width: 320px;
-            background: var(--bg-panel);
-            border-left: 1px solid var(--border-light);
+            width: 340px;
+            background: var(--bg-elevated);
+            border-left: 1px solid var(--border);
             transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 25;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 35;
             display: flex;
             flex-direction: column;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.3);
+            box-shadow: -8px 0 30px rgba(0,0,0,0.4);
         }
         .subtitle-panel.visible { transform: translateX(0); }
 
         .sub-header {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-light);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(0,0,0,0.2);
         }
-        .sub-header h3 { margin: 0; font-size: 1rem; color: var(--text-main); }
-        
-        .sub-search-box {
-            padding: 12px;
-            border-bottom: 1px solid var(--border-light);
+        .sub-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
         }
+        .sub-count {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .sub-search-box { padding: 12px 16px; border-bottom: 1px solid var(--border); }
         .search-input {
             width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-light);
-            padding: 8px 12px;
-            border-radius: 6px;
-            color: white;
-            font-size: 0.9rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            padding: 9px 14px;
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.85rem;
+            transition: all 0.2s;
         }
-        .search-input:focus { border-color: var(--primary); }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); outline: none; }
 
         .sub-list {
             flex: 1;
             overflow-y: auto;
-            padding: 0;
+            padding: 4px 0;
         }
-        
+
         .sub-item {
             padding: 10px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.15s ease;
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            align-items: flex-start;
         }
         .sub-item:hover { background: rgba(255,255,255,0.03); }
-        .sub-item.active { background: rgba(59, 130, 246, 0.15); border-left: 3px solid var(--primary); }
-        .sub-item-time { font-family: monospace; color: var(--text-muted); font-size: 0.75rem; min-width: 45px; }
-        .sub-item-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.4; }
-        
-        /* 搜索高亮 */
-        .highlight { background: rgba(255, 215, 0, 0.3); color: #ffd700; border-radius: 2px; }
+        .sub-item.active {
+            background: var(--primary-soft);
+            border-left: 3px solid var(--primary);
+        }
+        .sub-item-time {
+            font-family: var(--font-mono);
+            color: var(--primary);
+            font-size: 0.72rem;
+            min-width: 48px;
+            padding-top: 1px;
+        }
+        .sub-item-text {
+            font-size: 0.84rem;
+            color: var(--text);
+            line-height: 1.45;
+            flex: 1;
+        }
+        .highlight { background: rgba(245, 182, 66, 0.25); color: var(--gold); border-radius: 2px; padding: 0 1px; }
 
-        /* === 提示与消息 === */
-        .toast-message {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-20px);
-            background: var(--bg-glass);
-            border: 1px solid var(--primary);
-            padding: 8px 16px;
+        /* 空状态 */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            gap: 12px;
+        }
+        .empty-icon {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+        .empty-icon svg { width: 28px; height: 28px; opacity: 0.4; }
+        .empty-title { font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; }
+        .empty-desc { font-size: 0.78rem; color: var(--text-muted); }
+        .empty-action {
+            margin-top: 4px;
+            padding: 8px 18px;
+            background: var(--primary-soft);
+            color: var(--primary);
+            border: 1px solid rgba(79, 140, 247, 0.2);
             border-radius: 8px;
-            font-size: 0.9rem;
-            color: var(--primary-hover);
-            opacity: 0;
-            transition: 0.3s;
-            pointer-events: none;
-            z-index: 50;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: all 0.2s;
         }
-        .toast-message.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .empty-action:hover { background: rgba(79, 140, 247, 0.25); }
 
-        .shortcut-hint {
+        /* 拖放区域 */
+        .drop-zone {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.4);
-            background: rgba(0,0,0,0.6);
-            padding: 8px;
-            border-radius: 6px;
+            inset: 0;
+            background: rgba(79, 140, 247, 0.08);
+            border: 2px dashed rgba(79, 140, 247, 0.3);
+            border-radius: var(--radius-lg);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 55;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s;
         }
-        .shortcut-hint.visible { opacity: 1; }
+        .drop-zone.active {
+            display: flex;
+            background: rgba(79, 140, 247, 0.15);
+            border-color: var(--primary);
+        }
+        .drop-zone-text {
+            font-size: 1rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
 
-        /* 滚动条美化 */
-        ::-webkit-scrollbar { width: 6px; }
+        /* 快捷键面板 */
+        .shortcuts-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 28px;
+            z-index: 70;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            max-width: 420px;
+        }
+        .shortcuts-panel.visible { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+        .shortcuts-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 65;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+        .shortcuts-backdrop.visible { opacity: 1; pointer-events: auto; }
+        .shortcuts-panel h3 {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .shortcuts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 24px;
+        }
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+        }
+        .shortcut-key {
+            background: rgba(255,255,255,0.06);
+            padding: 3px 9px;
+            border-radius: 5px;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            min-width: 32px;
+            text-align: center;
+        }
+        .shortcut-label { color: var(--text-secondary); }
+        .shortcuts-close {
+            position: absolute;
+            top: 12px; right: 16px;
+            background: none; border: none;
+            color: var(--text-muted); cursor: pointer;
+            font-size: 1.2rem; padding: 4px;
+        }
+
+        /* 滚动条全局 */
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
 
-        /* 响应式调整 */
+        /* 响应式 */
         @media (max-width: 768px) {
-            .app-header { padding: 0 1rem; }
-            .subtitle-panel { width: 100%; top: auto; height: 50vh; transform: translateY(100%); bottom: 0; border-left: none; border-top: 1px solid var(--border-light); }
+            .app-header { padding: 0 12px; height: 48px; }
+            .app-title { font-size: 0.8rem; }
+            .mode-btn { padding: 5px 12px; font-size: 0.75rem; }
+            .action-btn { padding: 5px 10px; font-size: 0.75rem; }
+            .action-btn span { display: none; }
+            .subtitle-panel { width: 100%; top: auto; height: 55vh; transform: translateY(100%); border-left: none; border-top: 1px solid var(--border); bottom: 0; }
             .subtitle-panel.visible { transform: translateY(0); }
-            .controls-container { width: 96%; padding: 10px; bottom: 10px; }
-            .time-text { font-size: 0.7rem; min-width: 70px; }
+            .controls-container { width: 98%; padding: 8px 12px 10px; bottom: 8px; border-radius: 12px; }
+            .time-text { font-size: 0.7rem; min-width: 36px; }
+            .stage-container { padding: 8px; }
+            .shortcuts-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .header-center { display: none; }
+            .header-right .action-btn span { display: inline; }
+            .buttons-row { flex-wrap: wrap; gap: 6px; }
+            #volume-bar { width: 50px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 顶部栏 -->
+    <!-- ═══ 顶部栏 ═══ -->
     <header class="app-header">
-        <div class="app-title"></div>
-        
-        <div class="mode-switcher">
+        <div class="header-left">
+            <div class="app-logo">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div>
+                <span class="app-title">iLearn 视频播放器</span>
+                <span class="app-subtitle" id="video-info">双画面同步</span>
+            </div>
+        </div>
+
+        <div class="header-center">
             <button class="mode-btn" data-mode="left">左屏</button>
             <button class="mode-btn active" data-mode="both">双屏</button>
             <button class="mode-btn" data-mode="right">右屏</button>
         </div>
 
-        <div class="header-actions">
+        <div class="header-right">
             <button id="swap-btn" class="action-btn" title="交换视频位置">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
                 <span>交换</span>
+            </button>
+            <button id="shortcuts-btn" class="action-btn" title="快捷键 (?)">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
             </button>
         </div>
     </header>
 
-    <!-- 消息提示 -->
-    <div id="toast" class="toast-message">操作成功</div>
-    <div id="shortcuts-hint" class="shortcut-hint">
-        快捷键: 空格(播放) ←→(快进) ↑↓(音量) S(字幕) F(全屏)
+    <!-- ═══ 浮动提示 ═══ -->
+    <div id="toast" class="toast-bar">
+        <span class="toast-dot"></span>
+        <span id="toast-msg"></span>
     </div>
 
-    <!-- 主舞台 -->
+    <!-- ═══ 主舞台 ═══ -->
     <div class="stage-container" id="stage-container" tabindex="0">
+        <!-- 拖放区域 -->
+        <div class="drop-zone" id="drop-zone">
+            <span class="drop-zone-text">📁 拖放 .vtt 字幕文件至此</span>
+        </div>
+
+        <!-- 缓冲指示 -->
+        <div class="buffer-indicator" id="buffer-indicator">
+            <span class="buffer-dot"></span>
+            <span class="buffer-dot"></span>
+            <span class="buffer-dot"></span>
+            <span>缓冲中…</span>
+        </div>
+
         <div id="video-group" class="video-group mode-both">
             <!-- 左视频 -->
-            <div class="video-wrapper left-wrapper">
+            <div class="video-wrapper left-wrapper" id="left-wrapper">
+                <span class="video-label">画面 A</span>
+                <div class="loading-overlay" id="load-left">
+                    <div class="loading-spinner"></div>
+                    <span class="loading-text">加载中…</span>
+                </div>
                 <video id="video-left" class="video-js vjs-fluid" preload="auto">
-                    <!-- 默认视频源，为了演示 -->
                     <source src="_RIGHTVIDEO_" type="video/mp4">
                     <p class="vjs-no-js">请启用 JavaScript 以播放视频。</p>
                 </video>
             </div>
-            
+
             <!-- 右视频 -->
-            <div class="video-wrapper right-wrapper">
+            <div class="video-wrapper right-wrapper" id="right-wrapper">
+                <span class="video-label">画面 B</span>
+                <div class="loading-overlay" id="load-right">
+                    <div class="loading-spinner"></div>
+                    <span class="loading-text">加载中…</span>
+                </div>
                 <video id="video-right" class="video-js vjs-fluid" preload="auto" muted>
                     <source src="_LEFTVIDEO_" type="video/mp4">
                 </video>
             </div>
         </div>
 
-        <!-- 字幕覆盖 -->
+        <!-- 字幕覆盖层 -->
         <div id="subtitle-overlay"></div>
 
-        <!-- 悬浮控制栏 -->
+        <!-- ═══ 底部控制栏 ═══ -->
         <div id="controls" class="controls-container">
-            <!-- 进度行 -->
-            <div class="progress-row">
+            <div class="progress-row" style="position:relative;">
                 <span id="current-time" class="time-text">00:00</span>
-                <input type="range" id="seek-bar" value="0" step="0.1" min="0" max="100">
+                <div style="position:relative;flex:1;display:flex;align-items:center;">
+                    <div class="chapter-marks" id="chapter-marks"></div>
+                    <input type="range" id="seek-bar" value="0" step="0.1" min="0" max="100">
+                </div>
                 <span id="duration" class="time-text">00:00</span>
             </div>
 
-            <!-- 按钮行 -->
             <div class="buttons-row">
                 <div class="left-controls">
-                    <button id="play-btn" class="icon-btn" title="播放/暂停 (空格)">
+                    <button id="play-btn" class="icon-btn" title="播放 / 暂停 (空格)">
                         <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                     </button>
-                    
-                    <div style="display:flex; align-items:center;">
-                        <button id="mute-btn" class="icon-btn" title="静音 (M)">
-                            <svg id="icon-vol-high" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-                            <svg id="icon-vol-mute" viewBox="0 0 24 24" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
-                        </button>
-                        <input type="range" id="volume-bar" min="0" max="1" step="0.05" value="1">
-                    </div>
 
-                    <span style="width:1px; height:20px; background:rgba(255,255,255,0.2); margin:0 8px;"></span>
+                    <button id="skip-back-btn" class="icon-btn" title="后退 10 秒 (←)">
+                        <svg viewBox="0 0 24 24"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8zm-1.1 11h-.85v-3.26l-1.01.31v-.69l1.77-.63h.09V16zm4.28-1.76c0 .32-.03.6-.1.82s-.17.42-.29.57-.28.26-.45.33-.37.1-.59.1-.41-.03-.59-.1-.33-.18-.46-.33-.23-.34-.3-.57-.1-.5-.1-.82v-.74c0-.32.03-.6.1-.82s.17-.42.29-.57.28-.26.45-.33.37-.1.59-.1.41.03.59.1.33.18.46.33.23.34.3.57.1.5.1.82v.74zm-.85-.86c0-.19-.01-.35-.04-.48s-.07-.23-.13-.28-.13-.1-.22-.12-.18-.02-.29-.02-.2.01-.28.02-.15.06-.21.12-.1.15-.13.28-.04.3-.04.48v.97c0 .19.01.35.04.48s.07.24.13.28.13.1.22.12.18.02.29.02.2-.01.28-.02.15-.06.21-.12.1-.16.13-.28.04-.3.04-.48v-.97z"/></svg>
+                    </button>
 
-                    <span id="subtitle-status" style="font-size:0.75rem; color:var(--text-muted);">无字幕</span>
+                    <button id="skip-fwd-btn" class="icon-btn" title="前进 10 秒 (→)">
+                        <svg viewBox="0 0 24 24"><path d="M12.01 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/></svg>
+                    </button>
+
+                    <span class="divider"></span>
+
+                    <button id="mute-btn" class="icon-btn" title="静音 (M)">
+                        <svg id="icon-vol-high" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                        <svg id="icon-vol-mute" viewBox="0 0 24 24" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+                    </button>
+                    <input type="range" id="volume-bar" min="0" max="1" step="0.02" value="1">
+
+                    <span class="divider"></span>
+                    <span id="subtitle-status">无字幕</span>
                 </div>
 
                 <div class="right-controls">
-                    <select id="playback-rate" class="rate-select" title="播放速度">
-                        <option value="0.5">0.5x</option>
-                        <option value="1" selected>1.0x</option>
-                        <option value="1.5">1.5x</option>
-                        <option value="2">2.0x</option>
-                    </select>
+                    <button id="rate-btn" class="rate-btn" title="播放速度">1.0x</button>
 
-                    <button id="sub-toggle-btn" class="icon-btn" title="显示/隐藏字幕 (S)">
+                    <button id="pip-btn" class="icon-btn" title="画中画 (P)">
+                        <svg viewBox="0 0 24 24"><path d="M19 11h-8v6h8v-6zm-2 4h-4v-2h4v2zm4-12H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/></svg>
+                    </button>
+
+                    <button id="sub-toggle-btn" class="icon-btn" title="字幕开关 (S)">
                         <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>
                     </button>
-                    
+
                     <button id="sub-list-btn" class="icon-btn" title="字幕列表 (N)">
                         <svg viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/></svg>
                     </button>
 
-                    <button id="upload-sub-btn" class="icon-btn" title="加载本地 .vtt 字幕">
+                    <button id="upload-sub-btn" class="icon-btn" title="加载本地字幕">
                         <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-8-8-8 8h4zm-4 2h14v2H5z"/></svg>
                     </button>
-                    <input type="file" id="sub-file-input" accept=".vtt" style="display:none">
+                    <input type="file" id="sub-file-input" accept=".vtt,.srt" style="display:none">
+
+                    <span class="divider"></span>
 
                     <button id="fullscreen-btn" class="icon-btn" title="全屏 (F)">
                         <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
@@ -554,23 +926,69 @@
         </div>
     </div>
 
-    <!-- 字幕侧边栏 -->
+    <!-- ═══ 字幕侧边栏 ═══ -->
     <div id="subtitle-panel" class="subtitle-panel">
         <div class="sub-header">
-            <h3>字幕导航</h3>
-            <button id="close-sub-panel" class="icon-btn" style="padding:4px;"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+            <h3>字幕导航 <span class="sub-count" id="sub-count"></span></h3>
+            <button id="close-sub-panel" class="icon-btn" style="padding:6px;">
+                <svg viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
         </div>
         <div class="sub-search-box">
-            <input type="text" id="sub-search" class="search-input" placeholder="搜索字幕内容...">
+            <input type="text" id="sub-search" class="search-input" placeholder="搜索字幕内容…">
         </div>
         <div id="sub-list-container" class="sub-list">
-            <div style="padding:20px; text-align:center; color:#666; font-size:0.9rem;">暂无字幕，请点击上传按钮加载 .vtt 文件</div>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>
+                </div>
+                <div class="empty-title">暂无字幕</div>
+                <div class="empty-desc">上传 .vtt 文件或拖放至此区域</div>
+            </div>
         </div>
     </div>
 
+    <!-- ═══ 快捷键面板 ═══ -->
+    <div class="shortcuts-backdrop" id="shortcuts-backdrop"></div>
+    <div class="shortcuts-panel" id="shortcuts-panel">
+        <button class="shortcuts-close" id="shortcuts-close">&times;</button>
+        <h3>⌨ 快捷键</h3>
+        <div class="shortcuts-grid">
+            <div class="shortcut-item"><span class="shortcut-key">空格</span><span class="shortcut-label">播放 / 暂停</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">← →</span><span class="shortcut-label">快退 / 快进 5s</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">Shift+←→</span><span class="shortcut-label">快退 / 快进 10s</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">↑ ↓</span><span class="shortcut-label">音量增减</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">M</span><span class="shortcut-label">静音切换</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">F</span><span class="shortcut-label">全屏切换</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">S</span><span class="shortcut-label">字幕开关</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">N</span><span class="shortcut-label">字幕导航栏</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">P</span><span class="shortcut-label">画中画</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">R</span><span class="shortcut-label">循环切换倍速</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">?</span><span class="shortcut-label">显示此面板</span></div>
+            <div class="shortcut-item"><span class="shortcut-key">Esc</span><span class="shortcut-label">关闭面板</span></div>
+        </div>
+    </div>
+
+    <!-- ═══ 脚本 ═══ -->
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
-        // === 配置与状态 ===
+    (function() {
+        'use strict';
+
+        // ── 持久化存储 ──
+        const storage = {
+            get(k, fallback) {
+                try { const v = localStorage.getItem('ilearn_' + k); return v !== null ? JSON.parse(v) : fallback; }
+                catch (_) { return fallback; }
+            },
+            set(k, v) {
+                try { localStorage.setItem('ilearn_' + k, JSON.stringify(v)); } catch (_) {}
+            }
+        };
+
+        const RATES = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+
+        // ── 全局状态 ──
         const state = {
             mode: 'both',
             isSwapped: false,
@@ -580,139 +998,164 @@
             activeSubIndex: -1,
             playerLeft: null,
             playerRight: null,
-            syncThreshold: 0.15, // 秒
-            syncInterval: null
+            syncThreshold: 0.15,
+            syncInterval: null,
+            volume: storage.get('volume', 1),
+            muted: storage.get('muted', false),
+            rate: storage.get('rate', 1),
+            lastInteraction: 0,
         };
 
-        // === DOM 元素 ===
+        // ── DOM 引用 ──
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => document.querySelectorAll(sel);
+
         const els = {
-            container: document.getElementById('stage-container'),
-            videoGroup: document.getElementById('video-group'),
-            controls: document.getElementById('controls'),
-            overlay: document.getElementById('subtitle-overlay'),
-            subtitlePanel: document.getElementById('subtitle-panel'),
-            seekBar: document.getElementById('seek-bar'),
-            currentTime: document.getElementById('current-time'),
-            duration: document.getElementById('duration'),
-            playBtn: document.getElementById('play-btn'),
-            playIcon: document.getElementById('icon-play'),
-            pauseIcon: document.getElementById('icon-pause'),
-            subList: document.getElementById('sub-list-container'),
-            subStatus: document.getElementById('subtitle-status'),
-            subSearch: document.getElementById('sub-search'),
-            toast: document.getElementById('toast'),
-            shortcuts: document.getElementById('shortcuts-hint')
+            container: $('#stage-container'),
+            videoGroup: $('#video-group'),
+            controls: $('#controls'),
+            overlay: $('#subtitle-overlay'),
+            subtitlePanel: $('#subtitle-panel'),
+            seekBar: $('#seek-bar'),
+            currentTime: $('#current-time'),
+            duration: $('#duration'),
+            playBtn: $('#play-btn'),
+            playIcon: $('#icon-play'),
+            pauseIcon: $('#icon-pause'),
+            subList: $('#sub-list-container'),
+            subCount: $('#sub-count'),
+            subStatus: $('#subtitle-status'),
+            subSearch: $('#sub-search'),
+            toast: $('#toast'),
+            toastMsg: $('#toast-msg'),
+            bufferIndicator: $('#buffer-indicator'),
+            dropZone: $('#drop-zone'),
+            chapterMarks: $('#chapter-marks'),
+            rateBtn: $('#rate-btn'),
+            videoInfo: $('#video-info'),
+            loadLeft: $('#load-left'),
+            loadRight: $('#load-right'),
+            shortcutsPanel: $('#shortcuts-panel'),
+            shortcutsBackdrop: $('#shortcuts-backdrop'),
         };
 
-        // === 初始化播放器 ===
-        function initPlayers() {
-            const options = { controls: false, fluid: true, playsinline: true };
-            
-            state.playerLeft = videojs('video-left', options);
-            state.playerRight = videojs('video-right', { ...options, muted: true });
+        // ── Toast ──
+        let toastTimer = null;
+        function showToast(msg, duration = 2000) {
+            els.toastMsg.textContent = msg;
+            els.toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => els.toast.classList.remove('show'), duration);
+        }
 
-            // 确保播放器就绪后绑定事件
+        // ── 初始化播放器 ──
+        function initPlayers() {
+            const baseOpts = { controls: false, fluid: true, playsinline: true, preload: 'auto' };
+
+            state.playerLeft = videojs('video-left', baseOpts);
+            state.playerRight = videojs('video-right', Object.assign({}, baseOpts, { muted: true }));
+
+            // 加载状态
+            const onLoadStart = (wrapperEl, overlayEl) => {
+                overlayEl.classList.remove('fade-out');
+            };
+            const onCanPlay = (overlayEl) => {
+                overlayEl.classList.add('fade-out');
+            };
+
+            state.playerLeft.on('loadstart', () => onLoadStart(els.loadLeft));
+            state.playerLeft.on('canplay', () => onCanPlay(els.loadLeft));
+            state.playerRight.on('loadstart', () => onLoadStart(els.loadRight));
+            state.playerRight.on('canplay', () => onCanPlay(els.loadRight));
+
+            // 缓冲指示
+            state.playerLeft.on('waiting', () => els.bufferIndicator.classList.add('show'));
+            state.playerLeft.on('canplay', () => els.bufferIndicator.classList.remove('show'));
+            state.playerLeft.on('playing', () => els.bufferIndicator.classList.remove('show'));
+
             Promise.all([
                 new Promise(r => state.playerLeft.ready(r)),
                 new Promise(r => state.playerRight.ready(r))
             ]).then(() => {
                 bindPlayerEvents();
-                showToast("播放器就绪");
-                showShortcuts();
-
-                loadRemoteSubtitle('_SUBTITLE_'); 
+                restorePreferences();
+                showToast('播放器就绪');
+                loadRemoteSubtitle('_SUBTITLE_');
+                // 激活交互
+                els.container.focus();
             });
         }
 
-        // === 加载远程字幕辅助函数 ===
-        function loadRemoteSubtitle(url) {
-            if (!url) return;
-            fetch(url)
-                .then(response => response.text())
-                .then(text => {
-                    try {
-                        state.subtitles = parseVTT(text);
-                        renderSubtitleList();
-                        els.subStatus.innerText = `已加载: 默认字幕`;
-                        els.subStatus.style.color = 'var(--primary)';
-                        document.getElementById('sub-toggle-btn').classList.add('active');
-                        showToast(`成功加载默认字幕`);
-                    } catch (err) {
-                        console.error(err);
-                        showToast("默认字幕解析失败");
-                    }
-                })
-                .catch(err => {
-                    console.error('字幕加载失败:', err);
-                    showToast("无法加载默认字幕");
-                });
+        function restorePreferences() {
+            // 恢复音量
+            state.playerLeft.volume(state.volume);
+            state.playerRight.volume(state.volume);
+            $('#volume-bar').value = state.volume;
+            if (state.muted) {
+                state.playerLeft.muted(true);
+                state.volume = 0;
+                $('#volume-bar').value = 0;
+            }
+            updateVolumeIcon();
+            // 恢复倍速
+            state.playerLeft.playbackRate(state.rate);
+            state.playerRight.playbackRate(state.rate);
+            els.rateBtn.textContent = state.rate.toFixed(state.rate % 1 === 0 ? 1 : 2) + 'x';
         }
 
-        // === 核心逻辑：事件绑定 ===
+        // ── 事件绑定 ──
         function bindPlayerEvents() {
-            // 以左侧播放器为主（或当前非静音的那个）
-            const mainPlayer = state.playerLeft;
+            const main = state.playerLeft;
 
-            mainPlayer.on('timeupdate', () => {
+            main.on('timeupdate', () => {
                 updateProgress();
                 updateSubtitleDisplay();
             });
+            main.on('durationchange', updateDuration);
+            main.on('play', () => updatePlayState(true));
+            main.on('pause', () => updatePlayState(false));
+            main.on('ended', () => updatePlayState(false));
 
-            mainPlayer.on('durationchange', updateDuration);
-            mainPlayer.on('play', () => updatePlayState(true));
-            mainPlayer.on('pause', () => updatePlayState(false));
-            mainPlayer.on('ended', () => updatePlayState(false));
-
-            // 开始同步循环
             state.syncInterval = setInterval(syncPlayers, 200);
         }
 
-        // === 同步逻辑 ===
         function syncPlayers() {
             if (state.mode !== 'both' || !state.isPlaying) return;
-
             const t1 = state.playerLeft.currentTime();
             const t2 = state.playerRight.currentTime();
-
-            // 如果误差超过阈值，强制右侧同步左侧
             if (Math.abs(t1 - t2) > state.syncThreshold) {
-                // 只有当两者都在播放且并未在缓冲时才硬同步，避免死循环
                 if (!state.playerLeft.seeking() && !state.playerRight.seeking()) {
                     state.playerRight.currentTime(t1);
                 }
             }
         }
 
-        // === UI 更新 ===
+        // ── UI 更新 ──
         function updateProgress() {
-            const player = state.playerLeft;
-            const current = player.currentTime();
-            const dur = player.duration() || 1;
-            
-            els.currentTime.innerText = formatTime(current);
-            // 更新滑块位置
-            const percent = (current / dur) * 100;
-            els.seekBar.value = percent;
-            
-            // 更新滑块背景渐变
-            els.seekBar.style.background = `linear-gradient(to right, var(--primary) ${percent}%, rgba(255,255,255,0.2) ${percent}%)`;
+            const p = state.playerLeft;
+            const cur = p.currentTime();
+            const dur = p.duration() || 1;
+            els.currentTime.textContent = formatTime(cur);
+            const pct = (cur / dur) * 100;
+            els.seekBar.value = pct;
+            els.seekBar.style.background =
+                `linear-gradient(to right, var(--primary) ${pct}%, rgba(255,255,255,0.12) ${pct}%)`;
         }
 
         function updateDuration() {
-            const dur = state.playerLeft.duration();
-            els.duration.innerText = formatTime(dur);
+            els.duration.textContent = formatTime(state.playerLeft.duration());
+            renderChapterMarks();
         }
 
         function updatePlayState(playing) {
             state.isPlaying = playing;
-            els.playIcon.style.display = playing ? 'none' : 'block';
-            els.pauseIcon.style.display = playing ? 'block' : 'none';
-            
-            // 同步播放状态
+            els.playIcon.style.display = playing ? 'none' : '';
+            els.pauseIcon.style.display = playing ? '' : 'none';
+
             if (state.mode === 'both') {
                 if (playing) {
-                    state.playerLeft.play().catch(()=>{});
-                    state.playerRight.play().catch(()=>{});
+                    state.playerLeft.play().catch(() => {});
+                    state.playerRight.play().catch(() => {});
                 } else {
                     state.playerLeft.pause();
                     state.playerRight.pause();
@@ -720,62 +1163,89 @@
             }
         }
 
-        // === 控制功能 ===
+        function updateVolumeIcon() {
+            const v = state.playerLeft.volume();
+            const m = state.playerLeft.muted();
+            $('#icon-vol-high').style.display = (v === 0 || m) ? 'none' : '';
+            $('#icon-vol-mute').style.display = (v === 0 || m) ? '' : 'none';
+        }
+
+        // ── 核心控制 ──
         function togglePlay() {
-            if (state.playerLeft.paused()) {
-                state.playerLeft.play();
-            } else {
-                state.playerLeft.pause();
-            }
+            if (state.playerLeft.paused()) state.playerLeft.play();
+            else state.playerLeft.pause();
         }
 
         function seek(percent) {
             const dur = state.playerLeft.duration();
-            const time = (percent / 100) * dur;
-            state.playerLeft.currentTime(time);
-            if (state.mode === 'both') state.playerRight.currentTime(time);
+            if (!dur) return;
+            const t = (percent / 100) * dur;
+            state.playerLeft.currentTime(t);
+            if (state.mode === 'both') state.playerRight.currentTime(t);
+        }
+
+        function skip(seconds) {
+            const dur = state.playerLeft.duration();
+            if (!dur) return;
+            const cur = state.playerLeft.currentTime();
+            const t = Math.max(0, Math.min(dur, cur + seconds));
+            state.playerLeft.currentTime(t);
+            if (state.mode === 'both') state.playerRight.currentTime(t);
+            showToast(seconds > 0 ? `+${seconds}s` : `${seconds}s`);
         }
 
         function setVolume(val) {
+            val = Math.max(0, Math.min(1, val));
             state.playerLeft.volume(val);
-            state.playerRight.volume(val); // 即使右侧静音，也同步音量值以便解除静音时使用
-            
-            // 更新图标
-            const iconHigh = document.getElementById('icon-vol-high');
-            const iconMute = document.getElementById('icon-vol-mute');
-            if (val == 0) {
-                iconHigh.style.display = 'none';
-                iconMute.style.display = 'block';
-            } else {
-                iconHigh.style.display = 'block';
-                iconMute.style.display = 'none';
-            }
+            state.playerRight.volume(val);
+            state.playerLeft.muted(val === 0);
+            state.volume = val;
+            storage.set('volume', val);
+            $('#volume-bar').value = val;
+            updateVolumeIcon();
         }
 
         function toggleMute() {
-            const volBar = document.getElementById('volume-bar');
+            const volBar = $('#volume-bar');
             if (state.playerLeft.muted() || state.playerLeft.volume() === 0) {
                 state.playerLeft.muted(false);
-                if (state.mode === 'left' || state.mode === 'both') state.playerRight.muted(true); // 保持右侧静音
+                if (state.mode === 'left' || state.mode === 'both') state.playerRight.muted(true);
                 const lastVol = volBar.dataset.lastVol || 0.5;
-                state.playerLeft.volume(lastVol);
-                volBar.value = lastVol;
+                setVolume(parseFloat(lastVol));
             } else {
                 volBar.dataset.lastVol = state.playerLeft.volume();
                 state.playerLeft.muted(true);
-                volBar.value = 0;
+                state.playerRight.muted(true);
+                updateVolumeIcon();
+                $('#icon-vol-high').style.display = 'none';
+                $('#icon-vol-mute').style.display = '';
+                $('#volume-bar').value = 0;
+                storage.set('muted', true);
             }
-            setVolume(volBar.value);
         }
 
-        // === 模式切换 ===
-        document.querySelectorAll('.mode-btn').forEach(btn => {
+        function cycleRate() {
+            const current = state.playerLeft.playbackRate();
+            let idx = RATES.findIndex(r => Math.abs(r - current) < 0.01);
+            idx = (idx + 1) % RATES.length;
+            setRate(RATES[idx]);
+        }
+
+        function setRate(rate) {
+            state.playerLeft.playbackRate(rate);
+            state.playerRight.playbackRate(rate);
+            state.rate = rate;
+            storage.set('rate', rate);
+            els.rateBtn.textContent = rate.toFixed(rate % 1 === 0 ? 1 : 2) + 'x';
+            showToast(`速度: ${rate.toFixed(rate % 1 === 0 ? 1 : 2)}x`);
+        }
+
+        // ── 模式切换 ──
+        $$('.mode-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const mode = e.target.dataset.mode;
                 switchMode(mode);
-                
-                // 更新按钮状态
-                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                $$('.mode-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
             });
         });
@@ -783,25 +1253,27 @@
         function switchMode(mode) {
             state.mode = mode;
             els.videoGroup.className = `video-group mode-${mode}`;
-            
-            // 声音逻辑：双屏模式下默认静音右侧，单屏模式下开启对应侧声音
+
             if (mode === 'left') {
                 state.playerLeft.muted(false);
                 state.playerRight.muted(true);
+                els.videoInfo.textContent = '仅左屏';
             } else if (mode === 'right') {
                 state.playerLeft.muted(true);
                 state.playerRight.muted(false);
+                els.videoInfo.textContent = '仅右屏';
             } else {
                 state.playerLeft.muted(false);
                 state.playerRight.muted(true);
-                // 强制同步一次
                 state.playerRight.currentTime(state.playerLeft.currentTime());
+                els.videoInfo.textContent = '双画面同步';
             }
+            updateVolumeIcon();
             showToast(`已切换至: ${mode === 'both' ? '双屏' : mode === 'left' ? '左屏' : '右屏'}`);
         }
 
-        // === 交换视频 ===
-        document.getElementById('swap-btn').addEventListener('click', () => {
+        // ── 交换视频 ──
+        $('#swap-btn').addEventListener('click', () => {
             els.videoGroup.classList.add('is-swapping');
             setTimeout(() => {
                 const srcL = state.playerLeft.currentSrc();
@@ -811,53 +1283,57 @@
 
                 state.playerLeft.src({ type: 'video/mp4', src: srcR });
                 state.playerRight.src({ type: 'video/mp4', src: srcL });
-
-                // 恢复状态
                 state.playerLeft.currentTime(curTime);
                 state.playerRight.currentTime(curTime);
-                
-                if(wasPlaying) {
+                if (wasPlaying) {
                     state.playerLeft.play();
                     state.playerRight.play();
                 }
-
                 els.videoGroup.classList.remove('is-swapping');
                 state.isSwapped = !state.isSwapped;
-                showToast("视频源已交换");
-            }, 500);
+                showToast('视频源已交换');
+            }, 400);
         });
 
-        // === 字幕处理 ===
+        // ── 画中画 ──
+        $('#pip-btn').addEventListener('click', async () => {
+            try {
+                const mediaEl = state.playerLeft.tech().el();
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else if (document.pictureInPictureEnabled) {
+                    await mediaEl.requestPictureInPicture();
+                    showToast('画中画已开启');
+                }
+            } catch (err) {
+                showToast('画中画不可用');
+            }
+        });
+
+        // ── 字幕解析 ──
         function parseVTT(content) {
             const lines = content.split(/\r?\n/);
             const items = [];
             let current = null;
-
-            // 简单的解析器: 寻找 "00:00:00.000 --> 00:00:05.000" 模式
             const timeRegex = /(\d{2}:\d{2}:\d{2}[.,]\d{3})\s-->\s(\d{2}:\d{2}:\d{2}[.,]\d{3})/;
 
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
-                const match = line.match(timeRegex);
-
+            for (const line of lines) {
+                const trimmed = line.trim();
+                const match = trimmed.match(timeRegex);
                 if (match) {
                     if (current) items.push(current);
-                    current = {
-                        start: parseTime(match[1]),
-                        end: parseTime(match[2]),
-                        text: []
-                    };
-                } else if (current && line !== '' && !line.match(/^\d+$/)) { // 排除纯序号
-                    current.text.push(line);
+                    current = { start: parseTime(match[1]), end: parseTime(match[2]), text: [] };
+                } else if (current && trimmed !== '' && !/^\d+$/.test(trimmed)) {
+                    current.text.push(trimmed);
                 }
             }
             if (current) items.push(current);
             return items;
         }
 
-        function parseTime(timeStr) {
-            const parts = timeStr.replace(',', '.').split(':');
-            return (parseFloat(parts[0]) * 3600) + (parseFloat(parts[1]) * 60) + parseFloat(parts[2]);
+        function parseTime(s) {
+            const parts = s.replace(',', '.').split(':');
+            return parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2]);
         }
 
         function updateSubtitleDisplay() {
@@ -865,170 +1341,205 @@
                 els.overlay.classList.remove('visible');
                 return;
             }
-
             const now = state.playerLeft.currentTime();
-            // 查找当前字幕
             const sub = state.subtitles.find(s => now >= s.start && now <= s.end);
-
             if (sub) {
                 els.overlay.textContent = sub.text.join('\n');
                 els.overlay.classList.add('visible');
-                highlightSubListItem(sub);
+                highlightSubInPanel(sub);
             } else {
                 els.overlay.classList.remove('visible');
             }
         }
 
-        // 本地字幕加载
-        document.getElementById('upload-sub-btn').addEventListener('click', () => {
-            document.getElementById('sub-file-input').click();
-        });
-
-        document.getElementById('sub-file-input').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                try {
-                    state.subtitles = parseVTT(evt.target.result);
+        function loadRemoteSubtitle(url) {
+            if (!url || url === '_SUBTITLE_') return;
+            fetch(url)
+                .then(r => r.text())
+                .then(text => {
+                    state.subtitles = parseVTT(text);
                     renderSubtitleList();
-                    els.subStatus.innerText = `已加载: ${file.name}`;
+                    els.subStatus.textContent = '默认字幕';
                     els.subStatus.style.color = 'var(--primary)';
-                    document.getElementById('sub-toggle-btn').classList.add('active');
-                    showToast(`成功加载 ${state.subtitles.length} 条字幕`);
+                    $('#sub-toggle-btn').classList.add('active');
+                    renderChapterMarks();
+                    showToast(`已加载 ${state.subtitles.length} 条字幕`);
+                })
+                .catch(() => {
+                    // 静默处理，字幕为可选功能
+                });
+        }
+
+        function loadLocalSubtitle(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    state.subtitles = parseVTT(e.target.result);
+                    renderSubtitleList();
+                    els.subStatus.textContent = file.name;
+                    els.subStatus.style.color = 'var(--primary)';
+                    $('#sub-toggle-btn').classList.add('active');
+                    renderChapterMarks();
+                    showToast(`已加载 ${state.subtitles.length} 条字幕`);
                 } catch (err) {
-                    console.error(err);
-                    showToast("字幕解析失败");
+                    showToast('字幕解析失败');
                 }
             };
             reader.readAsText(file);
-        });
+        }
 
-        // 渲染字幕列表 (侧边栏)
-        function renderSubtitleList(filter = "") {
-            els.subList.innerHTML = "";
-            const list = filter 
+        // ── 字幕列表渲染 ──
+        function renderSubtitleList(filter = '') {
+            els.subList.innerHTML = '';
+            const list = filter
                 ? state.subtitles.filter(s => s.text.some(t => t.toLowerCase().includes(filter.toLowerCase())))
                 : state.subtitles;
 
+            els.subCount.textContent = list.length ? `${list.length} 条` : '';
+
             if (list.length === 0) {
-                els.subList.innerHTML = `<div style="padding:20px;text-align:center;color:#666">未找到匹配内容</div>`;
+                els.subList.innerHTML = filter
+                    ? `<div class="empty-state"><div class="empty-title">未找到匹配内容</div></div>`
+                    : `<div class="empty-state">
+                        <div class="empty-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;opacity:0.4;"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z"/></svg>
+                        </div>
+                        <div class="empty-title">暂无字幕</div>
+                        <div class="empty-desc">上传 .vtt 文件或拖放至此区域</div>
+                        <button class="empty-action" onclick="document.getElementById('upload-sub-btn').click()">选择字幕文件</button>
+                    </div>`;
                 return;
             }
 
-            // 使用 DocumentFragment 优化性能
-            const fragment = document.createDocumentFragment();
-            list.forEach((sub, index) => {
+            const frag = document.createDocumentFragment();
+            list.forEach((sub) => {
                 const div = document.createElement('div');
                 div.className = 'sub-item';
                 div.dataset.start = sub.start;
-                // 添加高亮逻辑
-                let textContent = sub.text.join(' ');
+                let text = sub.text.join(' ');
                 if (filter) {
-                    const reg = new RegExp(`(${filter})`, 'gi');
-                    textContent = textContent.replace(reg, '<span class="highlight">$1</span>');
+                    const reg = new RegExp(`(${filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                    text = text.replace(reg, '<span class="highlight">$1</span>');
                 }
-
-                div.innerHTML = `
-                    <div class="sub-item-time">${formatTime(sub.start)}</div>
-                    <div class="sub-item-text">${textContent}</div>
-                `;
+                div.innerHTML =
+                    `<div class="sub-item-time">${formatTime(sub.start)}</div><div class="sub-item-text">${text}</div>`;
                 div.addEventListener('click', () => {
                     state.playerLeft.currentTime(sub.start);
                     if (state.mode === 'both') state.playerRight.currentTime(sub.start);
                     state.playerLeft.play();
                 });
-                fragment.appendChild(div);
+                frag.appendChild(div);
             });
-            els.subList.appendChild(fragment);
+            els.subList.appendChild(frag);
         }
 
-        // 高亮当前字幕列表项
-        function highlightSubListItem(sub) {
-            // 简单实现：由于列表很长，不建议每次都遍历 DOM
-            // 实际生产中应结合 data-index 优化
-            // 这里为了演示，仅在侧边栏打开时查找
+        function highlightSubInPanel(sub) {
             if (!els.subtitlePanel.classList.contains('visible')) return;
-            
-            // 移除旧高亮
             const active = els.subList.querySelector('.active');
             if (active) active.classList.remove('active');
-
-            // 查找新高亮 (根据时间戳)
-            // 注意：这里用时间戳匹配可能不严谨，应该给每个字幕加 ID，但为了简单...
             const items = Array.from(els.subList.children);
-            const target = items.find(item => Math.abs(parseFloat(item.dataset.start) - sub.start) < 0.1);
-            
+            const target = items.find(el => Math.abs(parseFloat(el.dataset.start) - sub.start) < 0.1);
             if (target) {
                 target.classList.add('active');
-                target.scrollIntoView({ behavior: "smooth", block: "center" });
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
-        // 字幕搜索
-        els.subSearch.addEventListener('input', (e) => {
-            renderSubtitleList(e.target.value);
-        });
+        // ── 章节标记 ──
+        function renderChapterMarks() {
+            els.chapterMarks.innerHTML = '';
+            if (state.subtitles.length === 0) return;
+            const dur = state.playerLeft.duration();
+            if (!dur) return;
+            const frag = document.createDocumentFragment();
+            // 每10条字幕一个标记
+            const step = Math.max(1, Math.floor(state.subtitles.length / 20));
+            for (let i = 0; i < state.subtitles.length; i += step) {
+                const pct = (state.subtitles[i].start / dur) * 100;
+                if (pct > 100) break;
+                const dot = document.createElement('div');
+                dot.className = 'chapter-dot';
+                dot.style.left = pct + '%';
+                dot.title = formatTime(state.subtitles[i].start) + ' ' + state.subtitles[i].text.join(' ');
+                frag.appendChild(dot);
+            }
+            els.chapterMarks.appendChild(frag);
+        }
+
+        // ── 字幕面板 ──
+        function toggleSubPanel() {
+            els.subtitlePanel.classList.toggle('visible');
+            $('#sub-list-btn').classList.toggle('active', els.subtitlePanel.classList.contains('visible'));
+            if (state.subtitles.length > 0 && els.subList.children.length <= 1) {
+                renderSubtitleList();
+            }
+        }
+
+        $('#sub-list-btn').addEventListener('click', toggleSubPanel);
+        $('#close-sub-panel').addEventListener('click', toggleSubPanel);
+
+        els.subSearch.addEventListener('input', (e) => renderSubtitleList(e.target.value));
 
         // 字幕开关
-        document.getElementById('sub-toggle-btn').addEventListener('click', (e) => {
+        $('#sub-toggle-btn').addEventListener('click', function() {
             state.isSubVisible = !state.isSubVisible;
-            e.currentTarget.classList.toggle('active', state.isSubVisible);
+            this.classList.toggle('active', state.isSubVisible);
             updateSubtitleDisplay();
-            showToast(state.isSubVisible ? "字幕已开启" : "字幕已隐藏");
+            showToast(state.isSubVisible ? '字幕已开启' : '字幕已隐藏');
         });
 
-        // 字幕侧边栏开关
-        const toggleSubPanel = () => {
-            els.subtitlePanel.classList.toggle('visible');
-            const btn = document.getElementById('sub-list-btn');
-            btn.classList.toggle('active', els.subtitlePanel.classList.contains('visible'));
-            if (state.subtitles.length > 0 && els.subList.children.length <= 1) {
-                renderSubtitleList(); // 初次打开渲染
+        // 本地上传
+        $('#upload-sub-btn').addEventListener('click', () => $('#sub-file-input').click());
+        $('#sub-file-input').addEventListener('change', (e) => {
+            if (e.target.files[0]) loadLocalSubtitle(e.target.files[0]);
+        });
+
+        // 拖放加载
+        const stageEl = $('#stage-container');
+        stageEl.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            els.dropZone.classList.add('active');
+        });
+        stageEl.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            els.dropZone.classList.remove('active');
+        });
+        stageEl.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            els.dropZone.classList.remove('active');
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.endsWith('.vtt') || file.name.endsWith('.srt'))) {
+                loadLocalSubtitle(file);
             }
-        };
-        document.getElementById('sub-list-btn').addEventListener('click', toggleSubPanel);
-        document.getElementById('close-sub-panel').addEventListener('click', toggleSubPanel);
+        });
 
-
-        // === 辅助功能 ===
-        
-        // 自动隐藏控制栏
-        let hideControlsTimer;
-        const resetControlTimer = () => {
-            els.controls.classList.remove('hidden');
-            clearTimeout(hideControlsTimer);
-            hideControlsTimer = setTimeout(() => {
-                if (state.isPlaying && !els.controls.matches(':hover')) {
-                    els.controls.classList.add('hidden');
+        // ── 控制栏自动隐藏 ──
+        let hideTimer = null;
+        function resetControlTimer() {
+            els.controls.classList.remove('collapsed');
+            clearTimeout(hideTimer);
+            state.lastInteraction = Date.now();
+            hideTimer = setTimeout(() => {
+                if (state.isPlaying && !els.controls.matches(':hover') && Date.now() - state.lastInteraction > 3500) {
+                    els.controls.classList.add('collapsed');
                 }
-            }, 3000);
-        };
-        els.container.addEventListener('mousemove', resetControlTimer);
-        els.container.addEventListener('click', resetControlTimer);
-
-        // 格式化时间
-        function formatTime(seconds) {
-            const m = Math.floor(seconds / 60);
-            const s = Math.floor(seconds % 60);
-            return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            }, 3500);
         }
 
-        // 显示 Toast
-        function showToast(msg) {
-            els.toast.innerText = msg;
-            els.toast.classList.add('visible');
-            setTimeout(() => els.toast.classList.remove('visible'), 2000);
-        }
+        stageEl.addEventListener('mousemove', resetControlTimer);
+        stageEl.addEventListener('mousedown', resetControlTimer);
+        els.controls.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+        els.controls.addEventListener('mouseleave', resetControlTimer);
 
-        function showShortcuts() {
-            els.shortcuts.classList.add('visible');
-            setTimeout(() => els.shortcuts.classList.remove('visible'), 5000);
-        }
+        // 拖动进度条时保持显示
+        els.seekBar.addEventListener('mousedown', () => els.controls.classList.add('dragging'));
+        document.addEventListener('mouseup', () => els.controls.classList.remove('dragging'));
 
-        // 全屏
-        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+        // ── 全屏 ──
+        $('#fullscreen-btn').addEventListener('click', () => {
             if (!document.fullscreenElement) {
                 els.container.requestFullscreen();
             } else {
@@ -1036,46 +1547,86 @@
             }
         });
 
-        // 监听滑块事件
-        els.seekBar.addEventListener('input', (e) => seek(e.target.value));
+        // ── 快捷键面板 ──
+        function toggleShortcuts() {
+            const visible = els.shortcutsPanel.classList.contains('visible');
+            if (visible) {
+                els.shortcutsPanel.classList.remove('visible');
+                els.shortcutsBackdrop.classList.remove('visible');
+            } else {
+                els.shortcutsPanel.classList.add('visible');
+                els.shortcutsBackdrop.classList.add('visible');
+            }
+        }
+        $('#shortcuts-btn').addEventListener('click', toggleShortcuts);
+        $('#shortcuts-close').addEventListener('click', toggleShortcuts);
+        els.shortcutsBackdrop.addEventListener('click', toggleShortcuts);
+
+        // ── 事件绑定 ──
         els.playBtn.addEventListener('click', togglePlay);
-        document.getElementById('volume-bar').addEventListener('input', (e) => setVolume(e.target.value));
-        document.getElementById('mute-btn').addEventListener('click', toggleMute);
-        document.getElementById('playback-rate').addEventListener('change', (e) => {
-            const rate = parseFloat(e.target.value);
-            state.playerLeft.playbackRate(rate);
-            state.playerRight.playbackRate(rate);
-        });
+        $('#skip-back-btn').addEventListener('click', () => skip(-10));
+        $('#skip-fwd-btn').addEventListener('click', () => skip(10));
+        $('#mute-btn').addEventListener('click', toggleMute);
+        $('#volume-bar').addEventListener('input', (e) => setVolume(parseFloat(e.target.value)));
+        $('#rate-btn').addEventListener('click', cycleRate);
+        els.seekBar.addEventListener('input', (e) => seek(e.target.value));
 
-        // 键盘快捷键
+        // ── 键盘快捷键 ──
         document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return; // 输入框时不触发
+            // 在输入框中不触发快捷键
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            // 快捷键面板可见时，Esc 关闭
+            if (e.code === 'Escape') {
+                if (els.shortcutsPanel.classList.contains('visible')) {
+                    toggleShortcuts();
+                    return;
+                }
+                if (els.subtitlePanel.classList.contains('visible')) {
+                    toggleSubPanel();
+                    return;
+                }
+            }
 
-            switch(e.code) {
-                case 'Space': 
+            switch (e.code) {
+                case 'Space':
                     e.preventDefault(); togglePlay(); break;
-                case 'ArrowRight': 
-                    seek((state.playerLeft.currentTime() + 5) / state.playerLeft.duration() * 100); showToast("+5s"); break;
-                case 'ArrowLeft': 
-                    seek((state.playerLeft.currentTime() - 5) / state.playerLeft.duration() * 100); showToast("-5s"); break;
-                case 'ArrowUp': 
-                    setVolume(Math.min(1, state.playerLeft.volume() + 0.1)); document.getElementById('volume-bar').value = state.playerLeft.volume(); break;
-                case 'ArrowDown': 
-                    setVolume(Math.max(0, state.playerLeft.volume() - 0.1)); document.getElementById('volume-bar').value = state.playerLeft.volume(); break;
-                case 'KeyF': 
-                    document.getElementById('fullscreen-btn').click(); break;
-                case 'KeyS': 
-                    document.getElementById('sub-toggle-btn').click(); break;
+                case 'ArrowRight':
+                    e.preventDefault(); skip(e.shiftKey ? 10 : 5); break;
+                case 'ArrowLeft':
+                    e.preventDefault(); skip(e.shiftKey ? -10 : -5); break;
+                case 'ArrowUp':
+                    e.preventDefault(); setVolume(state.playerLeft.volume() + 0.1); break;
+                case 'ArrowDown':
+                    e.preventDefault(); setVolume(state.playerLeft.volume() - 0.1); break;
+                case 'KeyF':
+                    e.preventDefault(); $('#fullscreen-btn').click(); break;
+                case 'KeyS':
+                    e.preventDefault(); $('#sub-toggle-btn').click(); break;
                 case 'KeyN':
-                    toggleSubPanel(); break;
+                    e.preventDefault(); toggleSubPanel(); break;
                 case 'KeyM':
-                    toggleMute(); break;
+                    e.preventDefault(); toggleMute(); break;
+                case 'KeyP':
+                    e.preventDefault(); $('#pip-btn').click(); break;
+                case 'KeyR':
+                    e.preventDefault(); cycleRate(); break;
+                case 'Slash':
+                    if (e.shiftKey) { e.preventDefault(); toggleShortcuts(); }
+                    break;
             }
         });
 
-        // 启动
-        initPlayers();
+        // ── 工具函数 ──
+        function formatTime(seconds) {
+            if (!isFinite(seconds)) return '00:00';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
 
+        // ── 启动 ──
+        initPlayers();
+    })();
     </script>
 </body>
 </html>

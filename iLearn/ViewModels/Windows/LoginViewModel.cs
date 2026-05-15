@@ -195,7 +195,7 @@ namespace iLearn.ViewModels.Windows
                         ShowSnackbar("请勿重复获取，稍后再试");
                         break;
                     case ILearnApiService.WechatCodeRequestResult.SessionExpired:
-                        _snackbarService.Show("获取验证码失败", "会话已过期，请返回重新登录",
+                        _snackbarService.Show("获取验证码失败", "请检查账号密码是否正确，或稍后重试",
                             ControlAppearance.Danger, new SymbolIcon(SymbolRegular.CalendarError16), TimeSpan.FromSeconds(8));
                         break;
                     default:
