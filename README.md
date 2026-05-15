@@ -7,7 +7,7 @@
   <img src="https://github.com/wzyyyyyyy/iLearn/actions/workflows/dotnet-desktop.yml/badge.svg" />
   <img src="https://img.shields.io/github/downloads/wzyyyyyyy/iLearn/total.svg" />
   <img src="https://www.codefactor.io/repository/github/wzyyyyyyy/ilearn/badge" />
-  <img src="https://img.shields.io/badge/.NET-9.0-blue" />
+  <img src="https://img.shields.io/badge/.NET-10.0-blue" />
 </p>
 
 -----
