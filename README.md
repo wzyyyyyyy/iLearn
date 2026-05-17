@@ -39,7 +39,7 @@
 只需简单几步，即可开始使用 iLearn。
 
 1.  **下载：** 前往 [**📦 Releases 页面**](https://github.com/wzyyyyyyy/iLearn/releases) 获取最新版本。
-2.  **环境：** 确保您的电脑已安装 [**.NET 9 SDK**](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/sdk-9.0.301-windows-x64-installer)。
+2.  **环境：** 确保您的电脑已安装 [**.NET 10 SDK**](https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.300/dotnet-sdk-10.0.300-win-x64.exe)。
 3.  **安装与运行：**
       * **安装包：** 运行 `iLearnSetUp.exe` 进行引导式安装（推荐）。
       * **便携版：** 或解压下载的压缩包，直接运行 `iLearn.exe` 即可使用。
