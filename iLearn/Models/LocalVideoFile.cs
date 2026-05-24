@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
+using iLearn.Services;
 
 namespace iLearn.Models
 {
@@ -59,19 +60,16 @@ namespace iLearn.Models
             }
 
             var baseName = Path.GetFileNameWithoutExtension(FullPath);
-            var partnerBaseName = baseName.EndsWith("_HDMI", StringComparison.OrdinalIgnoreCase)
-                ? baseName[..^"_HDMI".Length] + "_教师"
-                : baseName.EndsWith("_教师", StringComparison.OrdinalIgnoreCase)
-                    ? baseName[..^"_教师".Length] + "_HDMI"
-                    : null;
-
-            if (partnerBaseName is null)
+            foreach (var partnerBaseName in GetPartnerBaseNames(baseName))
             {
-                return null;
+                var partnerPath = Path.Combine(directory, partnerBaseName + ".mp4");
+                if (File.Exists(partnerPath))
+                {
+                    return FromFileName(partnerPath);
+                }
             }
 
-            var partnerPath = Path.Combine(directory, partnerBaseName + ".mp4");
-            return File.Exists(partnerPath) ? FromFileName(partnerPath) : null;
+            return null;
         }
 
         public string? FindSubtitlePath(string downloadRoot)
@@ -93,6 +91,34 @@ namespace iLearn.Models
                     if (File.Exists(subtitlePath))
                     {
                         return subtitlePath;
+                    }
+                }
+            }
+
+            var subtitleCandidates = GetSubtitleCandidates(directories).ToList();
+            foreach (var subtitlePath in subtitleCandidates)
+            {
+                var candidateBaseName = Path.GetFileNameWithoutExtension(subtitlePath);
+                if (IsSubtitleMatch(subtitleBaseName, candidateBaseName))
+                {
+                    return subtitlePath;
+                }
+            }
+
+            var subtitlesDirectory = string.IsNullOrWhiteSpace(downloadRoot) ? null : Path.Combine(downloadRoot, "Subtitles");
+            if (!string.IsNullOrWhiteSpace(subtitlesDirectory))
+            {
+                var coursePrefix = GetCourseLikePrefix(subtitleBaseName);
+                if (!string.IsNullOrWhiteSpace(coursePrefix))
+                {
+                    var prefixMatches = subtitleCandidates
+                        .Where(path => string.Equals(Path.GetDirectoryName(path), subtitlesDirectory, StringComparison.OrdinalIgnoreCase))
+                        .Where(path => NormalizeForSubtitleMatch(Path.GetFileNameWithoutExtension(path)).StartsWith(coursePrefix, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+
+                    if (prefixMatches.Count == 1)
+                    {
+                        return prefixMatches[0];
                     }
                 }
             }
@@ -155,6 +181,79 @@ namespace iLearn.Models
             }
 
             return fileName;
+        }
+
+        private static IEnumerable<string> GetPartnerBaseNames(string baseName)
+        {
+            if (baseName.EndsWith("_HDMI", StringComparison.OrdinalIgnoreCase))
+            {
+                var prefix = baseName[..^"_HDMI".Length];
+                yield return prefix + "_教师";
+                yield return prefix + "_teacher";
+            }
+            else if (baseName.EndsWith("_教师", StringComparison.OrdinalIgnoreCase))
+            {
+                yield return baseName[..^"_教师".Length] + "_HDMI";
+            }
+            else if (baseName.EndsWith("_teacher", StringComparison.OrdinalIgnoreCase))
+            {
+                yield return baseName[..^"_teacher".Length] + "_HDMI";
+            }
+        }
+
+        private static IEnumerable<string> GetSubtitleCandidates(IEnumerable<string?> directories)
+        {
+            var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var directory in directories.Where(directory => !string.IsNullOrWhiteSpace(directory)))
+            {
+                if (!Directory.Exists(directory))
+                {
+                    continue;
+                }
+
+                foreach (var extension in new[] { "*.vtt", "*.srt" })
+                {
+                    foreach (var subtitlePath in Directory.EnumerateFiles(directory!, extension, SearchOption.TopDirectoryOnly))
+                    {
+                        if (seenPaths.Add(subtitlePath))
+                        {
+                            yield return subtitlePath;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static bool IsSubtitleMatch(string videoBaseName, string subtitleBaseName)
+        {
+            var videoSanitized = FileNameService.SanitizeFileName(videoBaseName);
+            var subtitleSanitized = FileNameService.SanitizeFileName(subtitleBaseName);
+            if (string.Equals(videoSanitized, subtitleSanitized, StringComparison.OrdinalIgnoreCase)
+                || videoSanitized.Contains(subtitleSanitized, StringComparison.OrdinalIgnoreCase)
+                || subtitleSanitized.Contains(videoSanitized, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            var normalizedVideo = NormalizeForSubtitleMatch(videoSanitized);
+            var normalizedSubtitle = NormalizeForSubtitleMatch(subtitleSanitized);
+            return string.Equals(normalizedVideo, normalizedSubtitle, StringComparison.OrdinalIgnoreCase)
+                || normalizedVideo.Contains(normalizedSubtitle, StringComparison.OrdinalIgnoreCase)
+                || normalizedSubtitle.Contains(normalizedVideo, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeForSubtitleMatch(string value)
+        {
+            return new string(FileNameService.SanitizeFileName(value)
+                .Where(character => char.IsLetterOrDigit(character))
+                .ToArray());
+        }
+
+        private static string GetCourseLikePrefix(string value)
+        {
+            var separatorIndex = value.IndexOf('_');
+            var prefix = separatorIndex > 0 ? value[..separatorIndex] : value;
+            return NormalizeForSubtitleMatch(prefix);
         }
 
         private static string GetPerspectiveFromSuffix(string fileName)

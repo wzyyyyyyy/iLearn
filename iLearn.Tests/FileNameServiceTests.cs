@@ -20,4 +20,20 @@ public sealed class FileNameServiceTests
 
         Assert.Equal("高数_第一讲_导论.vtt", fileName);
     }
+
+    [Fact]
+    public void SanitizeFileName_TrimsTrailingDotsAndSpaces()
+    {
+        var fileName = FileNameService.SanitizeFileName(" 高数. ");
+
+        Assert.Equal("高数", fileName);
+    }
+
+    [Fact]
+    public void SanitizeFileName_GuardsWindowsReservedDeviceNames()
+    {
+        var fileName = FileNameService.SanitizeFileName("CON");
+
+        Assert.Equal("_CON", fileName);
+    }
 }

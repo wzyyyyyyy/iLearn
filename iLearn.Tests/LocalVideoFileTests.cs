@@ -36,6 +36,21 @@ public sealed class LocalVideoFileTests : IDisposable
     }
 
     [Fact]
+    public void FindSubtitlePath_ReturnsSubtitleWithEquivalentBaseName()
+    {
+        var videoPath = Path.Combine(_root, "高数_第一讲_HDMI.mp4");
+        var subtitleDirectory = Path.Combine(_root, "Subtitles");
+        var subtitlePath = Path.Combine(subtitleDirectory, "高数第一讲.vtt");
+        Directory.CreateDirectory(subtitleDirectory);
+        File.WriteAllText(videoPath, string.Empty);
+        File.WriteAllText(subtitlePath, string.Empty);
+
+        var localVideo = LocalVideoFile.FromFileName(videoPath);
+
+        Assert.Equal(subtitlePath, localVideo.FindSubtitlePath(_root));
+    }
+
+    [Fact]
     public void GetPartnerVideo_ReturnsNullWhenPairIsMissing()
     {
         var videoPath = Path.Combine(_root, "高数_第一讲_HDMI.mp4");
@@ -44,5 +59,18 @@ public sealed class LocalVideoFileTests : IDisposable
         var localVideo = LocalVideoFile.FromFileName(videoPath);
 
         Assert.Null(localVideo.GetPartnerVideo());
+    }
+
+    [Fact]
+    public void GetPartnerVideo_PairsTeacherAliasWithHdmi()
+    {
+        var teacherPath = Path.Combine(_root, "高数_第一讲_teacher.mp4");
+        var hdmiPath = Path.Combine(_root, "高数_第一讲_HDMI.mp4");
+        File.WriteAllText(teacherPath, string.Empty);
+        File.WriteAllText(hdmiPath, string.Empty);
+
+        var localVideo = LocalVideoFile.FromFileName(teacherPath);
+
+        Assert.Equal(hdmiPath, localVideo.GetPartnerVideo()?.FullPath);
     }
 }
