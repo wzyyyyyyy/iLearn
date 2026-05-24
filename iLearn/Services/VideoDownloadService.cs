@@ -14,6 +14,7 @@ namespace iLearn.Services
         private readonly AppConfig _appConfig;
         private readonly ConcurrentDictionary<string, DownloadItem> _activeDownloads = new();
         private readonly ConcurrentDictionary<string, DownloadService> _downloaders = new();
+        private readonly ConcurrentDictionary<string, int> _downloadVersions = new();
         private readonly ConcurrentQueue<DownloadRequest> _downloadQueue = new();
         private readonly SemaphoreSlim _queueProcessingSemaphore = new(1, 1); // 确保队列处理不重复
         private SemaphoreSlim _concurrencyLimitSemaphore;
@@ -53,9 +54,6 @@ namespace iLearn.Services
             if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(outputPath))
                 return false;
 
-            if (_activeDownloads.ContainsKey(url))
-                return false;
-
             Directory.CreateDirectory(outputPath);
             string fullPath = Path.Combine(outputPath, fileName);
 
@@ -70,14 +68,20 @@ namespace iLearn.Services
                 Perspective = perspective ?? string.Empty
             };
 
-            _activeDownloads[url] = item;
+            if (!_activeDownloads.TryAdd(url, item))
+                return false;
 
-            var downloadRequest = new DownloadRequest(url, fileName, outputPath);
-            _downloadQueue.Enqueue(downloadRequest);
-
-            _ = Task.Run(() => ProcessDownloadQueueAsync(_cancellationTokenSource.Token));
+            EnqueueDownload(url, fileName, outputPath, item);
 
             return true;
+        }
+
+        private void EnqueueDownload(string url, string fileName, string outputPath, DownloadItem item)
+        {
+            var version = _downloadVersions.AddOrUpdate(url, 1, (_, current) => current + 1);
+            _downloadQueue.Enqueue(new DownloadRequest(url, fileName, outputPath, item, version));
+
+            _ = Task.Run(() => ProcessDownloadQueueAsync(_cancellationTokenSource.Token));
         }
 
         private async Task ProcessDownloadQueueAsync(CancellationToken cancellationToken)
@@ -91,10 +95,16 @@ namespace iLearn.Services
             {
                 while (_downloadQueue.TryDequeue(out var downloadRequest) && !cancellationToken.IsCancellationRequested)
                 {
-                    if (!_activeDownloads.TryGetValue(downloadRequest.Url, out var item))
+                    if (!IsCurrentRequest(downloadRequest, out var item))
                         continue;
 
-                    item.Status = DownloadStatus.Queued;
+                    lock (item)
+                    {
+                        if (!IsCurrentRequest(downloadRequest, out _) || item.Status == DownloadStatus.Cancelled)
+                            continue;
+
+                        item.Status = DownloadStatus.Queued;
+                    }
 
                     await _concurrencyLimitSemaphore.WaitAsync(cancellationToken);
 
@@ -102,7 +112,7 @@ namespace iLearn.Services
                     {
                         try
                         {
-                            await StartActualDownloadAsync(downloadRequest.Url, downloadRequest.FileName, downloadRequest.OutputPath, cancellationToken);
+                            await StartActualDownloadAsync(downloadRequest, cancellationToken);
                         }
                         finally
                         {
@@ -117,49 +127,77 @@ namespace iLearn.Services
             }
         }
 
-        private async Task StartActualDownloadAsync(string url, string fileName, string outputPath, CancellationToken cancellationToken)
+        private bool IsCurrentRequest(DownloadRequest downloadRequest, out DownloadItem item)
         {
-            if (!_activeDownloads.TryGetValue(url, out var item))
+            item = downloadRequest.Item;
+
+            return _activeDownloads.TryGetValue(downloadRequest.Url, out var activeItem)
+                && ReferenceEquals(activeItem, downloadRequest.Item)
+                && _downloadVersions.TryGetValue(downloadRequest.Url, out var version)
+                && version == downloadRequest.Version;
+        }
+
+        private async Task StartActualDownloadAsync(DownloadRequest downloadRequest, CancellationToken cancellationToken)
+        {
+            if (!IsCurrentRequest(downloadRequest, out var item) || item.Status == DownloadStatus.Cancelled)
                 return;
 
-            string fullPath = Path.Combine(outputPath, fileName);
+            string fullPath = Path.Combine(downloadRequest.OutputPath, downloadRequest.FileName);
             DownloadService? downloader = null;
 
             try
             {
+                lock (item)
+                {
+                    if (!IsCurrentRequest(downloadRequest, out _) || item.Status == DownloadStatus.Cancelled)
+                        return;
+                }
+
                 downloader = new DownloadService(_config);
-                _downloaders[url] = downloader;
+                _downloaders[downloadRequest.Url] = downloader;
 
-                downloader.DownloadProgressChanged += (s, e) => UpdateProgress(item, e);
-                downloader.DownloadFileCompleted += (s, e) => OnDownloadCompleted(url, item, e);
+                downloader.DownloadProgressChanged += (s, e) => UpdateProgress(downloadRequest, item, e);
+                downloader.DownloadFileCompleted += (s, e) => OnDownloadCompleted(downloadRequest, item, e);
 
-                item.Status = DownloadStatus.Downloading;
-                await downloader.DownloadFileTaskAsync(url, fullPath, cancellationToken);
+                lock (item)
+                {
+                    if (!IsCurrentRequest(downloadRequest, out _) || item.Status == DownloadStatus.Cancelled)
+                        return;
+
+                    item.Status = DownloadStatus.Downloading;
+                }
+                await downloader.DownloadFileTaskAsync(downloadRequest.Url, fullPath, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                item.Status = DownloadStatus.Cancelled;
+                if (IsCurrentRequest(downloadRequest, out _))
+                    item.Status = DownloadStatus.Cancelled;
             }
             catch (Exception ex)
             {
-                item.Status = DownloadStatus.Failed;
-                item.ErrorMessage = ex.Message;
+                if (IsCurrentRequest(downloadRequest, out _))
+                {
+                    item.Status = DownloadStatus.Failed;
+                    item.ErrorMessage = ex.Message;
+                }
             }
             finally
             {
                 if (downloader != null)
                 {
-                    _downloaders.TryRemove(url, out _);
+                    _downloaders.TryRemove(downloadRequest.Url, out _);
                     downloader.Dispose();
                 }
 
-                ResetItemSpeed(item);
+                if (IsCurrentRequest(downloadRequest, out _))
+                    ResetItemSpeed(item);
             }
         }
 
-        private void UpdateProgress(DownloadItem item, DownloadProgressChangedEventArgs e)
+        private void UpdateProgress(DownloadRequest downloadRequest, DownloadItem item, DownloadProgressChangedEventArgs e)
         {
-            if (_disposed) return;
+            if (_disposed || !IsCurrentRequest(downloadRequest, out _) || item.Status == DownloadStatus.Cancelled)
+                return;
 
             item.Progress = e.ProgressPercentage;
             item.BytesReceived = e.ReceivedBytesSize;
@@ -175,9 +213,16 @@ namespace iLearn.Services
             item.SpeedValue = e.BytesPerSecondSpeed;
         }
 
-        private void OnDownloadCompleted(string url, DownloadItem item, AsyncCompletedEventArgs e)
+        private void OnDownloadCompleted(DownloadRequest downloadRequest, DownloadItem item, AsyncCompletedEventArgs e)
         {
-            if (_disposed) return;
+            if (_disposed || !IsCurrentRequest(downloadRequest, out _))
+                return;
+
+            if (item.Status == DownloadStatus.Cancelled)
+            {
+                ResetItemSpeed(item);
+                return;
+            }
 
             if (e.Cancelled)
                 item.Status = DownloadStatus.Cancelled;
@@ -250,45 +295,60 @@ namespace iLearn.Services
             if (_disposed)
                 return false;
 
+            DownloadItem? item = null;
+
             try
             {
-                DownloadItem? item = null;
+                var hadDownloader = false;
+                var hadItem = _activeDownloads.TryGetValue(url, out item);
 
                 if (_downloaders.TryGetValue(url, out var downloader))
                 {
+                    hadDownloader = true;
                     downloader.CancelAsync();
                     _downloaders.TryRemove(url, out _);
                 }
 
-                if (_activeDownloads.TryGetValue(url, out item))
+                if (!hadItem && !hadDownloader)
+                    return false;
+
+                _downloadVersions.AddOrUpdate(url, 1, (_, current) => current + 1);
+
+                if (item != null)
                 {
-                    item.Status = DownloadStatus.Cancelled;
-                    ResetItemSpeed(item);
+                    lock (item)
+                    {
+                        item.Status = DownloadStatus.Cancelled;
+                        ResetItemSpeed(item);
+                    }
                 }
 
                 if (deleteFile && item != null)
-                    _ = DeleteCancelledFileAsync(item.OutputPath);
+                    _ = DeleteCancelledFileAsync(item);
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                if (item != null)
+                    item.ErrorMessage = ex.Message;
+
                 return false;
             }
         }
 
-        private static async Task DeleteCancelledFileAsync(string outputPath)
+        private static async Task DeleteCancelledFileAsync(DownloadItem item)
         {
             try
             {
                 await Task.Delay(1000);
 
-                if (File.Exists(outputPath))
-                    File.Delete(outputPath);
+                if (File.Exists(item.OutputPath))
+                    File.Delete(item.OutputPath);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Ignore cleanup failures; cancellation has already been recorded.
+                item.ErrorMessage = ex.Message;
             }
         }
 
@@ -299,7 +359,9 @@ namespace iLearn.Services
 
             try
             {
-                CancelDownload(url, deleteFile: false);
+                if (!CancelDownload(url, deleteFile: false))
+                    return false;
+
                 await Task.Delay(200, _cancellationTokenSource.Token);
 
                 item.Progress = 0;
@@ -311,9 +373,8 @@ namespace iLearn.Services
                 if (string.IsNullOrWhiteSpace(outputDir))
                     return false;
 
-                _activeDownloads.TryRemove(url, out _);
-
-                return await StartDownloadAsync(url, item.FileName, outputDir, item.Perspective);
+                EnqueueDownload(url, item.FileName, outputDir, item);
+                return true;
             }
             catch (OperationCanceledException)
             {
@@ -429,6 +490,7 @@ namespace iLearn.Services
 
                 _downloaders.Clear();
                 _activeDownloads.Clear();
+                _downloadVersions.Clear();
 
                 _cancellationTokenSource?.Dispose();
                 _concurrencyLimitSemaphore?.Dispose();
@@ -440,6 +502,6 @@ namespace iLearn.Services
             }
         }
 
-        private record DownloadRequest(string Url, string FileName, string OutputPath);
+        private record DownloadRequest(string Url, string FileName, string OutputPath, DownloadItem Item, int Version);
     }
 }
