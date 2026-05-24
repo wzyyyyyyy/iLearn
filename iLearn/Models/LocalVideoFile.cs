@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
+using iLearn.Services;
 
 namespace iLearn.Models
 {
@@ -35,7 +36,7 @@ namespace iLearn.Models
 
         public string FileSizeFormatted => FormatFileSize(FileSize);
 
-        public string DateFormatted => RecordDate.ToString("yyyyÄêMMÔÂddÈÕ");
+        public string DateFormatted => RecordDate.ToString("yyyyå¹´MMæœˆddæ—¥");
 
         private string FormatFileSize(long bytes)
         {
@@ -45,40 +46,60 @@ namespace iLearn.Models
             while (len >= 1024 && order < sizes.Length - 1)
             {
                 order++;
-                len = len / 1024;
+                len /= 1024;
             }
             return $"{len:0.##} {sizes[order]}";
         }
 
-        public LocalVideoFile GetPartnerVideo()
+        public LocalVideoFile? GetPartnerVideo()
         {
-            switch (Perspective)
+            var directory = Path.GetDirectoryName(FullPath);
+            if (string.IsNullOrWhiteSpace(directory))
             {
-                case "HDMI":
-                    {
-                        var path = FullPath.Replace("_HDMI.mp4", "_½ÌÊ¦.mp4");
-
-                        if (File.Exists(path))
-                        {
-                            return FromFileName(path);
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    }
-                case "½ÌÊ¦":
-                {
-                    var path = FullPath.Replace("_½ÌÊ¦.mp4", "_HDMI.mp4");
-
-                    return File.Exists(path) ? FromFileName(path) : null;
-                }
-                default:
-                    {
-                        return null;
-                    }
+                return null;
             }
-            ;
+
+            var baseName = Path.GetFileNameWithoutExtension(FullPath);
+            foreach (var partnerBaseName in GetPartnerBaseNames(baseName))
+            {
+                var partnerPath = Path.Combine(directory, partnerBaseName + ".mp4");
+                if (File.Exists(partnerPath))
+                {
+                    return FromFileName(partnerPath);
+                }
+            }
+
+            return null;
+        }
+
+        public string? FindSubtitlePath(string downloadRoot)
+        {
+            var videoDirectory = Path.GetDirectoryName(FullPath);
+            var subtitleBaseName = StripPerspectiveSuffix(Path.GetFileNameWithoutExtension(FullPath));
+            var extensions = new[] { ".vtt", ".srt" };
+            var directories = new[]
+            {
+                videoDirectory,
+                string.IsNullOrWhiteSpace(downloadRoot) ? null : Path.Combine(downloadRoot, "Subtitles")
+            };
+
+            var exactMatches = directories
+                .Where(directory => !string.IsNullOrWhiteSpace(directory))
+                .SelectMany(directory => extensions.Select(extension => Path.Combine(directory!, subtitleBaseName + extension)))
+                .Where(File.Exists)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (exactMatches.Count > 0)
+            {
+                return exactMatches.Count == 1 ? exactMatches[0] : null;
+            }
+
+            var fuzzyMatches = GetSubtitleCandidates(directories)
+                .Where(path => IsSubtitleMatch(subtitleBaseName, Path.GetFileNameWithoutExtension(path)))
+                .ToList();
+
+            return fuzzyMatches.Count == 1 ? fuzzyMatches[0] : null;
         }
 
         public static LocalVideoFile FromFileName(string filePath)
@@ -90,7 +111,7 @@ namespace iLearn.Models
             {
                 FileName = fileName,
                 FullPath = filePath,
-                FileSize = fileInfo.Length
+                FileSize = fileInfo.Exists ? fileInfo.Length : 0
             };
 
             var regex = new Regex(@"^(.+?)_(.+?)_(\d{4}-\d{2}-\d{2})\s(\d{2})_(\d{2})-(\d{2})_(\d{2})_(.+)$");
@@ -119,9 +140,92 @@ namespace iLearn.Models
             }
             else
             {
-                MessageBox.Show($"ÎÄ¼þÃû '{fileName}' ¸ñÊ½²»·ûºÏÔ¤ÆÚ£¬ÎÞ·¨½âÎö¡£");
+                video.CourseName = StripPerspectiveSuffix(fileName);
+                video.Perspective = GetPerspectiveFromSuffix(fileName);
             }
             return video;
+        }
+
+        private static string StripPerspectiveSuffix(string fileName)
+        {
+            foreach (var suffix in new[] { "_HDMI", "_æ•™å¸ˆ", "_teacher" })
+            {
+                if (fileName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return fileName[..^suffix.Length];
+                }
+            }
+
+            return fileName;
+        }
+
+        private static IEnumerable<string> GetPartnerBaseNames(string baseName)
+        {
+            if (baseName.EndsWith("_HDMI", StringComparison.OrdinalIgnoreCase))
+            {
+                var prefix = baseName[..^"_HDMI".Length];
+                yield return prefix + "_æ•™å¸ˆ";
+                yield return prefix + "_teacher";
+            }
+            else if (baseName.EndsWith("_æ•™å¸ˆ", StringComparison.OrdinalIgnoreCase))
+            {
+                yield return baseName[..^"_æ•™å¸ˆ".Length] + "_HDMI";
+            }
+            else if (baseName.EndsWith("_teacher", StringComparison.OrdinalIgnoreCase))
+            {
+                yield return baseName[..^"_teacher".Length] + "_HDMI";
+            }
+        }
+
+        private static IEnumerable<string> GetSubtitleCandidates(IEnumerable<string?> directories)
+        {
+            var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var directory in directories.Where(directory => !string.IsNullOrWhiteSpace(directory)))
+            {
+                if (!Directory.Exists(directory))
+                {
+                    continue;
+                }
+
+                foreach (var extension in new[] { "*.vtt", "*.srt" })
+                {
+                    foreach (var subtitlePath in Directory.EnumerateFiles(directory!, extension, SearchOption.TopDirectoryOnly))
+                    {
+                        if (seenPaths.Add(subtitlePath))
+                        {
+                            yield return subtitlePath;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static bool IsSubtitleMatch(string videoBaseName, string subtitleBaseName)
+        {
+            var normalizedVideo = NormalizeForSubtitleMatch(videoBaseName);
+            var normalizedSubtitle = NormalizeForSubtitleMatch(subtitleBaseName);
+            return !string.IsNullOrWhiteSpace(normalizedVideo)
+                && string.Equals(normalizedVideo, normalizedSubtitle, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeForSubtitleMatch(string value)
+        {
+            return new string(FileNameService.SanitizeFileName(value)
+                .Where(character => char.IsLetterOrDigit(character))
+                .ToArray());
+        }
+
+        private static string GetPerspectiveFromSuffix(string fileName)
+        {
+            foreach (var perspective in new[] { "HDMI", "æ•™å¸ˆ", "teacher" })
+            {
+                if (fileName.EndsWith("_" + perspective, StringComparison.OrdinalIgnoreCase))
+                {
+                    return perspective;
+                }
+            }
+
+            return string.Empty;
         }
     }
 }

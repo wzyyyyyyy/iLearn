@@ -1080,7 +1080,12 @@
                 bindPlayerEvents();
                 restorePreferences();
                 showToast('播放器就绪');
-                loadRemoteSubtitle('_SUBTITLE_');
+                const embeddedSubtitle = '_SUBTITLE_DATA_';
+                if (embeddedSubtitle && embeddedSubtitle !== '_SUBTITLE_DATA_') {
+                    loadEmbeddedSubtitle(embeddedSubtitle);
+                } else {
+                    loadRemoteSubtitle('_SUBTITLE_');
+                }
                 // 激活交互
                 els.container.focus();
             });
@@ -1352,21 +1357,40 @@
             }
         }
 
+        function applySubtitleText(text, label) {
+            state.subtitles = parseVTT(text);
+            renderSubtitleList();
+            els.subStatus.textContent = label;
+            els.subStatus.style.color = 'var(--primary)';
+            state.isSubVisible = true;
+            $('#sub-toggle-btn').classList.add('active');
+            renderChapterMarks();
+            showToast(`已加载 ${state.subtitles.length} 条字幕`);
+        }
+
+        function loadEmbeddedSubtitle(base64Text) {
+            try {
+                const binary = atob(base64Text);
+                const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+                const text = new TextDecoder('utf-8').decode(bytes);
+                applySubtitleText(text, '自动字幕');
+            } catch (err) {
+                loadRemoteSubtitle('_SUBTITLE_');
+            }
+        }
+
         function loadRemoteSubtitle(url) {
             if (!url || url === '_SUBTITLE_') return;
             fetch(url)
-                .then(r => r.text())
+                .then(r => {
+                    if (!r.ok) throw new Error('subtitle request failed');
+                    return r.text();
+                })
                 .then(text => {
-                    state.subtitles = parseVTT(text);
-                    renderSubtitleList();
-                    els.subStatus.textContent = '默认字幕';
-                    els.subStatus.style.color = 'var(--primary)';
-                    $('#sub-toggle-btn').classList.add('active');
-                    renderChapterMarks();
-                    showToast(`已加载 ${state.subtitles.length} 条字幕`);
+                    applySubtitleText(text, '自动字幕');
                 })
                 .catch(() => {
-                    // 静默处理，字幕为可选功能
+                    els.subStatus.textContent = '无字幕';
                 });
         }
 
