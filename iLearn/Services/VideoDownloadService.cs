@@ -1,6 +1,7 @@
 ﻿using Downloader;
 using iLearn.Models;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks.Dataflow;
@@ -185,7 +186,8 @@ namespace iLearn.Services
             {
                 if (downloader != null)
                 {
-                    _downloaders.TryRemove(downloadRequest.Url, out _);
+                    ((ICollection<KeyValuePair<string, DownloadService>>)_downloaders)
+                        .Remove(new KeyValuePair<string, DownloadService>(downloadRequest.Url, downloader));
                     downloader.Dispose();
                 }
 
