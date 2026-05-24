@@ -50,6 +50,37 @@ public sealed class LocalVideoFileTests : IDisposable
         Assert.Equal(subtitlePath, localVideo.FindSubtitlePath(_root));
     }
 
+    [Theory]
+    [InlineData("高数.vtt")]
+    [InlineData("高数_第二讲.vtt")]
+    public void FindSubtitlePath_DoesNotReturnUnsafeFuzzyMatch(string subtitleFileName)
+    {
+        var videoPath = Path.Combine(_root, "高数_第一讲_HDMI.mp4");
+        var subtitleDirectory = Path.Combine(_root, "Subtitles");
+        Directory.CreateDirectory(subtitleDirectory);
+        File.WriteAllText(videoPath, string.Empty);
+        File.WriteAllText(Path.Combine(subtitleDirectory, subtitleFileName), string.Empty);
+
+        var localVideo = LocalVideoFile.FromFileName(videoPath);
+
+        Assert.Null(localVideo.FindSubtitlePath(_root));
+    }
+
+    [Fact]
+    public void FindSubtitlePath_ReturnsNullWhenFuzzyMatchesAreAmbiguous()
+    {
+        var videoPath = Path.Combine(_root, "高数_第一讲_HDMI.mp4");
+        var subtitleDirectory = Path.Combine(_root, "Subtitles");
+        Directory.CreateDirectory(subtitleDirectory);
+        File.WriteAllText(videoPath, string.Empty);
+        File.WriteAllText(Path.Combine(subtitleDirectory, "高数第一讲.vtt"), string.Empty);
+        File.WriteAllText(Path.Combine(subtitleDirectory, "高数-第一讲.srt"), string.Empty);
+
+        var localVideo = LocalVideoFile.FromFileName(videoPath);
+
+        Assert.Null(localVideo.FindSubtitlePath(_root));
+    }
+
     [Fact]
     public void GetPartnerVideo_ReturnsNullWhenPairIsMissing()
     {

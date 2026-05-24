@@ -95,35 +95,11 @@ namespace iLearn.Models
                 }
             }
 
-            var subtitleCandidates = GetSubtitleCandidates(directories).ToList();
-            foreach (var subtitlePath in subtitleCandidates)
-            {
-                var candidateBaseName = Path.GetFileNameWithoutExtension(subtitlePath);
-                if (IsSubtitleMatch(subtitleBaseName, candidateBaseName))
-                {
-                    return subtitlePath;
-                }
-            }
+            var fuzzyMatches = GetSubtitleCandidates(directories)
+                .Where(path => IsSubtitleMatch(subtitleBaseName, Path.GetFileNameWithoutExtension(path)))
+                .ToList();
 
-            var subtitlesDirectory = string.IsNullOrWhiteSpace(downloadRoot) ? null : Path.Combine(downloadRoot, "Subtitles");
-            if (!string.IsNullOrWhiteSpace(subtitlesDirectory))
-            {
-                var coursePrefix = GetCourseLikePrefix(subtitleBaseName);
-                if (!string.IsNullOrWhiteSpace(coursePrefix))
-                {
-                    var prefixMatches = subtitleCandidates
-                        .Where(path => string.Equals(Path.GetDirectoryName(path), subtitlesDirectory, StringComparison.OrdinalIgnoreCase))
-                        .Where(path => NormalizeForSubtitleMatch(Path.GetFileNameWithoutExtension(path)).StartsWith(coursePrefix, StringComparison.OrdinalIgnoreCase))
-                        .ToList();
-
-                    if (prefixMatches.Count == 1)
-                    {
-                        return prefixMatches[0];
-                    }
-                }
-            }
-
-            return null;
+            return fuzzyMatches.Count == 1 ? fuzzyMatches[0] : null;
         }
 
         public static LocalVideoFile FromFileName(string filePath)
@@ -226,20 +202,10 @@ namespace iLearn.Models
 
         private static bool IsSubtitleMatch(string videoBaseName, string subtitleBaseName)
         {
-            var videoSanitized = FileNameService.SanitizeFileName(videoBaseName);
-            var subtitleSanitized = FileNameService.SanitizeFileName(subtitleBaseName);
-            if (string.Equals(videoSanitized, subtitleSanitized, StringComparison.OrdinalIgnoreCase)
-                || videoSanitized.Contains(subtitleSanitized, StringComparison.OrdinalIgnoreCase)
-                || subtitleSanitized.Contains(videoSanitized, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            var normalizedVideo = NormalizeForSubtitleMatch(videoSanitized);
-            var normalizedSubtitle = NormalizeForSubtitleMatch(subtitleSanitized);
-            return string.Equals(normalizedVideo, normalizedSubtitle, StringComparison.OrdinalIgnoreCase)
-                || normalizedVideo.Contains(normalizedSubtitle, StringComparison.OrdinalIgnoreCase)
-                || normalizedSubtitle.Contains(normalizedVideo, StringComparison.OrdinalIgnoreCase);
+            var normalizedVideo = NormalizeForSubtitleMatch(videoBaseName);
+            var normalizedSubtitle = NormalizeForSubtitleMatch(subtitleBaseName);
+            return !string.IsNullOrWhiteSpace(normalizedVideo)
+                && string.Equals(normalizedVideo, normalizedSubtitle, StringComparison.OrdinalIgnoreCase);
         }
 
         private static string NormalizeForSubtitleMatch(string value)
@@ -247,13 +213,6 @@ namespace iLearn.Models
             return new string(FileNameService.SanitizeFileName(value)
                 .Where(character => char.IsLetterOrDigit(character))
                 .ToArray());
-        }
-
-        private static string GetCourseLikePrefix(string value)
-        {
-            var separatorIndex = value.IndexOf('_');
-            var prefix = separatorIndex > 0 ? value[..separatorIndex] : value;
-            return NormalizeForSubtitleMatch(prefix);
         }
 
         private static string GetPerspectiveFromSuffix(string fileName)
