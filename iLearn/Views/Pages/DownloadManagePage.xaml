@@ -26,39 +26,13 @@
             </Style.Triggers>
         </Style>
 
-        <!-- 状态颜色转换器 -->
         <DataTemplate x:Key="StatusTemplate">
-            <Border CornerRadius="12" Padding="8,4">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Status}" Value="Downloading">
-                                <Setter Property="Background" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="Completed">
-                                <Setter Property="Background" Value="Green"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="Paused">
-                                <Setter Property="Background" Value="Orange"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="Failed">
-                                <Setter Property="Background" Value="Red"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="Cancelled">
-                                <Setter Property="Background" Value="Gray"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="Queued">
-                                <Setter Property="Background" Value="Purple"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Status}" Value="Waiting">
-                                <Setter Property="Background" Value="LightBlue"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+            <Border CornerRadius="4"
+                    Padding="8,3"
+                    Background="{DynamicResource ControlFillColorSecondaryBrush}">
                 <TextBlock Text="{Binding Status}" 
-                           Foreground="White" 
-                           FontSize="10" 
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                           FontSize="11" 
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"/>
             </Border>
@@ -220,30 +194,34 @@
                                 <!-- 下载信息 -->
                                 <Grid Grid.Row="2" Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="100"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                        <TextBlock Text="{Binding SpeedValue, Converter={StaticResource SpeedConverter}}" 
-                                                   FontSize="12" 
-                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                   Margin="0,0,16,0"/>
-                                        <TextBlock FontSize="12" 
-                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                                            <Run Text="{Binding BytesReceived, StringFormat='{}{0:N0}'}" />
-                                            <Run Text="/" />
-                                            <Run Text="{Binding TotalBytes, StringFormat='{}{0:N0}'}" />
-                                            <Run Text=" 字节" />
-                                        </TextBlock>
-                                    </StackPanel>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding SpeedValue, Converter={StaticResource SpeedConverter}}" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SizeText}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding RemainingText}"
+                                               FontSize="12"
+                                               HorizontalAlignment="Right"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                 </Grid>
 
                                 <!-- 操作按钮 -->
                                 <StackPanel Grid.Row="3" Orientation="Horizontal">
                                     <!-- 暂停按钮 -->
-                                    <ui:Button Content="暂停"
-                                               Icon="Pause24"
+                                    <ui:Button Icon="Pause24"
+                                               Width="36"
+                                               Height="32"
+                                               ToolTip="暂停"
                                                Command="{Binding DataContext.PauseDownloadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                CommandParameter="{Binding}"
                                                Appearance="Secondary"
@@ -261,8 +239,10 @@
                                     </ui:Button>
 
                                     <!-- 继续按钮 -->
-                                    <ui:Button Content="继续"
-                                               Icon="Play24"
+                                    <ui:Button Icon="Play24"
+                                               Width="36"
+                                               Height="32"
+                                               ToolTip="继续"
                                                Command="{Binding DataContext.ResumeDownloadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                CommandParameter="{Binding}"
                                                Appearance="Primary"
@@ -280,8 +260,10 @@
                                     </ui:Button>
 
                                     <!-- 重试按钮 -->
-                                    <ui:Button Content="重试"
-                                               Icon="ArrowSync24"
+                                    <ui:Button Icon="ArrowSync24"
+                                               Width="36"
+                                               Height="32"
+                                               ToolTip="重试"
                                                Command="{Binding DataContext.RetryDownloadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                CommandParameter="{Binding}"
                                                Appearance="Caution"
@@ -299,8 +281,10 @@
                                     </ui:Button>
 
                                     <!-- 取消按钮 -->
-                                    <ui:Button Content="取消"
-                                               Icon="Stop24"
+                                    <ui:Button Icon="Stop24"
+                                               Width="36"
+                                               Height="32"
+                                               ToolTip="取消"
                                                Command="{Binding DataContext.CancelDownloadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                CommandParameter="{Binding}"
                                                Appearance="Caution"
@@ -321,8 +305,10 @@
                                     </ui:Button>
 
                                     <!-- 打开文件 -->
-                                    <ui:Button Content="打开文件"
-                                               Icon="Open24"
+                                    <ui:Button Icon="Open24"
+                                               Width="36"
+                                               Height="32"
+                                               ToolTip="打开文件"
                                                Command="{Binding DataContext.OpenDownloadFileCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                CommandParameter="{Binding}"
                                                Appearance="Success">

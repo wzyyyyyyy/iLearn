@@ -55,10 +55,10 @@ namespace iLearn.ViewModels.Pages
             _refreshTimer.Tick += RefreshDownloads;
             _refreshTimer.Start();
 
-            RefreshDownloads(null, null);
+            RefreshDownloads(null, EventArgs.Empty);
         }
 
-        private void RefreshDownloads(object sender, EventArgs e)
+        private void RefreshDownloads(object? sender, EventArgs e)
         {
             var activeDownloads = _downloadService.ActiveDownloads.ToList();
 
@@ -69,19 +69,18 @@ namespace iLearn.ViewModels.Pages
 
             SortDownloadsByStatus();
 
-            ActiveDownloadsCount = Downloads.Count(d => d.Status == "Downloading");
-            CompletedDownloadsCount = Downloads.Count(d => d.Status == "Completed");
-            QueuedDownloadsCount = Downloads.Count(d => d.Status == "Queued") + _downloadService.GetQueuedDownloadsCount();
+            ActiveDownloadsCount = Downloads.Count(d => d.Status == DownloadStatus.Downloading);
+            CompletedDownloadsCount = Downloads.Count(d => d.Status == DownloadStatus.Completed);
+            QueuedDownloadsCount = Downloads.Count(d => d.Status is DownloadStatus.Queued or DownloadStatus.Waiting) + _downloadService.GetQueuedDownloadsCount();
 
-            HasDownloadingItems = Downloads.Any(d => d.Status == "Downloading");
-            HasPausedItems = Downloads.Any(d => d.Status == "Paused");
+            HasDownloadingItems = Downloads.Any(d => d.Status == DownloadStatus.Downloading);
+            HasPausedItems = Downloads.Any(d => d.Status == DownloadStatus.Paused);
 
             var totalSpeedBytes = Downloads
-                .Where(d => d.Status == "Downloading")
+                .Where(d => d.Status == DownloadStatus.Downloading)
                 .Sum(d => d.SpeedValue);
 
-            var totalSpeedMB = totalSpeedBytes / (1024.0 * 1024.0);
-            TotalDownloadSpeed = $"{totalSpeedMB:F2} MB/s";
+            TotalDownloadSpeed = FormatBytesPerSecond(totalSpeedBytes);
         }
 
         private void SortDownloadsByStatus()
@@ -100,16 +99,27 @@ namespace iLearn.ViewModels.Pages
             }
         }
 
-        private int GetStatusSortOrder(string status) =>
+        private static int GetStatusSortOrder(string status) =>
             status switch
             {
-                "Failed" => 0,        // 下载失败
-                "Downloading" => 1,   // 正在下载
-                "Paused" => 2,        // 已暂停
-                "Queued" => 3,        // 排队中
-                "Completed" => 4,     // 已完成
-                _ => 5                // 其他状态
+                DownloadStatus.Failed => 0,
+                DownloadStatus.Downloading => 1,
+                DownloadStatus.Paused => 2,
+                DownloadStatus.Queued => 3,
+                DownloadStatus.Waiting => 4,
+                DownloadStatus.Completed => 5,
+                DownloadStatus.Cancelled => 6,
+                _ => 7
             };
+
+        private static string FormatBytesPerSecond(double bytesPerSecond)
+        {
+            if (bytesPerSecond >= 1024 * 1024)
+                return $"{bytesPerSecond / 1024 / 1024:0.##} MB/s";
+            if (bytesPerSecond >= 1024)
+                return $"{bytesPerSecond / 1024:0.##} KB/s";
+            return $"{bytesPerSecond:0} B/s";
+        }
 
         [RelayCommand]
         private void PauseAllDownloads()
@@ -128,7 +138,7 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void PauseDownload(DownloadItem item)
         {
-            if (item?.Status == "Downloading")
+            if (item?.Status == DownloadStatus.Downloading)
             {
                 var success = _downloadService.PauseDownload(item.Url);
                 if (success)
@@ -141,7 +151,7 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void ResumeDownload(DownloadItem item)
         {
-            if (item?.Status == "Paused")
+            if (item?.Status == DownloadStatus.Paused)
             {
                 var success = _downloadService.ResumeDownload(item.Url);
                 if (success)
@@ -154,7 +164,7 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private void CancelDownload(DownloadItem item)
         {
-            if (item != null && item.Status != "Completed")
+            if (item != null && item.Status != DownloadStatus.Completed)
             {
                 var success = _downloadService.CancelDownload(item.Url);
                 if (success)
@@ -167,7 +177,7 @@ namespace iLearn.ViewModels.Pages
         [RelayCommand]
         private async Task RetryDownload(DownloadItem item)
         {
-            if (item?.Status == "Failed")
+            if (item?.Status == DownloadStatus.Failed)
             {
                 try
                 {
@@ -186,7 +196,7 @@ namespace iLearn.ViewModels.Pages
         {
             try
             {
-                if (item is { Status: "Completed" } && File.Exists(item.OutputPath))
+                if (item is { Status: DownloadStatus.Completed } && File.Exists(item.OutputPath))
                 {
                     Process.Start(new ProcessStartInfo
                     {
@@ -223,7 +233,7 @@ namespace iLearn.ViewModels.Pages
         {
             if (item != null)
             {
-                if (item.Status == "Downloading")
+                if (item.Status == DownloadStatus.Downloading)
                 {
                     _downloadService.CancelDownload(item.Url);
                 }
