@@ -83,16 +83,16 @@ namespace iLearn.Models
                 string.IsNullOrWhiteSpace(downloadRoot) ? null : Path.Combine(downloadRoot, "Subtitles")
             };
 
-            foreach (var directory in directories.Where(directory => !string.IsNullOrWhiteSpace(directory)))
+            var exactMatches = directories
+                .Where(directory => !string.IsNullOrWhiteSpace(directory))
+                .SelectMany(directory => extensions.Select(extension => Path.Combine(directory!, subtitleBaseName + extension)))
+                .Where(File.Exists)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (exactMatches.Count > 0)
             {
-                foreach (var extension in extensions)
-                {
-                    var subtitlePath = Path.Combine(directory!, subtitleBaseName + extension);
-                    if (File.Exists(subtitlePath))
-                    {
-                        return subtitlePath;
-                    }
-                }
+                return exactMatches.Count == 1 ? exactMatches[0] : null;
             }
 
             var fuzzyMatches = GetSubtitleCandidates(directories)

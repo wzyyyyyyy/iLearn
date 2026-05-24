@@ -50,6 +50,38 @@ public sealed class LocalVideoFileTests : IDisposable
         Assert.Equal(subtitlePath, localVideo.FindSubtitlePath(_root));
     }
 
+    [Fact]
+    public void FindSubtitlePath_ReturnsNullWhenExactMatchExistsInMultipleDirectories()
+    {
+        var videoPath = Path.Combine(_root, "高数_第一讲_HDMI.mp4");
+        var sameFolderSubtitlePath = Path.Combine(_root, "高数_第一讲.vtt");
+        var subtitleDirectory = Path.Combine(_root, "Subtitles");
+        var subtitlePath = Path.Combine(subtitleDirectory, "高数_第一讲.vtt");
+        Directory.CreateDirectory(subtitleDirectory);
+        File.WriteAllText(videoPath, string.Empty);
+        File.WriteAllText(sameFolderSubtitlePath, string.Empty);
+        File.WriteAllText(subtitlePath, string.Empty);
+
+        var localVideo = LocalVideoFile.FromFileName(videoPath);
+
+        Assert.Null(localVideo.FindSubtitlePath(_root));
+    }
+
+    [Fact]
+    public void FindSubtitlePath_ReturnsNullWhenExactMatchHasMultipleExtensions()
+    {
+        var videoPath = Path.Combine(_root, "高数_第一讲_HDMI.mp4");
+        var subtitleDirectory = Path.Combine(_root, "Subtitles");
+        Directory.CreateDirectory(subtitleDirectory);
+        File.WriteAllText(videoPath, string.Empty);
+        File.WriteAllText(Path.Combine(subtitleDirectory, "高数_第一讲.vtt"), string.Empty);
+        File.WriteAllText(Path.Combine(subtitleDirectory, "高数_第一讲.srt"), string.Empty);
+
+        var localVideo = LocalVideoFile.FromFileName(videoPath);
+
+        Assert.Null(localVideo.FindSubtitlePath(_root));
+    }
+
     [Theory]
     [InlineData("高数.vtt")]
     [InlineData("高数_第二讲.vtt")]
