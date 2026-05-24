@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using MessageBox = System.Windows.MessageBox;
@@ -60,7 +61,7 @@ namespace iLearn.ViewModels.Pages
         {
             _snackbarService = snackbarService;
             _appConfig = appConfig;
-            LoadLocalVideos();
+            _ = LoadLocalVideos();
         }
 
         partial void OnSearchQueryChanged(string value)
@@ -127,8 +128,12 @@ namespace iLearn.ViewModels.Pages
 
             try
             {
-                _ = OpenLocalVideoAsync(video);
-                ShowSnackbar("正在打开", $"正在使用默认程序打开 {video.FileName}", ControlAppearance.Info);
+                var subtitlePath = video.FindSubtitlePath(_appConfig.DownloadPath);
+                await OpenLocalVideoAsync(video, subtitlePath);
+                ShowSnackbar(
+                    "正在打开",
+                    subtitlePath == null ? $"正在打开 {video.FileName}，未找到匹配字幕" : $"正在打开 {video.FileName}，已自动匹配字幕",
+                    ControlAppearance.Info);
             }
             catch (Exception ex)
             {
@@ -211,30 +216,41 @@ namespace iLearn.ViewModels.Pages
             );
         }
 
-        private async Task OpenLocalVideoAsync(LocalVideoFile video)
+        private async Task OpenLocalVideoAsync(LocalVideoFile video, string? subtitlePath)
         {
             var uri = new Uri("pack://application:,,,/Assets/VideoPlayer.html");
             var streamInfo = Application.GetResourceStream(uri);
+            if (streamInfo == null)
+                throw new FileNotFoundException("无法加载内置播放器模板。");
 
             using var reader = new StreamReader(streamInfo.Stream);
             var content = await reader.ReadToEndAsync();
 
-            content = content.Replace("_LEFTVIDEO_", video.FullPath);
+            content = content.Replace("_LEFTVIDEO_", new Uri(video.FullPath).AbsoluteUri);
 
             var partnerVideo = video.GetPartnerVideo();
-            if (partnerVideo != null)
-                content = content.Replace("_RIGHTVIDEO_", partnerVideo.FullPath);
+            content = content.Replace(
+                "_RIGHTVIDEO_",
+                partnerVideo == null ? new Uri(video.FullPath).AbsoluteUri : new Uri(partnerVideo.FullPath).AbsoluteUri);
+            content = content.Replace("_SUBTITLE_", subtitlePath == null ? string.Empty : new Uri(subtitlePath).AbsoluteUri);
+            content = content.Replace("_SUBTITLE_DATA_", subtitlePath == null ? string.Empty : await CreateSubtitleDataAsync(subtitlePath));
 
             string tempFile = Path.Combine(Path.GetTempPath(), $"video_local_{Guid.NewGuid()}.html");
             await File.WriteAllTextAsync(tempFile, content);
 
-            using var process = new System.Diagnostics.Process();
-            process.StartInfo = new System.Diagnostics.ProcessStartInfo
+            using var process = new Process();
+            process.StartInfo = new ProcessStartInfo
             {
                 FileName = tempFile,
                 UseShellExecute = true
             };
             process.Start();
+        }
+
+        private static async Task<string> CreateSubtitleDataAsync(string subtitlePath)
+        {
+            var subtitleText = await File.ReadAllTextAsync(subtitlePath);
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(subtitleText));
         }
     }
 }
