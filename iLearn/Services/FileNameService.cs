@@ -4,6 +4,9 @@ namespace iLearn.Services;
 
 public static class FileNameService
 {
+    private static readonly HashSet<char> InvalidFileNameCharacters = new(
+        Path.GetInvalidFileNameChars().Concat(new[] { '<', '>', ':', '"', '/', '\\', '|', '?', '*' }));
+
     private static readonly HashSet<string> ReservedDeviceNames = new(StringComparer.OrdinalIgnoreCase)
     {
         "CON",
@@ -47,9 +50,8 @@ public static class FileNameService
             return "未命名";
         }
 
-        var invalidCharacters = Path.GetInvalidFileNameChars();
         var sanitized = new string(name.Trim().Select(character =>
-            invalidCharacters.Contains(character) ? '_' : character).ToArray());
+            InvalidFileNameCharacters.Contains(character) ? '_' : character).ToArray());
         sanitized = sanitized.TrimEnd('.', ' ');
 
         if (string.IsNullOrWhiteSpace(sanitized))
