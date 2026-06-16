@@ -53,6 +53,7 @@
     <Compile Include="Downloads/DownloadTaskSnapshot.cs" />
     <Compile Include="Downloads/DownloadRequest.cs" />
     <Compile Include="Downloads/IDownloadEngine.cs" />
+    <Compile Include="Downloads/HttpRangeDownloadEngine.cs" />
     <Compile Include="Downloads/DownloadQueueService.cs" />
     <Compile Include="Services/FileNameService.cs" />
     <Compile Include="Models/AppConfig.cs" />

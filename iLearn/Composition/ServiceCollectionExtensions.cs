@@ -1,3 +1,4 @@
+using iLearn.Downloads;
 using iLearn.Navigation;
 using iLearn.Notifications;
 using iLearn.Platform;
@@ -13,6 +14,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<NavigationService>();
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IPlatformLauncher, PlatformLauncher>();
+        services.AddSingleton<IDownloadEngine, HttpRangeDownloadEngine>();
+        services.AddSingleton<DownloadQueueService>();
         services.AddSingleton<ISecretStore>(_ =>
         {
             var secretsPath = Path.Combine(

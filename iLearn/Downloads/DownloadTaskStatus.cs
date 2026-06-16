@@ -5,6 +5,7 @@ public enum DownloadTaskStatus
     Waiting,
     Queued,
     Downloading,
+    Cancelling,
     Paused,
     Completed,
     Failed,
