@@ -49,6 +49,11 @@
     <Compile Include="Platform/PlatformLauncher.cs" />
     <Compile Include="Security/ISecretStore.cs" />
     <Compile Include="Security/FileSecretStore.cs" />
+    <Compile Include="Downloads/DownloadTaskStatus.cs" />
+    <Compile Include="Downloads/DownloadTaskSnapshot.cs" />
+    <Compile Include="Downloads/DownloadRequest.cs" />
+    <Compile Include="Downloads/IDownloadEngine.cs" />
+    <Compile Include="Downloads/DownloadQueueService.cs" />
     <Compile Include="Services/FileNameService.cs" />
     <Compile Include="Models/AppConfig.cs" />
     <Compile Include="Models/LocalVideoFile.cs" />
