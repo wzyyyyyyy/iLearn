@@ -1,0 +1,73 @@
+<Window
+    x:Class="iLearn.Views.Windows.LoginWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:iLearn.ViewModels.Windows"
+    x:DataType="vm:LoginViewModel"
+    x:CompileBindings="False"
+    Width="920"
+    Height="620"
+    MinWidth="760"
+    MinHeight="560"
+    Title="iLearn">
+  <Grid ColumnDefinitions="1.05*,0.95*" Background="#F5F7FB">
+    <Border Grid.Column="0" Padding="48" Background="#111827">
+      <StackPanel VerticalAlignment="Center" Spacing="18">
+        <TextBlock Text="iLearn" FontSize="42" FontWeight="Bold" Foreground="White" />
+        <TextBlock Text="学在吉大桌面客户端" FontSize="20" Foreground="#CBD5E1" />
+        <TextBlock Text="课程、视频、下载和本地学习都在一个更顺手的客户端里。"
+                   TextWrapping="Wrap"
+                   Foreground="#94A3B8"
+                   FontSize="15" />
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Column="1" Padding="42" Background="White">
+      <StackPanel VerticalAlignment="Center" Spacing="14">
+        <TextBlock Text="登录" FontSize="28" FontWeight="SemiBold" Foreground="#111827" />
+        <TextBox Watermark="学号 / 用户名" Text="{Binding UserName}" />
+        <TextBox Watermark="密码" Text="{Binding UserPassword}" PasswordChar="*" />
+
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+          <CheckBox Content="记住密码"
+                    IsChecked="{Binding IsRememberMeEnabled}"
+                    Command="{Binding SaveLoginOptionsCommand}" />
+          <CheckBox Grid.Column="1"
+                    Content="下次自动登录"
+                    IsChecked="{Binding IsAutoLoginEnabled}"
+                    Command="{Binding SaveLoginOptionsCommand}" />
+        </Grid>
+
+        <StackPanel Spacing="10" IsVisible="{Binding IsWechatVerifyStep}">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Height="46">
+              <Image Source="{Binding CaptchaImage}" Stretch="Uniform" />
+            </Border>
+            <Button Grid.Column="1"
+                    Content="刷新"
+                    Command="{Binding RefreshCasCaptchaCommand}" />
+          </Grid>
+          <TextBox Watermark="图形验证码" Text="{Binding ImageCaptchaCode}" />
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <TextBox Watermark="微信验证码" Text="{Binding WechatCode}" />
+            <Button Grid.Column="1"
+                    Content="{Binding SendWechatButtonText}"
+                    Command="{Binding SendWechatCodeCommand}" />
+          </Grid>
+        </StackPanel>
+
+        <Button Content="验证并登录"
+                Command="{Binding LoginCommand}" />
+        <Button Content="提交微信验证码"
+                Command="{Binding VerifyWechatCommand}"
+                IsVisible="{Binding IsWechatVerifyStep}" />
+        <Button Content="返回账号密码登录"
+                Command="{Binding BackToPasswordCommand}"
+                IsVisible="{Binding IsWechatVerifyStep}" />
+
+        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsAuthenticationInProgress}" />
+        <TextBlock Text="{Binding StatusText}" Foreground="#64748B" TextWrapping="Wrap" MinHeight="22" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

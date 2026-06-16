@@ -1,390 +1,390 @@
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using iLearn.Models;
+using iLearn.Notifications;
+using iLearn.Security;
 using iLearn.Services;
-using System.IO;
-using System.Text;
-using System.Windows.Input;
-using System.Windows.Media.Imaging;
-using Wpf.Ui;
-using Wpf.Ui.Controls;
-using Wpf.Ui.Extensions;
+using iLearn.Views.Windows;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace iLearn.ViewModels.Windows
+namespace iLearn.ViewModels.Windows;
+
+public enum LoginStep
 {
-    public enum LoginStep { Password, WechatVerify }
+    Password,
+    WechatVerify
+}
 
-    public partial class LoginViewModel : ObservableObject
+public sealed partial class LoginViewModel : ObservableObject, IDisposable
+{
+    private readonly ILearnApiService _learnApiService;
+    private readonly INotificationService _notifications;
+    private readonly ISecretStore _secretStore;
+    private readonly AppConfig _appConfig;
+    private readonly IServiceProvider _services;
+    private System.Timers.Timer? _countdownTimer;
+    private int _countdownSeconds;
+
+    [ObservableProperty]
+    private string _userName = string.Empty;
+
+    [ObservableProperty]
+    private string _userPassword = string.Empty;
+
+    [ObservableProperty]
+    private bool _isRememberMeEnabled;
+
+    [ObservableProperty]
+    private bool _isAutoLoginEnabled;
+
+    [ObservableProperty]
+    private bool _isAuthenticationInProgress;
+
+    [ObservableProperty]
+    private string _statusText = string.Empty;
+
+    [ObservableProperty]
+    private LoginStep _currentStep = LoginStep.Password;
+
+    [ObservableProperty]
+    private Bitmap? _captchaImage;
+
+    [ObservableProperty]
+    private string _imageCaptchaCode = string.Empty;
+
+    [ObservableProperty]
+    private string _wechatCode = string.Empty;
+
+    [ObservableProperty]
+    private bool _isSendingWechatCode;
+
+    [ObservableProperty]
+    private string _sendWechatButtonText = "发送验证码";
+
+    [ObservableProperty]
+    private bool _canSendWechatCode = true;
+
+    public LoginViewModel(
+        ILearnApiService learnApiService,
+        INotificationService notifications,
+        ISecretStore secretStore,
+        AppConfig appConfig,
+        IServiceProvider services)
     {
-        [ObservableProperty]
-        private string _userName = string.Empty;
+        _learnApiService = learnApiService;
+        _notifications = notifications;
+        _secretStore = secretStore;
+        _appConfig = appConfig;
+        _services = services;
 
-        [ObservableProperty]
-        private string _userPassword = string.Empty;
+        IsAutoLoginEnabled = _appConfig.IsAutoLoginEnabled;
+        IsRememberMeEnabled = _appConfig.IsRememberMeEnabled;
 
-        [ObservableProperty]
-        private bool _isRememberMeEnabled;
-
-        [ObservableProperty]
-        private bool _isAutoLoginEnabled;
-
-        [ObservableProperty]
-        private bool _isAuthenticationInProgress;
-
-        [ObservableProperty]
-        private LoginStep _currentStep = LoginStep.Password;
-
-        // 二次认证相关
-        [ObservableProperty]
-        private BitmapImage? _captchaImage;
-
-        [ObservableProperty]
-        private string _imageCaptchaCode = string.Empty;
-
-        [ObservableProperty]
-        private string _wechatCode = string.Empty;
-
-        [ObservableProperty]
-        private bool _isSendingWechatCode;
-
-        [ObservableProperty]
-        private string _sendWechatButtonText = "发送验证码";
-
-        [ObservableProperty]
-        private bool _canSendWechatCode = true;
-
-        private System.Timers.Timer _countdownTimer;
-        private int _countdownSeconds;
-
-        private readonly ILearnApiService _learnApiService;
-        private readonly ISnackbarService _snackbarService;
-        private readonly AppConfig _appConfig;
-        private readonly WindowsManagerService _windowsManagerService;
-        private readonly IContentDialogService _contentDialogService;
-
-        public LoginViewModel(ILearnApiService learnApiService, ISnackbarService snackbarService, AppConfig appConfig, WindowsManagerService windowsManagerService, IContentDialogService contentDialogService)
+        PropertyChanged += (_, e) =>
         {
-            _learnApiService = learnApiService ?? throw new ArgumentNullException(nameof(learnApiService));
-            _snackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
-            _appConfig = appConfig ?? throw new ArgumentNullException(nameof(appConfig));
-            _windowsManagerService = windowsManagerService ?? throw new ArgumentNullException(nameof(windowsManagerService));
-            _contentDialogService = contentDialogService ?? throw new ArgumentNullException(nameof(contentDialogService));
+            if (e.PropertyName is nameof(UserName) or nameof(UserPassword) or nameof(IsAuthenticationInProgress) or nameof(CurrentStep))
+                LoginCommand.NotifyCanExecuteChanged();
+            if (e.PropertyName is nameof(ImageCaptchaCode) or nameof(WechatCode) or nameof(IsAuthenticationInProgress))
+                VerifyWechatCommand.NotifyCanExecuteChanged();
+            if (e.PropertyName is nameof(ImageCaptchaCode) or nameof(IsSendingWechatCode) or nameof(CanSendWechatCode))
+                SendWechatCodeCommand.NotifyCanExecuteChanged();
+        };
 
-            PropertyChanged += (s, e) =>
+        _ = LoadSavedCredentialsAsync();
+    }
+
+    public bool IsWechatVerifyStep => CurrentStep == LoginStep.WechatVerify;
+
+    partial void OnCurrentStepChanged(LoginStep value)
+    {
+        OnPropertyChanged(nameof(IsWechatVerifyStep));
+    }
+
+    [RelayCommand(CanExecute = nameof(CanLogin))]
+    private async Task LoginAsync()
+    {
+        if (IsAuthenticationInProgress)
+            return;
+
+        IsAuthenticationInProgress = true;
+        StatusText = "正在连接统一认证服务...";
+        ShowMessage("正在登录", "正在连接统一认证服务", AppNotificationKind.Info);
+
+        try
+        {
+            var result = await _learnApiService.LoginStep1Async(UserName, UserPassword);
+            switch (result)
             {
-                if (e.PropertyName is nameof(UserName) or nameof(UserPassword) or nameof(IsAuthenticationInProgress) or nameof(CurrentStep))
-                    LoginCommand.NotifyCanExecuteChanged();
-                if (e.PropertyName is nameof(ImageCaptchaCode) or nameof(WechatCode) or nameof(IsAuthenticationInProgress))
-                    VerifyWechatCommand.NotifyCanExecuteChanged();
-            };
-
-            IsAutoLoginEnabled = _appConfig.IsAutoLoginEnabled;
-            IsRememberMeEnabled = _appConfig.IsRememberMeEnabled;
-
-            if (_appConfig.UserPassword != null && _appConfig.UserName != null && _appConfig.IsRememberMeEnabled)
-            {
-                UserName = _appConfig.UserName;
-                UserPassword = _appConfig.UserPassword;
-
-                if (_appConfig.IsAutoLoginEnabled)
-                    LoginCommand.Execute(null);
+                case LoginStepResult.Success:
+                    await OnLoginSuccessAsync();
+                    break;
+                case LoginStepResult.NeedWechatCode:
+                    CurrentStep = LoginStep.WechatVerify;
+                    StatusText = "需要微信二次认证，请先刷新并输入图形验证码";
+                    await RefreshCasCaptchaAsync();
+                    break;
+                case LoginStepResult.WrongPassword:
+                    ShowMessage("用户名或密码错误", "请检查后重新输入", AppNotificationKind.Error);
+                    StatusText = "用户名或密码错误";
+                    break;
+                default:
+                    ShowMessage("登录失败", "请检查网络或稍后重试", AppNotificationKind.Error);
+                    StatusText = "登录失败，请稍后重试";
+                    break;
             }
         }
-
-        // ── Step 1: 提交账号密码 ──────────────────────────────
-
-        [RelayCommand(CanExecute = nameof(CanLogin))]
-        private async Task LoginAsync()
+        catch (Exception ex)
         {
-            if (IsAuthenticationInProgress) return;
-            IsAuthenticationInProgress = true;
-            try
-            {
-                var result = await _learnApiService.LoginStep1Async(UserName, UserPassword);
+            ShowLoginError(ex);
+        }
+        finally
+        {
+            IsAuthenticationInProgress = false;
+        }
+    }
 
-                switch (result)
-                {
-                    case LoginStepResult.Success:
-                        OnLoginSuccess();
-                        break;
+    private bool CanLogin()
+    {
+        return CurrentStep == LoginStep.Password
+            && !IsAuthenticationInProgress
+            && !string.IsNullOrWhiteSpace(UserName)
+            && !string.IsNullOrWhiteSpace(UserPassword);
+    }
 
-                    case LoginStepResult.NeedWechatCode:
-                        CurrentStep = LoginStep.WechatVerify;
-                        await RefreshCasCaptchaAsync();
-                        IsAuthenticationInProgress = false;
-                        break;
+    [RelayCommand]
+    private async Task RefreshCasCaptchaAsync()
+    {
+        try
+        {
+            var bytes = await _learnApiService.GetCasCaptchaBytesAsync();
+            await using var stream = new MemoryStream(bytes);
+            CaptchaImage = new Bitmap(stream);
+            StatusText = "验证码已刷新";
+        }
+        catch
+        {
+            ShowMessage("验证码加载失败", "请检查网络后重试", AppNotificationKind.Warning);
+            StatusText = "验证码加载失败";
+        }
+    }
 
-                    case LoginStepResult.WrongPassword:
-                        ShowSnackbar("用户名或密码错误，请重新输入");
-                        break;
-
-                    default:
-                        _snackbarService.Show(
-                            "登录失败",
-                            "登录失败，请检查网络或稍后重试",
-                            ControlAppearance.Danger,
-                            new SymbolIcon(SymbolRegular.CalendarError16),
-                            TimeSpan.FromSeconds(8));
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _ = ShowLoginErrorDialogAsync(ex);
-            }
-            finally
-            {
-                IsAuthenticationInProgress = false;
-            }
+    [RelayCommand(CanExecute = nameof(CanSendWechat))]
+    private async Task SendWechatCodeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(ImageCaptchaCode))
+        {
+            ShowMessage("请输入图形验证码", "发送微信验证码前需要先填写图形验证码", AppNotificationKind.Info);
+            return;
         }
 
-        private bool CanLogin() =>
-            CurrentStep == LoginStep.Password &&
-            !IsAuthenticationInProgress &&
-            !string.IsNullOrWhiteSpace(UserName) &&
-            !string.IsNullOrWhiteSpace(UserPassword);
+        IsSendingWechatCode = true;
+        StatusText = "正在发送微信验证码...";
 
-        // ── 图形验证码刷新 ────────────────────────────────────
-
-        [RelayCommand]
-        private async Task RefreshCasCaptchaAsync()
+        try
         {
-            try
+            var result = await _learnApiService.RequestWechatCodeAsync(ImageCaptchaCode);
+            switch (result)
             {
-                var bytes = await _learnApiService.GetCasCaptchaBytesAsync();
-                var bmp = new BitmapImage();
-                bmp.BeginInit();
-                bmp.StreamSource = new MemoryStream(bytes);
-                bmp.CacheOption = BitmapCacheOption.OnLoad;
-                bmp.EndInit();
-                bmp.Freeze();
-                CaptchaImage = bmp;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[RefreshCasCaptcha] 获取图形验证码失败: {ex.Message}");
+                case ILearnApiService.WechatCodeRequestResult.Success:
+                    StartCountdown(120);
+                    ShowMessage("微信验证码已发送", "请在智慧吉大小程序中查收", AppNotificationKind.Success);
+                    StatusText = "微信验证码已发送";
+                    break;
+                case ILearnApiService.WechatCodeRequestResult.CaptchaError:
+                    ShowMessage("图形验证码错误", "请刷新后重新输入", AppNotificationKind.Warning);
+                    ImageCaptchaCode = string.Empty;
+                    await RefreshCasCaptchaAsync();
+                    break;
+                case ILearnApiService.WechatCodeRequestResult.TooFrequent:
+                    ShowMessage("发送过于频繁", "请稍后再试", AppNotificationKind.Warning);
+                    StatusText = "发送过于频繁";
+                    break;
+                case ILearnApiService.WechatCodeRequestResult.SessionExpired:
+                    ShowMessage("认证会话已过期", "请返回账号密码步骤重新登录", AppNotificationKind.Error);
+                    StatusText = "认证会话已过期";
+                    break;
+                default:
+                    ShowMessage("发送失败", "请稍后重试", AppNotificationKind.Error);
+                    StatusText = "发送失败";
+                    break;
             }
         }
-
-        // ── 发送微信验证码 ────────────────────────────────────
-
-        [RelayCommand(CanExecute = nameof(CanSendWechat))]
-        private async Task SendWechatCodeAsync()
+        catch
         {
-            if (string.IsNullOrWhiteSpace(ImageCaptchaCode))
-            {
-                ShowSnackbar("请先输入图形验证码");
-                return;
-            }
+            ShowMessage("网络请求失败", "请检查网络连接后重试", AppNotificationKind.Error);
+            StatusText = "网络请求失败";
+            await RefreshCasCaptchaAsync();
+        }
+        finally
+        {
+            IsSendingWechatCode = false;
+        }
+    }
 
-            IsSendingWechatCode = true;
-            try
-            {
-                var result = await _learnApiService.RequestWechatCodeAsync(ImageCaptchaCode);
+    private bool CanSendWechat()
+    {
+        return CanSendWechatCode
+            && !IsSendingWechatCode
+            && !string.IsNullOrWhiteSpace(ImageCaptchaCode);
+    }
 
-                switch (result)
-                {
-                    case ILearnApiService.WechatCodeRequestResult.Success:
-                        StartCountdown(120);
-                        ShowInfoSnackbar("微信验证码已发送，请在【智慧吉大】小程序中查收");
-                        break;
-                    case ILearnApiService.WechatCodeRequestResult.CaptchaError:
-                        ShowSnackbar("图形验证码错误，请重新输入");
-                        await RefreshCasCaptchaAsync();
-                        ImageCaptchaCode = string.Empty;
-                        break;
-                    case ILearnApiService.WechatCodeRequestResult.TooFrequent:
-                        ShowSnackbar("请勿重复获取，稍后再试");
-                        break;
-                    case ILearnApiService.WechatCodeRequestResult.SessionExpired:
-                        _snackbarService.Show("获取验证码失败", "请检查账号密码是否正确，或稍后重试",
-                            ControlAppearance.Danger, new SymbolIcon(SymbolRegular.CalendarError16), TimeSpan.FromSeconds(8));
-                        break;
-                    default:
-                        ShowSnackbar("发送失败，请稍后重试");
-                        break;
-                }
-            }
-            catch
+    [RelayCommand(CanExecute = nameof(CanVerifyWechat))]
+    private async Task VerifyWechatAsync()
+    {
+        if (IsAuthenticationInProgress)
+            return;
+
+        IsAuthenticationInProgress = true;
+        StatusText = "正在验证微信验证码...";
+
+        try
+        {
+            var result = await _learnApiService.LoginStep2Async(ImageCaptchaCode, WechatCode);
+            if (result == LoginStepResult.Success)
             {
-                ShowSnackbar("网络请求失败，请检查网络连接");
+                await OnLoginSuccessAsync();
+            }
+            else
+            {
+                ShowMessage("验证码错误", "请重新输入微信验证码", AppNotificationKind.Warning);
+                WechatCode = string.Empty;
                 await RefreshCasCaptchaAsync();
             }
-            finally
-            {
-                IsSendingWechatCode = false;
-            }
+        }
+        catch (Exception ex)
+        {
+            ShowLoginError(ex);
+        }
+        finally
+        {
+            IsAuthenticationInProgress = false;
+        }
+    }
+
+    private bool CanVerifyWechat()
+    {
+        return !IsAuthenticationInProgress
+            && !string.IsNullOrWhiteSpace(ImageCaptchaCode)
+            && !string.IsNullOrWhiteSpace(WechatCode);
+    }
+
+    [RelayCommand]
+    private void BackToPassword()
+    {
+        CurrentStep = LoginStep.Password;
+        ImageCaptchaCode = string.Empty;
+        WechatCode = string.Empty;
+        StatusText = string.Empty;
+        StopCountdown();
+    }
+
+    [RelayCommand]
+    private void SaveLoginOptions()
+    {
+        _appConfig.IsRememberMeEnabled = IsRememberMeEnabled;
+        _appConfig.IsAutoLoginEnabled = IsAutoLoginEnabled;
+        _appConfig.Save();
+    }
+
+    private async Task LoadSavedCredentialsAsync()
+    {
+        IsRememberMeEnabled = _appConfig.IsRememberMeEnabled;
+        IsAutoLoginEnabled = _appConfig.IsAutoLoginEnabled;
+
+        if (_appConfig.UserName is null || !_appConfig.IsRememberMeEnabled)
+            return;
+
+        UserName = _appConfig.UserName;
+        UserPassword = await _secretStore.ReadSecretAsync("login-password") ?? string.Empty;
+
+        if (_appConfig.IsAutoLoginEnabled && CanLogin())
+            await LoginAsync();
+    }
+
+    private async Task OnLoginSuccessAsync()
+    {
+        StopCountdown();
+
+        if (IsRememberMeEnabled)
+        {
+            _appConfig.UserName = UserName;
+            await _secretStore.SaveSecretAsync("login-password", UserPassword);
+        }
+        else
+        {
+            _appConfig.UserName = null;
+            await _secretStore.DeleteSecretAsync("login-password");
         }
 
-        private bool CanSendWechat() => CanSendWechatCode && !IsSendingWechatCode;
+        _appConfig.IsRememberMeEnabled = IsRememberMeEnabled;
+        _appConfig.IsAutoLoginEnabled = IsAutoLoginEnabled;
+        _appConfig.Save();
 
-        // ── Step 2: 提交微信验证码 ────────────────────────────
+        ShowMessage("登录成功", "正在打开主界面", AppNotificationKind.Success);
 
-        [RelayCommand(CanExecute = nameof(CanVerifyWechat))]
-        private async Task VerifyWechatAsync()
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            if (IsAuthenticationInProgress) return;
-            IsAuthenticationInProgress = true;
-            try
-            {
-                var result = await _learnApiService.LoginStep2Async(ImageCaptchaCode, WechatCode);
-
-                if (result == LoginStepResult.Success)
-                {
-                    OnLoginSuccess();
-                }
-                else
-                {
-                    IsAuthenticationInProgress = false;
-                    ShowSnackbar("验证码错误，请重新输入");
-                    WechatCode = string.Empty;
-                    await RefreshCasCaptchaAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                _ = ShowLoginErrorDialogAsync(ex);
-            }
-            finally
-            {
-                IsAuthenticationInProgress = false;
-            }
+            var oldWindow = desktop.MainWindow;
+            var mainWindow = _services.GetRequiredService<MainWindow>();
+            desktop.MainWindow = mainWindow;
+            mainWindow.Show();
+            oldWindow?.Close();
         }
+    }
 
-        private bool CanVerifyWechat() =>
-            !IsAuthenticationInProgress &&
-            !string.IsNullOrWhiteSpace(ImageCaptchaCode) &&
-            !string.IsNullOrWhiteSpace(WechatCode);
+    private void StartCountdown(int seconds)
+    {
+        StopCountdown();
+        _countdownSeconds = seconds;
+        CanSendWechatCode = false;
+        SendWechatButtonText = $"重新发送 ({_countdownSeconds}s)";
 
-        // ── 返回密码步骤 ──────────────────────────────────────
-
-        [RelayCommand]
-        private void BackToPassword()
+        _countdownTimer = new System.Timers.Timer(1000);
+        _countdownTimer.Elapsed += (_, _) =>
         {
-            CurrentStep = LoginStep.Password;
-            ImageCaptchaCode = string.Empty;
-            WechatCode = string.Empty;
-            StopCountdown();
-        }
-
-        // ── 通用 ──────────────────────────────────────────────
-
-        private void OnLoginSuccess()
-        {
-            if (IsRememberMeEnabled)
+            _countdownSeconds--;
+            Dispatcher.UIThread.Post(() =>
             {
-                _appConfig.UserName = UserName;
-                _appConfig.UserPassword = UserPassword;
-                _appConfig.Save();
-            }
-            _windowsManagerService.Show<MainViewModel>();
-            _windowsManagerService.Close<LoginViewModel>();
-        }
-
-        private void StartCountdown(int seconds)
-        {
-            StopCountdown();
-            _countdownSeconds = seconds;
-            CanSendWechatCode = false;
-            _countdownTimer = new System.Timers.Timer(1000);
-            _countdownTimer.Elapsed += (s, e) =>
-            {
-                _countdownSeconds--;
-                App.Current.Dispatcher.Invoke(() =>
-                    SendWechatButtonText = $"重新发送 ({_countdownSeconds}s)");
                 if (_countdownSeconds <= 0)
                 {
                     StopCountdown();
-                    App.Current.Dispatcher.Invoke(() =>
-                    {
-                        SendWechatButtonText = "发送验证码";
-                        CanSendWechatCode = true;
-                        SendWechatCodeCommand.NotifyCanExecuteChanged();
-                    });
+                    SendWechatButtonText = "发送验证码";
+                    CanSendWechatCode = true;
+                    return;
                 }
-            };
-            _countdownTimer.Start();
-        }
 
-        private void StopCountdown()
-        {
-            _countdownTimer?.Stop();
-            _countdownTimer?.Dispose();
-            _countdownTimer = null;
-        }
-
-        private async Task ShowLoginErrorDialogAsync(Exception ex)
-        {
-            if (ex is TaskCanceledException tcEx && !tcEx.CancellationToken.IsCancellationRequested)
-            {
-                await _contentDialogService.ShowSimpleDialogAsync(new SimpleContentDialogCreateOptions
-                {
-                    Title = "登录失败",
-                    Content = "请求超时，请检查网络连接或稍后重试。",
-                    CloseButtonText = "关闭"
-                });
-                return;
-            }
-
-            var sb = new StringBuilder();
-            while (ex != null)
-            {
-                sb.AppendLine($"类型：{ex.GetType().Name}");
-                sb.AppendLine($"消息：{ex.Message}");
-                sb.AppendLine($"堆栈：{ex.StackTrace}");
-                sb.AppendLine("------");
-                ex = ex.InnerException;
-            }
-
-            await _contentDialogService.ShowSimpleDialogAsync(new SimpleContentDialogCreateOptions
-            {
-                Title = "登录失败，请尝试联系开发者",
-                Content = sb.ToString(),
-                CloseButtonText = "关闭"
+                SendWechatButtonText = $"重新发送 ({_countdownSeconds}s)";
             });
-        }
+        };
+        _countdownTimer.Start();
+    }
 
-        public void ShowSnackbar(string message)
-        {
-            _snackbarService.Show(
-                "登录失败",
-                message,
-                ControlAppearance.Danger,
-                new SymbolIcon(SymbolRegular.CalendarError16),
-                TimeSpan.FromSeconds(3));
-        }
+    private void StopCountdown()
+    {
+        _countdownTimer?.Stop();
+        _countdownTimer?.Dispose();
+        _countdownTimer = null;
+    }
 
-        private void ShowInfoSnackbar(string message)
-        {
-            _snackbarService.Show(
-                "提示",
-                message,
-                ControlAppearance.Info,
-                new SymbolIcon(SymbolRegular.Info16),
-                TimeSpan.FromSeconds(4));
-        }
+    private void ShowLoginError(Exception ex)
+    {
+        var message = ex is TaskCanceledException
+            ? "请求超时，请检查网络连接或稍后重试"
+            : ex.Message;
 
-        [RelayCommand]
-        private void KeyPress(KeyEventArgs e)
-        {
-            if (e?.Key != Key.Enter) return;
+        ShowMessage("登录失败", message, AppNotificationKind.Error);
+        StatusText = message;
+    }
 
-            if (CurrentStep == LoginStep.Password && CanLogin())
-            {
-                LoginCommand.Execute(null);
-                e.Handled = true;
-            }
-            else if (CurrentStep == LoginStep.WechatVerify && CanVerifyWechat())
-            {
-                VerifyWechatCommand.Execute(null);
-                e.Handled = true;
-            }
-        }
+    private void ShowMessage(string title, string message, AppNotificationKind kind)
+    {
+        _notifications.Show(title, message, kind);
+    }
 
-        [RelayCommand]
-        private void ClickCheckBox()
-        {
-            _appConfig.IsRememberMeEnabled = IsRememberMeEnabled;
-            _appConfig.IsAutoLoginEnabled = IsAutoLoginEnabled;
-            _appConfig.Save();
-        }
+    public void Dispose()
+    {
+        StopCountdown();
+        CaptchaImage?.Dispose();
     }
 }

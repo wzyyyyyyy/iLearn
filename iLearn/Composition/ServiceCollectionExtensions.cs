@@ -5,7 +5,10 @@ using iLearn.Notifications;
 using iLearn.Platform;
 using iLearn.Security;
 using iLearn.Services;
+using iLearn.ViewModels;
 using iLearn.ViewModels.Pages;
+using iLearn.ViewModels.Windows;
+using iLearn.Views.Windows;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace iLearn.Composition;
@@ -29,9 +32,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<DownloadQueueService>();
         services.AddSingleton<ILearnApiService>();
         services.AddSingleton<List<LiveAndRecordInfo>>();
+        services.AddSingleton<ShellViewModel>();
+        services.AddSingleton<LoginViewModel>();
         services.AddSingleton<VideoDownloadListViewModel>();
         services.AddSingleton<DownloadManageViewModel>();
         services.AddSingleton<SettingViewModel>();
+        services.AddTransient<LoginWindow>();
+        services.AddTransient<MainWindow>();
         services.AddSingleton<ISecretStore>(_ =>
         {
             var secretsPath = Path.Combine(
