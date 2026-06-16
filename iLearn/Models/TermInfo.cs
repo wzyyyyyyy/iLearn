@@ -4,17 +4,19 @@ namespace iLearn.Models
 {
     public class TermInfo
     {
-        public string Year { get; set; }
-        public string EndDate { get; set; }
-        public string Num { get; set; }
-        public string Name { get; set; }
-        public string Id { get; set; }
-        public string StartDate { get; set; }
-        public string Selected { get; set; }
+        public string Year { get; set; } = string.Empty;
+        public string EndDate { get; set; } = string.Empty;
+        public string Num { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
+        public string StartDate { get; set; } = string.Empty;
+        public string Selected { get; set; } = string.Empty;
 
         public override string ToString()
         {
-            return $"{Year}-{int.Parse(Year) + 1}学年{Name}";
+            return int.TryParse(Year, out var startYear)
+                ? $"{Year}-{startYear + 1}学年{Name}"
+                : Name;
         }
 
         public static List<TermInfo> Parse(string json)

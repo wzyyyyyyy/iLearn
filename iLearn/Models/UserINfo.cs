@@ -4,14 +4,14 @@ namespace iLearn.Models
 {
     public class UserInfo
     {
-        public string StudentId { get; set; }
-        public string Msg { get; set; }
-        public string StudyNo { get; set; }
-        public string StudentName { get; set; }
-        public string SchoolName { get; set; }
-        public string UserName { get; set; }
-        public string HeadPic { get; set; }
-        public string MemberId { get; set; }
+        public string StudentId { get; set; } = string.Empty;
+        public string Msg { get; set; } = string.Empty;
+        public string StudyNo { get; set; } = string.Empty;
+        public string StudentName { get; set; } = string.Empty;
+        public string SchoolName { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string HeadPic { get; set; } = string.Empty;
+        public string MemberId { get; set; } = string.Empty;
 
         public static UserInfo Parse(string json)
         {

@@ -1,270 +1,106 @@
-﻿using iLearn.Models;
-using iLearn.Services;
+using iLearn.Downloads;
+using iLearn.Models;
+using iLearn.Notifications;
+using iLearn.Platform;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.Windows.Threading;
-using Wpf.Ui;
-using Wpf.Ui.Controls;
+using System.Collections.Specialized;
 
-namespace iLearn.ViewModels.Pages
+namespace iLearn.ViewModels.Pages;
+
+public partial class DownloadManageViewModel : ObservableObject
 {
-    public partial class DownloadManageViewModel : ObservableObject
+    private readonly DownloadQueueService _downloadQueue;
+    private readonly INotificationService _notifications;
+    private readonly IPlatformLauncher _launcher;
+    private readonly AppConfig _appConfig;
+
+    public DownloadManageViewModel(
+        DownloadQueueService downloadQueue,
+        INotificationService notifications,
+        IPlatformLauncher launcher,
+        AppConfig appConfig)
     {
-        private readonly VideoDownloadService _downloadService;
-        private readonly ISnackbarService _snackbarService;
-        private readonly AppConfig _appConfig;
-        private readonly DispatcherTimer _refreshTimer;
+        _downloadQueue = downloadQueue;
+        _notifications = notifications;
+        _launcher = launcher;
+        _appConfig = appConfig;
+        Downloads = _downloadQueue.Tasks;
 
-        [ObservableProperty]
-        private ObservableCollection<DownloadItem> _downloads;
+        if (Downloads is INotifyCollectionChanged collectionChanged)
+            collectionChanged.CollectionChanged += (_, _) => RaiseSummaryChanged();
+    }
 
-        [ObservableProperty]
-        private int _activeDownloadsCount;
+    public ReadOnlyObservableCollection<DownloadTaskSnapshot> Downloads { get; }
 
-        [ObservableProperty]
-        private int _completedDownloadsCount;
+    public int ActiveDownloadsCount => Downloads.Count(download => download.Status == DownloadTaskStatus.Downloading);
 
-        [ObservableProperty]
-        private int _queuedDownloadsCount;
+    public int CompletedDownloadsCount => Downloads.Count(download => download.Status == DownloadTaskStatus.Completed);
 
-        [ObservableProperty]
-        private string _totalDownloadSpeed = "0 MB/s";
+    public int QueuedDownloadsCount => Downloads.Count(download => download.Status is DownloadTaskStatus.Queued or DownloadTaskStatus.Waiting);
 
-        [ObservableProperty]
-        private bool _hasDownloadingItems;
+    public bool HasDownloadingItems => Downloads.Any(download => download.Status == DownloadTaskStatus.Downloading);
 
-        [ObservableProperty]
-        private bool _hasPausedItems;
+    public bool HasPausedItems => Downloads.Any(download => download.Status == DownloadTaskStatus.Paused);
 
-        public DownloadManageViewModel(
-            VideoDownloadService downloadService,
-            ISnackbarService snackbarService,
-            AppConfig appConfig)
+    public string TotalDownloadSpeed => FormatBytesPerSecond(
+        Downloads.Where(download => download.Status == DownloadTaskStatus.Downloading).Sum(download => download.BytesPerSecond));
+
+    [RelayCommand]
+    private async Task PauseDownload(DownloadTaskSnapshot item)
+    {
+        await _downloadQueue.PauseAsync(item.Id);
+        _notifications.Show("下载已暂停", item.FileName, AppNotificationKind.Info);
+    }
+
+    [RelayCommand]
+    private async Task RetryDownload(DownloadTaskSnapshot item)
+    {
+        try
         {
-            _downloadService = downloadService;
-            _snackbarService = snackbarService;
-            _appConfig = appConfig;
-            Downloads = new ObservableCollection<DownloadItem>();
-
-            // 设置定时器定期刷新下载状态
-            _refreshTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            _refreshTimer.Tick += RefreshDownloads;
-            _refreshTimer.Start();
-
-            RefreshDownloads(null, EventArgs.Empty);
+            await _downloadQueue.RetryAsync(item.Id);
+            _notifications.Show("重试开始", item.FileName, AppNotificationKind.Info);
         }
-
-        private void RefreshDownloads(object? sender, EventArgs e)
+        catch (Exception ex)
         {
-            var activeDownloads = _downloadService.ActiveDownloads.ToList();
-
-            foreach (var download in from download in activeDownloads let existingItem = Downloads.FirstOrDefault(d => d.Url == download.Url) where existingItem == null select download)
-            {
-                Downloads.Add(download);
-            }
-
-            SortDownloadsByStatus();
-
-            ActiveDownloadsCount = Downloads.Count(d => d.Status == DownloadStatus.Downloading);
-            CompletedDownloadsCount = Downloads.Count(d => d.Status == DownloadStatus.Completed);
-            QueuedDownloadsCount = Downloads.Count(d => d.Status is DownloadStatus.Queued or DownloadStatus.Waiting) + _downloadService.GetQueuedDownloadsCount();
-
-            HasDownloadingItems = Downloads.Any(d => d.Status == DownloadStatus.Downloading);
-            HasPausedItems = Downloads.Any(d => d.Status == DownloadStatus.Paused);
-
-            var totalSpeedBytes = Downloads
-                .Where(d => d.Status == DownloadStatus.Downloading)
-                .Sum(d => d.SpeedValue);
-
-            TotalDownloadSpeed = FormatBytesPerSecond(totalSpeedBytes);
+            _notifications.Show("重试失败", ex.Message, AppNotificationKind.Error);
         }
+    }
 
-        private void SortDownloadsByStatus()
-        {
-            var sortedDownloads = Downloads.OrderBy(d => GetStatusSortOrder(d.Status))
-                                          .ThenBy(d => d.FileName)
-                                          .ToList();
+    [RelayCommand]
+    private async Task CancelDownload(DownloadTaskSnapshot item)
+    {
+        await _downloadQueue.CancelAsync(item.Id);
+        _notifications.Show("下载已取消", item.FileName, AppNotificationKind.Warning);
+    }
 
-            for (int i = 0; i < sortedDownloads.Count; i++)
-            {
-                var currentIndex = Downloads.IndexOf(sortedDownloads[i]);
-                if (currentIndex != i)
-                {
-                    Downloads.Move(currentIndex, i);
-                }
-            }
-        }
+    [RelayCommand]
+    private async Task OpenDownloadFile(DownloadTaskSnapshot item)
+    {
+        await _launcher.OpenFileAsync(item.OutputPath);
+    }
 
-        private static int GetStatusSortOrder(string status) =>
-            status switch
-            {
-                DownloadStatus.Failed => 0,
-                DownloadStatus.Downloading => 1,
-                DownloadStatus.Paused => 2,
-                DownloadStatus.Queued => 3,
-                DownloadStatus.Waiting => 4,
-                DownloadStatus.Completed => 5,
-                DownloadStatus.Cancelled => 6,
-                _ => 7
-            };
+    [RelayCommand]
+    private async Task OpenDownloadsFolder()
+    {
+        await _launcher.OpenFolderAsync(_appConfig.DownloadPath);
+    }
 
-        private static string FormatBytesPerSecond(double bytesPerSecond)
-        {
-            if (bytesPerSecond >= 1024 * 1024)
-                return $"{bytesPerSecond / 1024 / 1024:0.##} MB/s";
-            if (bytesPerSecond >= 1024)
-                return $"{bytesPerSecond / 1024:0.##} KB/s";
-            return $"{bytesPerSecond:0} B/s";
-        }
+    private void RaiseSummaryChanged()
+    {
+        OnPropertyChanged(nameof(ActiveDownloadsCount));
+        OnPropertyChanged(nameof(CompletedDownloadsCount));
+        OnPropertyChanged(nameof(QueuedDownloadsCount));
+        OnPropertyChanged(nameof(HasDownloadingItems));
+        OnPropertyChanged(nameof(HasPausedItems));
+        OnPropertyChanged(nameof(TotalDownloadSpeed));
+    }
 
-        [RelayCommand]
-        private void PauseAllDownloads()
-        {
-            _downloadService.PauseAllDownloads();
-            ShowSnackbar("全部暂停", "已暂停所有正在下载的任务", ControlAppearance.Info);
-        }
-
-        [RelayCommand]
-        private void ResumeAllDownloads()
-        {
-            _downloadService.ResumeAllDownloads();
-            ShowSnackbar("全部开始", "已恢复所有暂停的下载任务", ControlAppearance.Success);
-        }
-
-        [RelayCommand]
-        private void PauseDownload(DownloadItem item)
-        {
-            if (item?.Status == DownloadStatus.Downloading)
-            {
-                var success = _downloadService.PauseDownload(item.Url);
-                if (success)
-                {
-                    ShowSnackbar("下载已暂停", $"已暂停下载: {item.FileName}", ControlAppearance.Info);
-                }
-            }
-        }
-
-        [RelayCommand]
-        private void ResumeDownload(DownloadItem item)
-        {
-            if (item?.Status == DownloadStatus.Paused)
-            {
-                var success = _downloadService.ResumeDownload(item.Url);
-                if (success)
-                {
-                    ShowSnackbar("下载已恢复", $"已恢复下载: {item.FileName}", ControlAppearance.Success);
-                }
-            }
-        }
-
-        [RelayCommand]
-        private void CancelDownload(DownloadItem item)
-        {
-            if (item != null && item.Status != DownloadStatus.Completed)
-            {
-                var success = _downloadService.CancelDownload(item.Url);
-                if (success)
-                {
-                    ShowSnackbar("下载已取消", $"已取消下载: {item.FileName}", ControlAppearance.Caution);
-                }
-            }
-        }
-
-        [RelayCommand]
-        private async Task RetryDownload(DownloadItem item)
-        {
-            if (item?.Status == DownloadStatus.Failed)
-            {
-                try
-                {
-                    await _downloadService.RetryDownloadAsync(item.Url);
-                    ShowSnackbar("重试开始", $"正在重试下载: {item.FileName}", ControlAppearance.Info);
-                }
-                catch (Exception ex)
-                {
-                    ShowSnackbar("重试失败", $"无法重试下载: {ex.Message}", ControlAppearance.Danger);
-                }
-            }
-        }
-
-        [RelayCommand]
-        private void OpenDownloadFile(DownloadItem item)
-        {
-            try
-            {
-                if (item is { Status: DownloadStatus.Completed } && File.Exists(item.OutputPath))
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = item.OutputPath,
-                        UseShellExecute = true
-                    });
-                }
-                else
-                {
-                    ShowSnackbar("文件不存在", "下载文件不存在或下载未完成", ControlAppearance.Caution);
-                }
-            }
-            catch (Exception ex)
-            {
-                ShowSnackbar("打开失败", $"无法打开文件: {ex.Message}", ControlAppearance.Danger);
-            }
-        }
-
-        [RelayCommand]
-        private void OpenDownloadsFolder()
-        {
-            try
-            {
-                Process.Start("explorer.exe", _appConfig.DownloadPath);
-            }
-            catch (Exception ex)
-            {
-                ShowSnackbar("打开失败", $"无法打开下载文件夹: {ex.Message}", ControlAppearance.Danger);
-            }
-        }
-
-        [RelayCommand]
-        private void RemoveDownload(DownloadItem item)
-        {
-            if (item != null)
-            {
-                if (item.Status == DownloadStatus.Downloading)
-                {
-                    _downloadService.CancelDownload(item.Url);
-                }
-                Downloads.Remove(item);
-                ShowSnackbar("已移除", $"已从列表中移除: {item.FileName}", ControlAppearance.Info);
-            }
-        }
-
-        private void ShowSnackbar(string title, string message, ControlAppearance appearance)
-        {
-            var icon = appearance switch
-            {
-                ControlAppearance.Success => new SymbolIcon(SymbolRegular.CheckmarkCircle24),
-                ControlAppearance.Danger => new SymbolIcon(SymbolRegular.ErrorCircle24),
-                ControlAppearance.Info => new SymbolIcon(SymbolRegular.Info24),
-                ControlAppearance.Caution => new SymbolIcon(SymbolRegular.Warning24),
-                _ => new SymbolIcon(SymbolRegular.Info24)
-            };
-
-            _snackbarService.Show(
-                title,
-                message,
-                appearance,
-                icon,
-                TimeSpan.FromSeconds(4)
-            );
-        }
-
-        public void Dispose()
-        {
-            _refreshTimer?.Stop();
-        }
+    private static string FormatBytesPerSecond(double bytesPerSecond)
+    {
+        if (bytesPerSecond >= 1024 * 1024)
+            return $"{bytesPerSecond / 1024 / 1024:0.##} MB/s";
+        if (bytesPerSecond >= 1024)
+            return $"{bytesPerSecond / 1024:0.##} KB/s";
+        return $"{bytesPerSecond:0} B/s";
     }
 }

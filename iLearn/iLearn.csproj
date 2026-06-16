@@ -55,8 +55,19 @@
     <Compile Include="Downloads/IDownloadEngine.cs" />
     <Compile Include="Downloads/HttpRangeDownloadEngine.cs" />
     <Compile Include="Downloads/DownloadQueueService.cs" />
+    <Compile Include="Helpers/DesEncryption.cs" />
+    <Compile Include="Helpers/Extensions/HttpClientRetryExtensions.cs" />
+    <Compile Include="Services/iLearnApiService.cs" />
     <Compile Include="Services/FileNameService.cs" />
     <Compile Include="Models/AppConfig.cs" />
+    <Compile Include="Models/ClassInfo.cs" />
+    <Compile Include="Models/LiveAndRecordInfo.cs" />
     <Compile Include="Models/LocalVideoFile.cs" />
+    <Compile Include="Models/TermInfo.cs" />
+    <Compile Include="Models/UserINfo.cs" />
+    <Compile Include="Models/VideoInfo.cs" />
+    <Compile Include="ViewModels/Pages/VideoDownloadListViewModel.cs" />
+    <Compile Include="ViewModels/Pages/DownloadManageViewModel.cs" />
+    <Compile Include="ViewModels/Pages/SettingViewModel.cs" />
   </ItemGroup>
 </Project>
