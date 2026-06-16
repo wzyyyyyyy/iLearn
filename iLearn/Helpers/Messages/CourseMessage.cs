@@ -4,6 +4,6 @@ namespace iLearn.Helpers.Messages
 {
     internal record class CourseMessage
     {
-        public ClassInfo classInfo { get; set; }
+        public ClassInfo classInfo { get; set; } = new();
     }
 }

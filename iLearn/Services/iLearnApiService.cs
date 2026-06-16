@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Web;
 
 namespace iLearn.Services
 {
@@ -89,10 +88,10 @@ namespace iLearn.Services
             var casDoc = new HtmlDocument();
             casDoc.LoadHtml(await casPageResp.Content.ReadAsStringAsync());
 
-            var lt = casDoc.DocumentNode.SelectSingleNode("//input[@name='lt']")?.GetAttributeValue("value", null);
-            var execution = casDoc.DocumentNode.SelectSingleNode("//input[@name='execution']")?.GetAttributeValue("value", null);
+            var lt = casDoc.DocumentNode.SelectSingleNode("//input[@name='lt']")?.GetAttributeValue("value", string.Empty);
+            var execution = casDoc.DocumentNode.SelectSingleNode("//input[@name='execution']")?.GetAttributeValue("value", string.Empty);
 
-            if (lt == null || execution == null)
+            if (string.IsNullOrEmpty(lt) || string.IsNullOrEmpty(execution))
                 return LoginStepResult.Failed;
 
             var rsa = DesEncryption.StrEnc(username + password + lt, "1", "2", "3");
@@ -138,9 +137,9 @@ namespace iLearn.Services
 
             _pendingUsername = username;
             _pendingPassword = password;
-            _pendingLt = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='lt']")?.GetAttributeValue("value", null) ?? lt;
-            _pendingExecution = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='execution']")?.GetAttributeValue("value", null) ?? "e1s2";
-            _pendingEventId = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='_eventId']")?.GetAttributeValue("value", null) ?? "submit";
+            _pendingLt = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='lt']")?.GetAttributeValue("value", string.Empty) ?? lt;
+            _pendingExecution = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='execution']")?.GetAttributeValue("value", string.Empty) ?? "e1s2";
+            _pendingEventId = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='_eventId']")?.GetAttributeValue("value", string.Empty) ?? "submit";
 
             return LoginStepResult.NeedWechatCode;
         }
@@ -174,7 +173,7 @@ namespace iLearn.Services
                 new Cookie("recheck_djsendtime", (time + 120000).ToString()));
 
             var req = new HttpRequestMessage(HttpMethod.Get,
-                $"{CAS_BASE}/recheckcode?code={HttpUtility.UrlEncode(imageCaptcha)}&t={time}");
+                $"{CAS_BASE}/recheckcode?code={Uri.EscapeDataString(imageCaptcha)}&t={time}");
             req.Headers.TryAddWithoutValidation("X-Requested-With", "XMLHttpRequest");
             req.Headers.TryAddWithoutValidation("Referer", $"{CAS_BASE}/login?service={Uri.EscapeDataString(CAS_SERVICE)}");
 
@@ -252,8 +251,8 @@ namespace iLearn.Services
             var jwcDoc = new HtmlDocument();
             jwcDoc.LoadHtml(await jwcResp.Content.ReadAsStringAsync());
 
-            var casUsername = jwcDoc.DocumentNode.SelectSingleNode("//input[@id='username']")?.GetAttributeValue("value", null);
-            var casPassword = jwcDoc.DocumentNode.SelectSingleNode("//input[@id='password']")?.GetAttributeValue("value", null);
+            var casUsername = jwcDoc.DocumentNode.SelectSingleNode("//input[@id='username']")?.GetAttributeValue("value", string.Empty);
+            var casPassword = jwcDoc.DocumentNode.SelectSingleNode("//input[@id='password']")?.GetAttributeValue("value", string.Empty);
 
             if (string.IsNullOrEmpty(casUsername) || string.IsNullOrEmpty(casPassword))
                 return false;
@@ -331,7 +330,7 @@ namespace iLearn.Services
 
         // ── API methods ──
 
-        public async Task<List<TermInfo>> GetTermsAsync()
+        public virtual async Task<List<TermInfo>> GetTermsAsync()
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
             var response = await _httpClient.PostWithRetryAsync(
@@ -341,7 +340,7 @@ namespace iLearn.Services
             return TermInfo.Parse(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<ClassInfo>> GetClassesAsync(string year, string term)
+        public virtual async Task<List<ClassInfo>> GetClassesAsync(string year, string term)
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
             var response = await _httpClient.GetWithRetryAsync(
@@ -350,7 +349,7 @@ namespace iLearn.Services
             return ClassInfo.Parse(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<LiveAndRecordInfo>> GetLiveAndRecordInfoAsync(string termId, string classId)
+        public virtual async Task<List<LiveAndRecordInfo>> GetLiveAndRecordInfoAsync(string termId, string classId)
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
             var response = await _httpClient.GetWithRetryAsync(
@@ -361,7 +360,7 @@ namespace iLearn.Services
             return LiveAndRecordInfo.Parse(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<VideoInfo> GetVideoInfoAsync(string resourceId)
+        public virtual async Task<VideoInfo> GetVideoInfoAsync(string resourceId)
         {
             if (!Logined) throw new InvalidOperationException("Not logged in.");
             await _httpClient.GetWithRetryAsync(

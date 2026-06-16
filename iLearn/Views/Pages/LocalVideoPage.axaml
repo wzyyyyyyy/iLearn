@@ -1,0 +1,46 @@
+<UserControl
+    x:Class="iLearn.Views.Pages.LocalVideoPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:iLearn.ViewModels.Pages"
+    x:DataType="vm:LocalVideoViewModel"
+    x:CompileBindings="False">
+  <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="14">
+    <DockPanel>
+      <StackPanel>
+        <TextBlock Text="本地视频" FontSize="30" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding StatusText}" Foreground="#64748B" />
+      </StackPanel>
+      <Button DockPanel.Dock="Right" Content="刷新" Command="{Binding LoadLocalVideosCommand}" />
+    </DockPanel>
+
+    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,180" ColumnSpacing="12">
+      <TextBox Watermark="搜索课程或文件名" Text="{Binding SearchQuery}" />
+      <ComboBox Grid.Column="1" ItemsSource="{Binding FilterOptions}" SelectedItem="{Binding SelectedFilter}" />
+    </Grid>
+
+    <ListBox Grid.Row="3" ItemsSource="{Binding FilteredVideos}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
+            <StackPanel>
+              <TextBlock Text="{Binding CourseName}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding FileName}" Foreground="#64748B" />
+              <TextBlock Text="{Binding FileSizeFormatted}" Foreground="#94A3B8" />
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Content="播放"
+                    Command="{Binding DataContext.OpenVideoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CommandParameter="{Binding}" />
+            <Button Grid.Column="2"
+                    Content="位置"
+                    Command="{Binding DataContext.OpenFileLocationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CommandParameter="{Binding}" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</UserControl>

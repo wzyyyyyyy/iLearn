@@ -115,7 +115,7 @@ namespace iLearn.Helpers.Extensions
 
         public static IAsyncPolicy<HttpResponseMessage> CreateRetryPolicy(
             int retryCount = 5,
-            Func<int, TimeSpan> sleepDurationProvider = null)
+            Func<int, TimeSpan>? sleepDurationProvider = null)
         {
             sleepDurationProvider ??= retryAttempt =>
                 TimeSpan.FromMilliseconds(Math.Pow(4, retryAttempt)) +
@@ -220,7 +220,7 @@ namespace iLearn.Helpers.Extensions
         {
             foreach (var option in source.Options)
             {
-                target.Options.Set(new HttpRequestOptionsKey<object>(option.Key), option.Value);
+                target.Options.Set(new HttpRequestOptionsKey<object?>(option.Key), option.Value);
             }
         }
     }

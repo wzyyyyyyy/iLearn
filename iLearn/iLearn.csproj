@@ -1,56 +1,92 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>iLearn-icon.ico</ApplicationIcon>
-    <UseWPF>true</UseWPF>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-	  <AssemblyVersion>1.3.0.0</AssemblyVersion>
-	  <FileVersion>1.3.0.0</FileVersion>
-	  <Version>1.3.0</Version>
+    <ApplicationIcon>iLearn-icon.ico</ApplicationIcon>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <FileVersion>1.3.0.0</FileVersion>
+    <Version>1.3.0</Version>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
-    <PackageReference Include="Costura.Fody" Version="6.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Downloader" Version="4.0.3" />
+    <PackageReference Include="Avalonia" Version="11.3.14" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.14" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.14" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.14" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.14" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="Semi.Avalonia" Version="11.3.14" />
+    <PackageReference Include="Irihi.Ursa" Version="1.15.1" />
+    <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.15.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.2" />
     <PackageReference Include="LiteDB" Version="5.0.21" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
     <PackageReference Include="Polly" Version="8.6.3" />
     <PackageReference Include="System.Runtime.Caching" Version="9.0.8" />
-    <PackageReference Include="WPF-UI" Version="4.0.3" />
-    <PackageReference Include="WPF-UI.DependencyInjection" Version="4.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0 " />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Assets\CourseDate.db" />
-    <None Remove="Assets\iLearn.png" />
-    <None Remove="Assets\IronMan.png" />
-    <None Remove="Assets\VideoPlayer.html" />
-    <None Remove="iLearn-icon.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <AvaloniaResource Include="Assets/**" />
     <Content Include="iLearn-icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\CourseDate.db" />
-    <Resource Include="Assets\IronMan.png" />
+    <Compile Include="Usings.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="App.axaml.cs" />
+    <Compile Include="Composition/ServiceCollectionExtensions.cs" />
+    <Compile Include="Navigation/AppRoute.cs" />
+    <Compile Include="Navigation/NavigationItemViewModel.cs" />
+    <Compile Include="Navigation/NavigationService.cs" />
+    <Compile Include="Notifications/AppNotification.cs" />
+    <Compile Include="Notifications/INotificationService.cs" />
+    <Compile Include="Notifications/NotificationService.cs" />
+    <Compile Include="Platform/IPlatformLauncher.cs" />
+    <Compile Include="Platform/PlatformLauncher.cs" />
+    <Compile Include="Security/ISecretStore.cs" />
+    <Compile Include="Security/FileSecretStore.cs" />
+    <Compile Include="Downloads/DownloadTaskStatus.cs" />
+    <Compile Include="Downloads/DownloadTaskSnapshot.cs" />
+    <Compile Include="Downloads/DownloadRequest.cs" />
+    <Compile Include="Downloads/IDownloadEngine.cs" />
+    <Compile Include="Downloads/HttpRangeDownloadEngine.cs" />
+    <Compile Include="Downloads/DownloadQueueService.cs" />
+    <Compile Include="Updates/UpdateManifest.cs" />
+    <Compile Include="Updates/UpdateCheckResult.cs" />
+    <Compile Include="Updates/IUpdateService.cs" />
+    <Compile Include="Updates/UpdateService.cs" />
+    <Compile Include="Helpers/DesEncryption.cs" />
+    <Compile Include="Helpers/Extensions/HttpClientRetryExtensions.cs" />
+    <Compile Include="Helpers/Messages/CourseMessage.cs" />
+    <Compile Include="Services/iLearnApiService.cs" />
+    <Compile Include="Services/FileNameService.cs" />
+    <Compile Include="Models/AppConfig.cs" />
+    <Compile Include="Models/ClassInfo.cs" />
+    <Compile Include="Models/LiveAndRecordInfo.cs" />
+    <Compile Include="Models/LocalVideoFile.cs" />
+    <Compile Include="Models/TermInfo.cs" />
+    <Compile Include="Models/UserINfo.cs" />
+    <Compile Include="Models/VideoInfo.cs" />
+    <Compile Include="ViewModels/AppViewModelBase.cs" />
+    <Compile Include="ViewModels/ShellViewModel.cs" />
+    <Compile Include="ViewModels/Pages/CoursesViewModel.cs" />
+    <Compile Include="ViewModels/Pages/MediaViewModel.cs" />
+    <Compile Include="ViewModels/Pages/VideoDownloadListViewModel.cs" />
+    <Compile Include="ViewModels/Pages/DownloadManageViewModel.cs" />
+    <Compile Include="ViewModels/Pages/LocalVideoViewModel.cs" />
+    <Compile Include="ViewModels/Pages/SettingViewModel.cs" />
+    <Compile Include="ViewModels/Windows/LoginViewModel.cs" />
+    <Compile Include="Views/Pages/CoursesPage.axaml.cs" />
+    <Compile Include="Views/Pages/MediaPage.axaml.cs" />
+    <Compile Include="Views/Pages/VideoDownloadListPage.axaml.cs" />
+    <Compile Include="Views/Pages/DownloadManagePage.axaml.cs" />
+    <Compile Include="Views/Pages/LocalVideoPage.axaml.cs" />
+    <Compile Include="Views/Pages/SettingPage.axaml.cs" />
+    <Compile Include="Views/Windows/LoginWindow.axaml.cs" />
+    <Compile Include="Views/Windows/MainWindow.axaml.cs" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Assets\iLearn.png" />
-    <Resource Include="Assets\VideoPlayer.html" />
-  </ItemGroup>
-
 </Project>

@@ -1,256 +1,208 @@
-﻿using iLearn.Models;
+using Avalonia.Platform;
+using Avalonia.Threading;
+using iLearn.Models;
+using iLearn.Notifications;
+using iLearn.Platform;
+using iLearn.ViewModels;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
 using System.Text;
-using Wpf.Ui;
-using Wpf.Ui.Controls;
-using MessageBox = System.Windows.MessageBox;
 
-namespace iLearn.ViewModels.Pages
+namespace iLearn.ViewModels.Pages;
+
+public sealed partial class LocalVideoViewModel : AppViewModelBase
 {
-    public partial class LocalVideoViewModel : ObservableObject
+    private readonly INotificationService _notifications;
+    private readonly IPlatformLauncher _launcher;
+    private readonly AppConfig _appConfig;
+
+    [ObservableProperty]
+    private ObservableCollection<LocalVideoFile> _localVideos = [];
+
+    [ObservableProperty]
+    private string _searchQuery = string.Empty;
+
+    [ObservableProperty]
+    private string _selectedFilter = "全部";
+
+    public ObservableCollection<string> FilterOptions { get; } =
+    [
+        "全部",
+        "HDMI视角",
+        "教师视角"
+    ];
+
+    public ObservableCollection<LocalVideoFile> FilteredVideos
     {
-        private readonly ISnackbarService _snackbarService;
-        private readonly AppConfig _appConfig;
-
-        [ObservableProperty]
-        private ObservableCollection<LocalVideoFile> _localVideos = new();
-
-        [ObservableProperty]
-        private string _searchQuery = string.Empty;
-
-        [ObservableProperty]
-        private string _selectedFilter = "全部";
-
-        [ObservableProperty]
-        private bool _isLoading = false;
-
-        public ObservableCollection<string> FilterOptions { get; } = new()
+        get
         {
-            "全部", "HDMI视角", "教师视角"
-        };
+            var filtered = LocalVideos.AsEnumerable();
 
-        public ObservableCollection<LocalVideoFile> FilteredVideos
-        {
-            get
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var filtered = LocalVideos.AsEnumerable();
+                filtered = filtered.Where(video =>
+                    video.CourseName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    video.FileName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase));
+            }
 
-                if (!string.IsNullOrWhiteSpace(SearchQuery))
-                {
-                    filtered = filtered.Where(v =>
-                        v.CourseName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
-                        v.FileName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase));
-                }
+            filtered = SelectedFilter switch
+            {
+                "HDMI视角" => filtered.Where(video => video.Perspective.Contains("HDMI", StringComparison.OrdinalIgnoreCase)),
+                "教师视角" => filtered.Where(video =>
+                    video.Perspective.Contains("教师", StringComparison.OrdinalIgnoreCase) ||
+                    video.Perspective.Contains("teacher", StringComparison.OrdinalIgnoreCase)),
+                _ => filtered
+            };
 
-                filtered = SelectedFilter switch
+            return new ObservableCollection<LocalVideoFile>(
+                filtered.OrderByDescending(video => video.RecordDate)
+                    .ThenBy(video => video.CourseName));
+        }
+    }
+
+    public LocalVideoViewModel(
+        INotificationService notifications,
+        IPlatformLauncher launcher,
+        AppConfig appConfig)
+    {
+        _notifications = notifications;
+        _launcher = launcher;
+        _appConfig = appConfig;
+        _ = LoadLocalVideosAsync();
+    }
+
+    partial void OnSearchQueryChanged(string value)
+    {
+        OnPropertyChanged(nameof(FilteredVideos));
+    }
+
+    partial void OnSelectedFilterChanged(string value)
+    {
+        OnPropertyChanged(nameof(FilteredVideos));
+    }
+
+    [RelayCommand]
+    private async Task LoadLocalVideosAsync()
+    {
+        BeginBusy("正在扫描下载目录...");
+        try
+        {
+            var videos = await Task.Run(() =>
+            {
+                var videoExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    "HDMI视角" => filtered.Where(v => v.Perspective.Contains("HDMI")),
-                    "教师视角" => filtered.Where(v => v.Perspective.Contains("教师") || v.Perspective.Contains("teacher")),
-                    _ => filtered
+                    ".mp4",
+                    ".avi",
+                    ".mkv",
+                    ".mov",
+                    ".wmv",
+                    ".flv"
                 };
 
-                return new ObservableCollection<LocalVideoFile>(
-                    filtered.OrderByDescending(v => v.RecordDate)
-                           .ThenBy(v => v.CourseName));
-            }
-        }
+                if (!Directory.Exists(_appConfig.DownloadPath))
+                    return new List<LocalVideoFile>();
 
-        public LocalVideoViewModel(ISnackbarService snackbarService, AppConfig appConfig)
-        {
-            _snackbarService = snackbarService;
-            _appConfig = appConfig;
-            _ = LoadLocalVideos();
-        }
+                return Directory
+                    .EnumerateFiles(_appConfig.DownloadPath, "*.*", SearchOption.AllDirectories)
+                    .Where(file => videoExtensions.Contains(Path.GetExtension(file)))
+                    .Select(LocalVideoFile.FromFileName)
+                    .ToList();
+            });
 
-        partial void OnSearchQueryChanged(string value)
-        {
-            OnPropertyChanged(nameof(FilteredVideos));
-        }
-
-        partial void OnSelectedFilterChanged(string value)
-        {
-            OnPropertyChanged(nameof(FilteredVideos));
-        }
-
-        [RelayCommand]
-        private async Task LoadLocalVideos()
-        {
-            IsLoading = true;
-            try
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                await Task.Run(() =>
-                {
-                    var videos = new List<LocalVideoFile>();
-                    var videoExtensions = new[] { ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv" };
-
-                    var downloadsPath = _appConfig.DownloadPath;
-                    if (Directory.Exists(downloadsPath))
-                    {
-                        var videoFiles = Directory.GetFiles(downloadsPath, "*.*", SearchOption.AllDirectories)
-                            .Where(file => videoExtensions.Contains(Path.GetExtension(file).ToLower()));
-
-                        videos.AddRange(videoFiles.Select(LocalVideoFile.FromFileName));
-                    }
-
-                    App.Current.Dispatcher.Invoke(() =>
-                    {
-                        LocalVideos.Clear();
-                        foreach (var video in videos)
-                        {
-                            LocalVideos.Add(video);
-                        }
-                    });
-                });
-
+                LocalVideos = new ObservableCollection<LocalVideoFile>(videos);
                 OnPropertyChanged(nameof(FilteredVideos));
-                ShowSnackbar("加载完成", $"找到 {LocalVideos.Count} 个本地视频文件", ControlAppearance.Success);
-            }
-            catch (Exception ex)
-            {
-                ShowSnackbar("加载失败", $"无法加载本地视频: {ex.Message}", ControlAppearance.Danger);
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
+            });
 
-        [RelayCommand]
-        private async Task OpenVideo(LocalVideoFile video)
+            _notifications.Show("本地视频已刷新", $"找到 {videos.Count} 个视频文件", AppNotificationKind.Success);
+            StatusText = videos.Count == 0 ? "下载目录中还没有本地视频" : $"找到 {videos.Count} 个本地视频";
+        }
+        catch (Exception ex)
         {
-            if (video == null || !File.Exists(video.FullPath))
-            {
-                ShowSnackbar("文件不存在", "视频文件已被移动或删除", ControlAppearance.Danger);
-                return;
-            }
-
-            try
-            {
-                var subtitlePath = video.FindSubtitlePath(_appConfig.DownloadPath);
-                await OpenLocalVideoAsync(video, subtitlePath);
-                ShowSnackbar(
-                    "正在打开",
-                    subtitlePath == null ? $"正在打开 {video.FileName}，未找到匹配字幕" : $"正在打开 {video.FileName}，已自动匹配字幕",
-                    ControlAppearance.Info);
-            }
-            catch (Exception ex)
-            {
-                ShowSnackbar("打开失败", $"无法打开视频文件: {ex.Message}", ControlAppearance.Danger);
-            }
+            _notifications.Show("加载失败", $"无法加载本地视频: {ex.Message}", AppNotificationKind.Error);
+            StatusText = "加载失败";
         }
-
-        [RelayCommand]
-        private async Task OpenFileLocation(LocalVideoFile video)
+        finally
         {
-            if (video == null || !File.Exists(video.FullPath))
-            {
-                ShowSnackbar("文件不存在", "视频文件已被移动或删除", ControlAppearance.Danger);
-                return;
-            }
-
-            try
-            {
-                Process.Start("explorer.exe", $"/select,\"{video.FullPath}\"");
-            }
-            catch (Exception ex)
-            {
-                ShowSnackbar("打开失败", $"无法打开文件位置: {ex.Message}", ControlAppearance.Danger);
-            }
+            EndBusy();
         }
+    }
 
-        [RelayCommand]
-        private async Task DeleteVideo(LocalVideoFile video)
+    [RelayCommand]
+    private async Task OpenVideoAsync(LocalVideoFile? video)
+    {
+        if (video is null || !File.Exists(video.FullPath))
         {
-            if (video == null || !File.Exists(video.FullPath))
-            {
-                ShowSnackbar("文件不存在", "视频文件已被移动或删除", ControlAppearance.Danger);
-                return;
-            }
-
-            var result = MessageBox.Show(
-                $"确定要删除视频文件吗？\n\n{video.FileName}",
-                "确认删除",
-                System.Windows.MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == System.Windows.MessageBoxResult.Yes)
-            {
-                try
-                {
-                    File.Delete(video.FullPath);
-                    LocalVideos.Remove(video);
-                    OnPropertyChanged(nameof(FilteredVideos));
-                    ShowSnackbar("删除成功", "视频文件已删除", ControlAppearance.Success);
-                }
-                catch (Exception ex)
-                {
-                    ShowSnackbar("删除失败", $"无法删除文件: {ex.Message}", ControlAppearance.Danger);
-                }
-            }
+            ShowNotification("文件不存在", "视频文件已被移动或删除", AppNotificationKind.Error);
+            return;
         }
 
-        [RelayCommand]
-        private void Search()
+        try
         {
-            OnPropertyChanged(nameof(FilteredVideos));
+            var subtitlePath = video.FindSubtitlePath(_appConfig.DownloadPath);
+            await OpenLocalVideoAsync(video, subtitlePath);
+            ShowNotification(
+                "正在打开",
+                subtitlePath is null ? $"正在打开 {video.FileName}，未找到匹配字幕" : $"正在打开 {video.FileName}，已自动匹配字幕",
+                AppNotificationKind.Info);
         }
-
-        private void ShowSnackbar(string title, string message, ControlAppearance appearance)
+        catch (Exception ex)
         {
-            var icon = appearance switch
-            {
-                ControlAppearance.Success => new SymbolIcon(SymbolRegular.CheckmarkCircle24),
-                ControlAppearance.Danger => new SymbolIcon(SymbolRegular.ErrorCircle24),
-                ControlAppearance.Info => new SymbolIcon(SymbolRegular.Info24),
-                _ => new SymbolIcon(SymbolRegular.Info24)
-            };
-
-            _snackbarService.Show(
-                title,
-                message,
-                appearance,
-                icon,
-                TimeSpan.FromSeconds(4)
-            );
+            ShowNotification("打开失败", $"无法打开视频文件: {ex.Message}", AppNotificationKind.Error);
         }
+    }
 
-        private async Task OpenLocalVideoAsync(LocalVideoFile video, string? subtitlePath)
+    [RelayCommand]
+    private async Task OpenFileLocationAsync(LocalVideoFile? video)
+    {
+        if (video is null || !File.Exists(video.FullPath))
         {
-            var uri = new Uri("pack://application:,,,/Assets/VideoPlayer.html");
-            var streamInfo = Application.GetResourceStream(uri);
-            if (streamInfo == null)
-                throw new FileNotFoundException("无法加载内置播放器模板。");
-
-            using var reader = new StreamReader(streamInfo.Stream);
-            var content = await reader.ReadToEndAsync();
-
-            content = content.Replace("_LEFTVIDEO_", new Uri(video.FullPath).AbsoluteUri);
-
-            var partnerVideo = video.GetPartnerVideo();
-            content = content.Replace(
-                "_RIGHTVIDEO_",
-                partnerVideo == null ? new Uri(video.FullPath).AbsoluteUri : new Uri(partnerVideo.FullPath).AbsoluteUri);
-            content = content.Replace("_SUBTITLE_", subtitlePath == null ? string.Empty : new Uri(subtitlePath).AbsoluteUri);
-            content = content.Replace("_SUBTITLE_DATA_", subtitlePath == null ? string.Empty : await CreateSubtitleDataAsync(subtitlePath));
-
-            string tempFile = Path.Combine(Path.GetTempPath(), $"video_local_{Guid.NewGuid()}.html");
-            await File.WriteAllTextAsync(tempFile, content);
-
-            using var process = new Process();
-            process.StartInfo = new ProcessStartInfo
-            {
-                FileName = tempFile,
-                UseShellExecute = true
-            };
-            process.Start();
+            ShowNotification("文件不存在", "视频文件已被移动或删除", AppNotificationKind.Error);
+            return;
         }
 
-        private static async Task<string> CreateSubtitleDataAsync(string subtitlePath)
-        {
-            var subtitleText = await File.ReadAllTextAsync(subtitlePath);
-            return Convert.ToBase64String(Encoding.UTF8.GetBytes(subtitleText));
-        }
+        var directory = Path.GetDirectoryName(video.FullPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+            await _launcher.OpenFolderAsync(directory);
+    }
+
+    [RelayCommand]
+    private void Search()
+    {
+        OnPropertyChanged(nameof(FilteredVideos));
+    }
+
+    private void ShowNotification(string title, string message, AppNotificationKind kind)
+    {
+        _notifications.Show(title, message, kind);
+    }
+
+    private async Task OpenLocalVideoAsync(LocalVideoFile video, string? subtitlePath)
+    {
+        var content = await ReadPlayerTemplateAsync();
+        var partnerVideo = video.GetPartnerVideo();
+
+        content = content
+            .Replace("_LEFTVIDEO_", new Uri(video.FullPath).AbsoluteUri)
+            .Replace("_RIGHTVIDEO_", partnerVideo is null ? new Uri(video.FullPath).AbsoluteUri : new Uri(partnerVideo.FullPath).AbsoluteUri)
+            .Replace("_SUBTITLE_", subtitlePath is null ? string.Empty : new Uri(subtitlePath).AbsoluteUri)
+            .Replace("_SUBTITLE_DATA_", subtitlePath is null ? string.Empty : await CreateSubtitleDataAsync(subtitlePath));
+
+        var tempFile = Path.Combine(Path.GetTempPath(), $"video_local_{Guid.NewGuid():N}.html");
+        await File.WriteAllTextAsync(tempFile, content);
+        await _launcher.OpenFileAsync(tempFile);
+    }
+
+    private static async Task<string> ReadPlayerTemplateAsync()
+    {
+        await using var stream = AssetLoader.Open(new Uri("avares://iLearn/Assets/VideoPlayer.html"));
+        using var reader = new StreamReader(stream);
+        return await reader.ReadToEndAsync();
+    }
+
+    private static async Task<string> CreateSubtitleDataAsync(string subtitlePath)
+    {
+        var subtitleText = await File.ReadAllTextAsync(subtitlePath);
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(subtitleText));
     }
 }

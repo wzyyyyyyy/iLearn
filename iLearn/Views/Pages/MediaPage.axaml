@@ -1,0 +1,40 @@
+<UserControl
+    x:Class="iLearn.Views.Pages.MediaPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:iLearn.ViewModels.Pages"
+    x:DataType="vm:MediaViewModel"
+    x:CompileBindings="False">
+  <Grid RowDefinitions="Auto,Auto,*" RowSpacing="18">
+    <DockPanel>
+      <StackPanel>
+        <TextBlock Text="课程视频" FontSize="30" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding CurrentCourse.CourseName}" Foreground="#64748B" />
+      </StackPanel>
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10">
+        <TextBox Width="300" Watermark="搜索视频或教师" Text="{Binding SearchQuery}" />
+        <Button Content="刷新" Command="{Binding RefreshCommand}" />
+      </StackPanel>
+    </DockPanel>
+
+    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+
+    <ListBox Grid.Row="2" ItemsSource="{Binding MediaItems}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="{Binding LiveRecordName}" FontSize="17" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding TeacherName}" Foreground="#64748B" />
+              <TextBlock Text="{Binding TimeRange}" Foreground="#94A3B8" />
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Content="播放"
+                    Command="{Binding DataContext.OpenMediaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CommandParameter="{Binding}" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</UserControl>

@@ -1,0 +1,64 @@
+<Window
+    x:Class="iLearn.Views.Windows.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:iLearn.ViewModels"
+    x:DataType="vm:ShellViewModel"
+    x:CompileBindings="False"
+    Width="1180"
+    Height="760"
+    MinWidth="980"
+    MinHeight="640"
+    Title="iLearn">
+  <Grid ColumnDefinitions="236,*" Background="#F6F8FB">
+    <Border Grid.Column="0" Background="#111827" Padding="18">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top"
+                   Text="iLearn"
+                   FontSize="28"
+                   FontWeight="Bold"
+                   Foreground="White"
+                   Margin="0,8,0,22" />
+        <ItemsControl ItemsSource="{Binding Items}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                      CommandParameter="{Binding}"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Left"
+                      Margin="0,0,0,8"
+                      Padding="14,10"
+                      Content="{Binding Title}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
+      <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="28,18">
+        <TextBlock Text="{Binding CurrentRouteTitle}" FontSize="24" FontWeight="SemiBold" Foreground="#111827" />
+      </Border>
+
+      <ContentControl Name="PageHost" Grid.Row="1" Margin="28" />
+
+      <ItemsControl Grid.Row="2" ItemsSource="{Binding Notifications.Items}" Margin="28,0,28,18">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="#FFFFFF"
+                    BorderBrush="#E5E7EB"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="12"
+                    Margin="0,0,0,8">
+              <StackPanel>
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding Message}" Foreground="#64748B" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Grid>
+  </Grid>
+</Window>
