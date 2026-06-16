@@ -8,6 +8,7 @@ using iLearn.Services;
 using iLearn.ViewModels;
 using iLearn.ViewModels.Pages;
 using iLearn.ViewModels.Windows;
+using iLearn.Views.Pages;
 using iLearn.Views.Windows;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,11 +35,20 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<List<LiveAndRecordInfo>>();
         services.AddSingleton<ShellViewModel>();
         services.AddSingleton<LoginViewModel>();
+        services.AddSingleton<CoursesViewModel>();
+        services.AddSingleton<MediaViewModel>();
         services.AddSingleton<VideoDownloadListViewModel>();
         services.AddSingleton<DownloadManageViewModel>();
+        services.AddSingleton<LocalVideoViewModel>();
         services.AddSingleton<SettingViewModel>();
         services.AddTransient<LoginWindow>();
         services.AddTransient<MainWindow>();
+        services.AddTransient<CoursesPage>();
+        services.AddTransient<MediaPage>();
+        services.AddTransient<VideoDownloadListPage>();
+        services.AddTransient<DownloadManagePage>();
+        services.AddTransient<LocalVideoPage>();
+        services.AddTransient<SettingPage>();
         services.AddSingleton<ISecretStore>(_ =>
         {
             var secretsPath = Path.Combine(

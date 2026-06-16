@@ -1,0 +1,48 @@
+<UserControl
+    x:Class="iLearn.Views.Pages.CoursesPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:iLearn.ViewModels.Pages"
+    x:DataType="vm:CoursesViewModel"
+    x:CompileBindings="False">
+  <Grid RowDefinitions="Auto,Auto,*" RowSpacing="18">
+    <DockPanel>
+      <StackPanel>
+        <TextBlock Text="我的课程" FontSize="30" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding StatusText}" Foreground="#64748B" />
+      </StackPanel>
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10">
+        <ComboBox Width="260" ItemsSource="{Binding TermsOptions}" SelectedItem="{Binding SelectedTerm}" />
+        <Button Content="刷新" Command="{Binding RefreshCommand}" />
+      </StackPanel>
+    </DockPanel>
+
+    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+
+    <ScrollViewer Grid.Row="2">
+      <ItemsControl ItemsSource="{Binding MyCourses}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Button Command="{Binding DataContext.CourseSelectedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CommandParameter="{Binding}"
+                    Width="280"
+                    Height="138"
+                    Margin="0,0,16,16"
+                    Padding="16">
+              <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <TextBlock Text="{Binding CourseName}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding TeacherName}" Foreground="#64748B" Margin="0,8,0,0" />
+                <TextBlock Text="{Binding StatusName}" Foreground="#0F766E" Margin="0,12,0,0" />
+              </StackPanel>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

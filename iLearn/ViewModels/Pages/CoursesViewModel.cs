@@ -1,89 +1,104 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using iLearn.Helpers.Messages;
 using iLearn.Models;
+using iLearn.Navigation;
+using iLearn.Notifications;
 using iLearn.Services;
-using iLearn.ViewModels.Windows;
-using iLearn.Views.Pages;
+using iLearn.ViewModels;
 using System.Collections.ObjectModel;
-using Wpf.Ui;
 
-namespace iLearn.ViewModels.Pages
+namespace iLearn.ViewModels.Pages;
+
+public sealed partial class CoursesViewModel : AppViewModelBase
 {
-    public partial class CoursesViewModel : ObservableObject
+    private readonly ILearnApiService _ilearnApiService;
+    private readonly NavigationService _navigationService;
+    private readonly INotificationService _notifications;
+
+    [ObservableProperty]
+    private ObservableCollection<TermInfo> _termsOptions = [];
+
+    [ObservableProperty]
+    private TermInfo? _selectedTerm;
+
+    [ObservableProperty]
+    private ObservableCollection<ClassInfo> _myCourses = [];
+
+    public CoursesViewModel(
+        ILearnApiService ilearnApiService,
+        NavigationService navigationService,
+        INotificationService notifications)
     {
-        [ObservableProperty]
-        private ObservableCollection<TermInfo> _termsOptions;
+        _ilearnApiService = ilearnApiService;
+        _navigationService = navigationService;
+        _notifications = notifications;
+        _ = InitializeAsync();
+    }
 
-        [ObservableProperty]
-        private TermInfo? _selectedTerm;
+    partial void OnSelectedTermChanged(TermInfo? value)
+    {
+        if (value is not null)
+            _ = LoadCoursesAsync(value);
+    }
 
-        [ObservableProperty]
-        private ObservableCollection<ClassInfo> _myCourses;
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        await InitializeAsync();
+    }
 
-        private readonly ILearnApiService _ilearnApiService;
-        private readonly ISnackbarService _snackbarService;
-        private readonly INavigationService _navigationService;
-        private readonly WindowsManagerService _windowsManagerService;
-        private readonly AutoUpdateService _autoUpdateService;
-
-        public CoursesViewModel(ILearnApiService ilearnApiService, ISnackbarService snackbarService, INavigationService navigationService, WindowsManagerService windowsManagerService, AutoUpdateService autoUpdateService)
+    [RelayCommand]
+    private void CourseSelected(ClassInfo? course)
+    {
+        if (course is null)
         {
-            _ilearnApiService = ilearnApiService ?? throw new ArgumentNullException(nameof(ilearnApiService));
-            _snackbarService = snackbarService ?? throw new ArgumentNullException(nameof(snackbarService));
-            _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
-            _windowsManagerService = windowsManagerService ?? throw new ArgumentNullException(nameof(windowsManagerService));
-            Init().ConfigureAwait(false);
-            _autoUpdateService = autoUpdateService;
+            _notifications.Show("无法打开课程", "课程数据为空，请刷新后重试", AppNotificationKind.Warning);
+            return;
         }
 
-        private async Task Init()
-        {
-            TermsOptions = [];
+        WeakReferenceMessenger.Default.Send(new CourseMessage { classInfo = course });
+        _navigationService.NavigateTo(AppRoute.Media);
+    }
 
+    private async Task InitializeAsync()
+    {
+        BeginBusy("正在加载学期...");
+        try
+        {
             var terms = await _ilearnApiService.GetTermsAsync();
-            foreach (var term in terms)
-            {
-                TermsOptions.Add(term);
-            }
-
+            TermsOptions = new ObservableCollection<TermInfo>(terms);
             SelectedTerm = TermsOptions.FirstOrDefault();
-
-            MyCourses = [];
-
-            if (SelectedTerm != null)
-            {
-                await LoadCoursesAsync(SelectedTerm);
-            }
-
+            if (SelectedTerm is null)
+                MyCourses.Clear();
         }
+        catch (Exception ex)
+        {
+            _notifications.Show("课程加载失败", ex.Message, AppNotificationKind.Error);
+            StatusText = "课程加载失败";
+        }
+        finally
+        {
+            EndBusy();
+        }
+    }
 
-        private async Task LoadCoursesAsync(TermInfo term)
+    private async Task LoadCoursesAsync(TermInfo term)
+    {
+        BeginBusy("正在加载课程...");
+        try
         {
             var classes = await _ilearnApiService.GetClassesAsync(term.Year, term.Num);
-            MyCourses.Clear();
-            foreach (var classInfo in classes)
-            {
-                MyCourses.Add(classInfo);
-            }
+            MyCourses = new ObservableCollection<ClassInfo>(classes);
+            StatusText = classes.Count == 0 ? "当前学期没有课程" : $"已加载 {classes.Count} 门课程";
         }
-
-        [RelayCommand]
-        private void JoinCourse()
+        catch (Exception ex)
         {
-            _windowsManagerService.Show<JoinCourseViewModel>();
+            _notifications.Show("课程加载失败", ex.Message, AppNotificationKind.Error);
+            StatusText = "课程加载失败";
         }
-
-        [RelayCommand]
-        public void TermSelectionChanged()
+        finally
         {
-            LoadCoursesAsync(SelectedTerm).ConfigureAwait(false);
-        }
-
-        [RelayCommand]
-        private void CourseSelected(ClassInfo course)
-        {
-            _navigationService.Navigate(typeof(MediaPage));
-            WeakReferenceMessenger.Default.Send(new CourseMessage { classInfo = course });
+            IsBusy = false;
         }
     }
 }

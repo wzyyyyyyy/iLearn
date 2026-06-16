@@ -1,0 +1,41 @@
+<UserControl
+    x:Class="iLearn.Views.Pages.DownloadManagePage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:iLearn.ViewModels.Pages"
+    x:DataType="vm:DownloadManageViewModel"
+    x:CompileBindings="False">
+  <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+    <DockPanel>
+      <StackPanel>
+        <TextBlock Text="下载管理" FontSize="30" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding TotalDownloadSpeed}" Foreground="#64748B" />
+      </StackPanel>
+      <Button DockPanel.Dock="Right" Content="打开下载文件夹" Command="{Binding OpenDownloadsFolderCommand}" />
+    </DockPanel>
+
+    <UniformGrid Grid.Row="1" Columns="3">
+      <TextBlock Text="{Binding ActiveDownloadsCount, StringFormat='下载中 {0}'}" />
+      <TextBlock Text="{Binding QueuedDownloadsCount, StringFormat='排队 {0}'}" />
+      <TextBlock Text="{Binding CompletedDownloadsCount, StringFormat='已完成 {0}'}" />
+    </UniformGrid>
+
+    <ListBox Grid.Row="2" ItemsSource="{Binding Downloads}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="0,0,0,12">
+            <StackPanel>
+              <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" />
+              <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" />
+              <TextBlock Text="{Binding ErrorMessage}" Foreground="#DC2626" />
+            </StackPanel>
+            <Button Grid.Column="1" Content="打开" Command="{Binding DataContext.OpenDownloadFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+            <Button Grid.Column="2" Content="暂停" Command="{Binding DataContext.PauseDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+            <Button Grid.Column="3" Content="重试" Command="{Binding DataContext.RetryDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+            <Button Grid.Column="4" Content="取消" Command="{Binding DataContext.CancelDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</UserControl>

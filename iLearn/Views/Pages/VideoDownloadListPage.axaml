@@ -1,0 +1,42 @@
+<UserControl
+    x:Class="iLearn.Views.Pages.VideoDownloadListPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:iLearn.ViewModels.Pages"
+    x:DataType="vm:VideoDownloadListViewModel"
+    x:CompileBindings="False">
+  <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="14">
+    <DockPanel>
+      <StackPanel>
+        <TextBlock Text="课程下载" FontSize="30" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding SelectedDownloadText}" Foreground="#64748B" />
+      </StackPanel>
+      <Button DockPanel.Dock="Right"
+              Content="{Binding DownloadButtonText}"
+              Command="{Binding DownloadSelectedCommand}" />
+    </DockPanel>
+
+    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsPreparingDownloads}" />
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+      <TextBox Watermark="搜索视频或教师" Text="{Binding SearchText}" />
+      <CheckBox Grid.Column="1" Content="全选 HDMI" IsChecked="{Binding IsAllHdmiSelected}" />
+      <CheckBox Grid.Column="2" Content="全选教师" IsChecked="{Binding IsAllTeacherSelected}" />
+    </Grid>
+
+    <ListBox Grid.Row="3" ItemsSource="{Binding FilteredVideos}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="{Binding LiveRecordName}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding TeacherName}" Foreground="#64748B" />
+            </StackPanel>
+            <CheckBox Grid.Column="1" Content="HDMI" IsChecked="{Binding IsHdmiSelected}" />
+            <CheckBox Grid.Column="2" Content="教师" IsChecked="{Binding IsTeacherSelected}" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</UserControl>

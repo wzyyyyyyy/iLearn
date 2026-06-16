@@ -88,15 +88,39 @@ public sealed class DownloadSelectionViewModelTests
 
             await viewModel.DownloadSelectedCommand.ExecuteAsync(null);
 
-            Assert.Contains(queue.Tasks, task => task.Id == "resource-1-HDMI");
-            Assert.Contains(queue.Tasks, task => task.Id == "resource-1-教师");
-            Assert.Contains(queue.Tasks, task => task.Id == "resource-1-subtitle");
+            var tasks = await ReadStableSnapshotAsync(queue, expectedCount: 3);
+            Assert.Contains(tasks, task => task.Id == "resource-1-HDMI");
+            Assert.Contains(tasks, task => task.Id == "resource-1-教师");
+            Assert.Contains(tasks, task => task.Id == "resource-1-subtitle");
             Assert.Equal("未选择", viewModel.SelectedDownloadText);
         }
         finally
         {
             if (Directory.Exists(downloadDirectory))
                 Directory.Delete(downloadDirectory, recursive: true);
+        }
+    }
+
+    private static async Task<List<DownloadTaskSnapshot>> ReadStableSnapshotAsync(
+        DownloadQueueService queue,
+        int expectedCount)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        while (true)
+        {
+            timeout.Token.ThrowIfCancellationRequested();
+            try
+            {
+                var tasks = queue.Tasks.ToList();
+                if (tasks.Count >= expectedCount && tasks.All(task => task.Status == DownloadTaskStatus.Completed))
+                    return tasks;
+            }
+            catch (InvalidOperationException)
+            {
+                // The queue publishes UI snapshots asynchronously; retry until updates settle.
+            }
+
+            await Task.Delay(10, timeout.Token);
         }
     }
 

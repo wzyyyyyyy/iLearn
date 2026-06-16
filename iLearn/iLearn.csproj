@@ -57,6 +57,7 @@
     <Compile Include="Downloads/DownloadQueueService.cs" />
     <Compile Include="Helpers/DesEncryption.cs" />
     <Compile Include="Helpers/Extensions/HttpClientRetryExtensions.cs" />
+    <Compile Include="Helpers/Messages/CourseMessage.cs" />
     <Compile Include="Services/iLearnApiService.cs" />
     <Compile Include="Services/FileNameService.cs" />
     <Compile Include="Models/AppConfig.cs" />
@@ -68,10 +69,19 @@
     <Compile Include="Models/VideoInfo.cs" />
     <Compile Include="ViewModels/AppViewModelBase.cs" />
     <Compile Include="ViewModels/ShellViewModel.cs" />
+    <Compile Include="ViewModels/Pages/CoursesViewModel.cs" />
+    <Compile Include="ViewModels/Pages/MediaViewModel.cs" />
     <Compile Include="ViewModels/Pages/VideoDownloadListViewModel.cs" />
     <Compile Include="ViewModels/Pages/DownloadManageViewModel.cs" />
+    <Compile Include="ViewModels/Pages/LocalVideoViewModel.cs" />
     <Compile Include="ViewModels/Pages/SettingViewModel.cs" />
     <Compile Include="ViewModels/Windows/LoginViewModel.cs" />
+    <Compile Include="Views/Pages/CoursesPage.axaml.cs" />
+    <Compile Include="Views/Pages/MediaPage.axaml.cs" />
+    <Compile Include="Views/Pages/VideoDownloadListPage.axaml.cs" />
+    <Compile Include="Views/Pages/DownloadManagePage.axaml.cs" />
+    <Compile Include="Views/Pages/LocalVideoPage.axaml.cs" />
+    <Compile Include="Views/Pages/SettingPage.axaml.cs" />
     <Compile Include="Views/Windows/LoginWindow.axaml.cs" />
     <Compile Include="Views/Windows/MainWindow.axaml.cs" />
   </ItemGroup>
