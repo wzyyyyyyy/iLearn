@@ -1,6 +1,6 @@
-# iLearn - 一款现代化的“学在吉大”客户端
+# iLearn - 一款现代化的“学在吉大”跨平台客户端
 
-### 精致、现代、功能丰富的 Fluent UI “学在吉大”桌面客户端。
+### 基于 Avalonia、Semi.Avalonia 和 Ursa 的 Windows / macOS / Linux 桌面客户端。
 
 ![iLearn](https://socialify.git.ci/wzyyyyyyy/iLearn/image?custom_description=%E7%8E%B0%E4%BB%A3%E7%9A%84+FluentUI+%E9%A3%8E%E6%A0%BC%E7%9A%84%E5%AD%A6%E5%9C%A8%E5%90%89%E5%A4%A7%E5%AE%A2%E6%88%B7%E7%AB%AF%E3%80%82%0A&description=1&font=Inter&forks=1&issues=1&language=1&name=1&owner=1&pattern=Formal+Invitation&pulls=1&stargazers=1&theme=Auto)
 <p align="center">
@@ -14,16 +14,18 @@
 
 ## ✨ 项目简介
 
-**iLearn** 是一个**非官方、纯公益的开源项目**，旨在通过现代化的 Fluent UI 界面，显著优化“学在吉大”平台的视频学习体验。
+**iLearn** 是一个**非官方、纯公益的开源项目**，旨在通过现代化的跨平台桌面体验，显著优化“学在吉大”平台的视频学习、下载和离线复习流程。
 
 > **⚠️ 请注意：** 本项目不提供盗版资源，不破解账号。它仅用于优化您已有权限访问的内容的观看体验。
 
 ## 🚀 核心功能
 
+  * **跨平台桌面体验：** 使用 Avalonia 构建，支持 Windows、macOS、Linux。
   * **无缝播放在线与离线视频：** 支持在线流畅播放，也可下载课程以便离线学习。
   * **播放控制：** 提供 **0.5x 至 3.0x** 的流畅倍速播放。
   * **智能字幕集成：** 自动提取课程字幕，并支持点击任意字幕行，视频即可跳转至对应时间点。
-  * **现代化的 Fluent UI：** 精美、简洁、直观的界面设计。
+  * **顺手的下载管理：** 支持队列、进度、暂停、取消、失败重试、下载速度统计和下载目录快捷打开。
+  * **清晰的状态提示：** 登录、加载课程、准备下载、检查更新都会显示即时反馈，不再出现点击后无反应。
   * **本地视频支持：** 支持导入并播放您自己的本地视频文件。
 
 ## 📸 界面预览
@@ -39,10 +41,11 @@
 只需简单几步，即可开始使用 iLearn。
 
 1.  **下载：** 前往 [**📦 Releases 页面**](https://github.com/wzyyyyyyy/iLearn/releases) 获取最新版本。
-2.  **环境：** 确保您的电脑已安装 [**.NET 10 SDK**](https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.300/dotnet-sdk-10.0.300-win-x64.exe)。
+2.  **环境：** 推荐使用 Releases 中的自包含包；从源码运行需要安装 .NET 10 SDK。
 3.  **安装与运行：**
-      * **安装包：** 运行 `iLearnSetUp.exe` 进行引导式安装（推荐）。
-      * **便携版：** 或解压下载的压缩包，直接运行 `iLearn.exe` 即可使用。
+      * **Windows：** 下载 `iLearn-win-x64.zip`，解压后运行 `iLearn.exe`。
+      * **macOS：** 下载 `iLearn-osx-x64.zip` 或 `iLearn-osx-arm64.zip`，解压后运行应用。
+      * **Linux：** 下载 `iLearn-linux-x64.tar.gz`，解压后运行 `iLearn`。
 
 ## 🗺️ 开发路线图
 
@@ -53,7 +56,7 @@
   - [x] 在线播放课程
   - [x] 视频下载与离线播放
   - [x] 倍速播放控制
-  - [x] Fluent UI 界面
+  - [x] Avalonia / Semi.Avalonia 跨平台界面
   - [x] 本地视频导入
 
 #### **📋 字幕系统**

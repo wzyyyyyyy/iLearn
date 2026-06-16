@@ -1,0 +1,35 @@
+name: avalonia-desktop
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        rid: [win-x64, osx-x64, osx-arm64, linux-x64]
+        include:
+          - rid: win-x64
+            os: windows-latest
+          - rid: osx-x64
+            os: macos-latest
+          - rid: osx-arm64
+            os: macos-latest
+          - rid: linux-x64
+            os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet restore iLearn.sln
+      - run: dotnet test iLearn.sln --configuration Release --no-restore
+      - run: dotnet publish iLearn/iLearn.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -o artifacts/iLearn-${{ matrix.rid }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iLearn-${{ matrix.rid }}
+          path: artifacts/iLearn-${{ matrix.rid }}
