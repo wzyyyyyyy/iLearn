@@ -38,6 +38,15 @@
     <Compile Include="Usings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="App.axaml.cs" />
+    <Compile Include="Composition/ServiceCollectionExtensions.cs" />
+    <Compile Include="Navigation/AppRoute.cs" />
+    <Compile Include="Navigation/NavigationItemViewModel.cs" />
+    <Compile Include="Navigation/NavigationService.cs" />
+    <Compile Include="Notifications/AppNotification.cs" />
+    <Compile Include="Notifications/INotificationService.cs" />
+    <Compile Include="Notifications/NotificationService.cs" />
+    <Compile Include="Platform/IPlatformLauncher.cs" />
+    <Compile Include="Platform/PlatformLauncher.cs" />
     <Compile Include="Services/FileNameService.cs" />
     <Compile Include="Models/LocalVideoFile.cs" />
   </ItemGroup>
