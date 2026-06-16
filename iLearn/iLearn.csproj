@@ -47,7 +47,10 @@
     <Compile Include="Notifications/NotificationService.cs" />
     <Compile Include="Platform/IPlatformLauncher.cs" />
     <Compile Include="Platform/PlatformLauncher.cs" />
+    <Compile Include="Security/ISecretStore.cs" />
+    <Compile Include="Security/FileSecretStore.cs" />
     <Compile Include="Services/FileNameService.cs" />
+    <Compile Include="Models/AppConfig.cs" />
     <Compile Include="Models/LocalVideoFile.cs" />
   </ItemGroup>
 </Project>
