@@ -84,9 +84,15 @@ public sealed partial class LoginViewModel : ObservableObject, IDisposable
         PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(UserName) or nameof(UserPassword) or nameof(IsAuthenticationInProgress) or nameof(CurrentStep))
+            {
                 LoginCommand.NotifyCanExecuteChanged();
+                SubmitCommand.NotifyCanExecuteChanged();
+            }
             if (e.PropertyName is nameof(ImageCaptchaCode) or nameof(WechatCode) or nameof(IsAuthenticationInProgress))
+            {
                 VerifyWechatCommand.NotifyCanExecuteChanged();
+                SubmitCommand.NotifyCanExecuteChanged();
+            }
             if (e.PropertyName is nameof(ImageCaptchaCode) or nameof(IsSendingWechatCode) or nameof(CanSendWechatCode))
                 SendWechatCodeCommand.NotifyCanExecuteChanged();
         };
@@ -96,9 +102,34 @@ public sealed partial class LoginViewModel : ObservableObject, IDisposable
 
     public bool IsWechatVerifyStep => CurrentStep == LoginStep.WechatVerify;
 
+    public string SubmitButtonText => CurrentStep == LoginStep.WechatVerify
+        ? "提交微信验证码"
+        : "验证并登录";
+
     partial void OnCurrentStepChanged(LoginStep value)
     {
         OnPropertyChanged(nameof(IsWechatVerifyStep));
+        OnPropertyChanged(nameof(SubmitButtonText));
+        SubmitCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSubmit))]
+    private async Task SubmitAsync()
+    {
+        if (CurrentStep == LoginStep.WechatVerify)
+        {
+            await VerifyWechatAsync();
+            return;
+        }
+
+        await LoginAsync();
+    }
+
+    private bool CanSubmit()
+    {
+        return CurrentStep == LoginStep.WechatVerify
+            ? CanVerifyWechat()
+            : CanLogin();
     }
 
     [RelayCommand(CanExecute = nameof(CanLogin))]

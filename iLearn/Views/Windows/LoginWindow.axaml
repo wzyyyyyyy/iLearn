@@ -56,11 +56,8 @@
           </Grid>
         </StackPanel>
 
-        <Button Content="验证并登录"
-                Command="{Binding LoginCommand}" />
-        <Button Content="提交微信验证码"
-                Command="{Binding VerifyWechatCommand}"
-                IsVisible="{Binding IsWechatVerifyStep}" />
+        <Button Content="{Binding SubmitButtonText}"
+                Command="{Binding SubmitCommand}" />
         <Button Content="返回账号密码登录"
                 Command="{Binding BackToPasswordCommand}"
                 IsVisible="{Binding IsWechatVerifyStep}" />

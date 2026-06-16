@@ -47,6 +47,24 @@
       * **macOS：** 下载 `iLearn-osx-x64.zip` 或 `iLearn-osx-arm64.zip`，解压后运行应用。
       * **Linux：** 下载 `iLearn-linux-x64.tar.gz`，解压后运行 `iLearn`。
 
+## 📦 本地打包
+
+项目提供三平台打包脚本，产物会输出到 `artifacts/package`。
+
+```bash
+scripts/package.sh osx-arm64
+scripts/package.sh osx-x64
+scripts/package.sh linux-x64
+```
+
+Windows 打包在 PowerShell 中运行：
+
+```powershell
+./scripts/package/windows.ps1 -Rid win-x64
+```
+
+Windows 默认生成 zip；如果本机安装了 Inno Setup CLI `iscc`，会额外生成安装向导 exe。macOS 默认生成 unsigned app zip，在 macOS 上会额外生成 unsigned dmg。
+
 ## 🗺️ 开发路线图
 
 以下是项目关键功能的当前开发状态：

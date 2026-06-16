@@ -75,7 +75,7 @@ namespace iLearn.Services
 
         // ── Step 1: 提交账号密码 ──
 
-        public async Task<LoginStepResult> LoginStep1Async(string username, string password)
+        public virtual async Task<LoginStepResult> LoginStep1Async(string username, string password)
         {
             if (Logined) return LoginStepResult.Success;
 
@@ -88,8 +88,8 @@ namespace iLearn.Services
             var casDoc = new HtmlDocument();
             casDoc.LoadHtml(await casPageResp.Content.ReadAsStringAsync());
 
-            var lt = casDoc.DocumentNode.SelectSingleNode("//input[@name='lt']")?.GetAttributeValue("value", string.Empty);
-            var execution = casDoc.DocumentNode.SelectSingleNode("//input[@name='execution']")?.GetAttributeValue("value", string.Empty);
+            var lt = GetAttributeValueOrNull(casDoc.DocumentNode.SelectSingleNode("//input[@name='lt']"), "value");
+            var execution = GetAttributeValueOrNull(casDoc.DocumentNode.SelectSingleNode("//input[@name='execution']"), "value");
 
             if (string.IsNullOrEmpty(lt) || string.IsNullOrEmpty(execution))
                 return LoginStepResult.Failed;
@@ -137,16 +137,16 @@ namespace iLearn.Services
 
             _pendingUsername = username;
             _pendingPassword = password;
-            _pendingLt = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='lt']")?.GetAttributeValue("value", string.Empty) ?? lt;
-            _pendingExecution = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='execution']")?.GetAttributeValue("value", string.Empty) ?? "e1s2";
-            _pendingEventId = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='_eventId']")?.GetAttributeValue("value", string.Empty) ?? "submit";
+            _pendingLt = GetAttributeValueOrNull(recheckDoc.DocumentNode.SelectSingleNode("//input[@name='lt']"), "value") ?? lt;
+            _pendingExecution = GetAttributeValueOrNull(recheckDoc.DocumentNode.SelectSingleNode("//input[@name='execution']"), "value") ?? "e1s2";
+            _pendingEventId = GetAttributeValueOrNull(recheckDoc.DocumentNode.SelectSingleNode("//input[@name='_eventId']"), "value") ?? "submit";
 
             return LoginStepResult.NeedWechatCode;
         }
 
         // ── 获取图形验证码 ──
 
-        public async Task<byte[]> GetCasCaptchaBytesAsync()
+        public virtual async Task<byte[]> GetCasCaptchaBytesAsync()
         {
             var resp = await _httpClient.GetAsync(
                 $"{CAS_BASE}/code?{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}");
@@ -165,7 +165,7 @@ namespace iLearn.Services
             Failed
         }
 
-        public async Task<WechatCodeRequestResult> RequestWechatCodeAsync(string imageCaptcha)
+        public virtual async Task<WechatCodeRequestResult> RequestWechatCodeAsync(string imageCaptcha)
         {
             var time = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             _cookieContainer.Add(
@@ -196,7 +196,7 @@ namespace iLearn.Services
 
         // ── Step 2: 提交验证码完成二次认证 ──
 
-        public async Task<LoginStepResult> LoginStep2Async(string imageCaptcha, string wechatCode)
+        public virtual async Task<LoginStepResult> LoginStep2Async(string imageCaptcha, string wechatCode)
         {
             if (_pendingLt == null || _pendingUsername == null || _pendingPassword == null)
                 return LoginStepResult.Failed;
@@ -326,6 +326,11 @@ namespace iLearn.Services
             _pendingEventId = null;
             _pendingUsername = null;
             _pendingPassword = null;
+        }
+
+        private static string? GetAttributeValueOrNull(HtmlNode? node, string attributeName)
+        {
+            return node?.Attributes[attributeName]?.Value;
         }
 
         // ── API methods ──
