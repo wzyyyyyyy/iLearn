@@ -26,6 +26,25 @@ public sealed class DownloadQueueService
 
     public ReadOnlyObservableCollection<DownloadTaskSnapshot> Tasks { get; }
 
+    public int ActiveCount => CountByStatus(DownloadTaskStatus.Downloading);
+
+    public int FailedCount => CountByStatus(DownloadTaskStatus.Failed);
+
+    public int CompletedCount => CountByStatus(DownloadTaskStatus.Completed);
+
+    public double TotalBytesPerSecond
+    {
+        get
+        {
+            lock (_tasksGate)
+            {
+                return _tasks
+                    .Where(item => item.Status == DownloadTaskStatus.Downloading)
+                    .Sum(item => item.BytesPerSecond);
+            }
+        }
+    }
+
     public async Task EnqueueAsync(DownloadRequest request, CancellationToken cancellationToken = default)
     {
         CancellationTokenSource downloadCancellation;
@@ -82,6 +101,32 @@ public sealed class DownloadQueueService
     public Task PauseAsync(string id, CancellationToken cancellationToken = default)
     {
         return CancelAsync(id, cancellationToken);
+    }
+
+    public void ClearCompleted()
+    {
+        if (_collectionContext is not null && SynchronizationContext.Current != _collectionContext)
+        {
+            _collectionContext.Post(_ => ClearCompletedCore(), null);
+            return;
+        }
+
+        ClearCompletedCore();
+    }
+
+    public async Task RetryFailedAsync(CancellationToken cancellationToken = default)
+    {
+        List<string> failedIds;
+        lock (_tasksGate)
+        {
+            failedIds = _tasks
+                .Where(item => item.Status == DownloadTaskStatus.Failed)
+                .Select(item => item.Id)
+                .ToList();
+        }
+
+        foreach (var id in failedIds)
+            await RetryAsync(id, cancellationToken);
     }
 
     public async Task RetryAsync(string id, CancellationToken cancellationToken = default)
@@ -159,7 +204,10 @@ public sealed class DownloadQueueService
         }
         catch (Exception ex)
         {
-            finalSnapshot = DownloadTaskSnapshot.FromRequest(request, DownloadTaskStatus.Failed, ex.Message);
+            finalSnapshot = DownloadTaskSnapshot.FromRequest(
+                request,
+                DownloadTaskStatus.Failed,
+                $"{request.FileName}: {ex.Message}");
         }
         finally
         {
@@ -246,6 +294,23 @@ public sealed class DownloadQueueService
         lock (_tasksGate)
         {
             return _tasks.FirstOrDefault(task => task.Id == id)?.Status;
+        }
+    }
+
+    private int CountByStatus(DownloadTaskStatus status)
+    {
+        lock (_tasksGate)
+        {
+            return _tasks.Count(item => item.Status == status);
+        }
+    }
+
+    private void ClearCompletedCore()
+    {
+        lock (_tasksGate)
+        {
+            foreach (var item in _tasks.Where(item => item.Status == DownloadTaskStatus.Completed).ToList())
+                _tasks.Remove(item);
         }
     }
 

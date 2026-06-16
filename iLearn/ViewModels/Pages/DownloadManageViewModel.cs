@@ -13,6 +13,7 @@ public partial class DownloadManageViewModel : ObservableObject
     private readonly INotificationService _notifications;
     private readonly IPlatformLauncher _launcher;
     private readonly AppConfig _appConfig;
+    private int _lastFailedDownloadsCount;
 
     public DownloadManageViewModel(
         DownloadQueueService downloadQueue,
@@ -38,12 +39,32 @@ public partial class DownloadManageViewModel : ObservableObject
 
     public int QueuedDownloadsCount => Downloads.Count(download => download.Status is DownloadTaskStatus.Queued or DownloadTaskStatus.Waiting);
 
+    public int FailedDownloadsCount => Downloads.Count(download => download.Status == DownloadTaskStatus.Failed);
+
+    public bool HasDownloads => Downloads.Count > 0;
+
+    public bool HasNoDownloads => !HasDownloads;
+
     public bool HasDownloadingItems => Downloads.Any(download => download.Status == DownloadTaskStatus.Downloading);
 
     public bool HasPausedItems => Downloads.Any(download => download.Status == DownloadTaskStatus.Paused);
 
     public string TotalDownloadSpeed => FormatBytesPerSecond(
         Downloads.Where(download => download.Status == DownloadTaskStatus.Downloading).Sum(download => download.BytesPerSecond));
+
+    [RelayCommand]
+    private void ClearCompleted()
+    {
+        _downloadQueue.ClearCompleted();
+        _notifications.Show("已清理", "已移除完成的下载记录", AppNotificationKind.Success);
+    }
+
+    [RelayCommand]
+    private async Task RetryFailed()
+    {
+        await _downloadQueue.RetryFailedAsync();
+        _notifications.Show("正在重试", "失败任务已重新加入队列", AppNotificationKind.Info);
+    }
 
     [RelayCommand]
     private async Task PauseDownload(DownloadTaskSnapshot item)
@@ -87,9 +108,17 @@ public partial class DownloadManageViewModel : ObservableObject
 
     private void RaiseSummaryChanged()
     {
+        var failedCount = FailedDownloadsCount;
+        if (failedCount > _lastFailedDownloadsCount)
+            _notifications.Show("下载失败", "有任务下载失败，可在下载管理中重试", AppNotificationKind.Error);
+        _lastFailedDownloadsCount = failedCount;
+
         OnPropertyChanged(nameof(ActiveDownloadsCount));
         OnPropertyChanged(nameof(CompletedDownloadsCount));
         OnPropertyChanged(nameof(QueuedDownloadsCount));
+        OnPropertyChanged(nameof(FailedDownloadsCount));
+        OnPropertyChanged(nameof(HasDownloads));
+        OnPropertyChanged(nameof(HasNoDownloads));
         OnPropertyChanged(nameof(HasDownloadingItems));
         OnPropertyChanged(nameof(HasPausedItems));
         OnPropertyChanged(nameof(TotalDownloadSpeed));

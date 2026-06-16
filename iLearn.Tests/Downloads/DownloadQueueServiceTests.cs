@@ -161,6 +161,47 @@ public sealed class DownloadQueueServiceTests
         await service.CancelAsync("task-1", TestContext.Current.CancellationToken);
     }
 
+    [Fact]
+    public async Task ClearCompleted_RemovesCompletedTasks()
+    {
+        var engine = new FakeDownloadEngine();
+        var service = new DownloadQueueService(engine);
+        await service.EnqueueAsync(new DownloadRequest(
+            "task-1",
+            "https://example.test/video.mp4",
+            "video.mp4",
+            Path.GetTempPath(),
+            "第一讲",
+            "HDMI"),
+            TestContext.Current.CancellationToken);
+        await WaitUntilAsync(() => service.Tasks.Single().Status == DownloadTaskStatus.Completed);
+
+        service.ClearCompleted();
+
+        Assert.Empty(service.Tasks);
+    }
+
+    [Fact]
+    public async Task RetryFailedAsync_RequeuesFailedTasks()
+    {
+        var engine = new FailingDownloadEngine();
+        var service = new DownloadQueueService(engine);
+        await service.EnqueueAsync(new DownloadRequest(
+            "task-1",
+            "https://example.test/video.mp4",
+            "video.mp4",
+            Path.GetTempPath(),
+            "第一讲",
+            "HDMI"),
+            TestContext.Current.CancellationToken);
+        await WaitUntilAsync(() => service.Tasks.Single().Status == DownloadTaskStatus.Failed);
+
+        engine.ShouldFail = false;
+        await service.RetryFailedAsync(TestContext.Current.CancellationToken);
+
+        await WaitUntilAsync(() => service.Tasks.Single().Status == DownloadTaskStatus.Completed);
+    }
+
     private sealed class FakeDownloadEngine : IDownloadEngine
     {
         public Task DownloadAsync(
@@ -212,6 +253,23 @@ public sealed class DownloadQueueServiceTests
         public void AllowCancellationToFinish()
         {
             _allowCancellationToFinish.SetResult();
+        }
+    }
+
+    private sealed class FailingDownloadEngine : IDownloadEngine
+    {
+        public bool ShouldFail { get; set; } = true;
+
+        public Task DownloadAsync(
+            DownloadRequest request,
+            string outputPath,
+            IProgress<DownloadTaskSnapshot> progress,
+            CancellationToken cancellationToken)
+        {
+            progress.Report(DownloadTaskSnapshot.Downloading(request, 10, 100, 1024, null));
+            if (ShouldFail)
+                throw new InvalidOperationException("network failed");
+            return Task.CompletedTask;
         }
     }
 
