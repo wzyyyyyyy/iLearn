@@ -122,18 +122,12 @@ namespace iLearn.Services
 
             var responseHtml = await loginResp.Content.ReadAsStringAsync();
 
-            if (responseHtml.Contains("用户名或密码错误") || responseHtml.Contains("账号或密码错误"))
-                return LoginStepResult.WrongPassword;
+            var loginResult = LoginResponseClassifier.Classify(responseHtml);
+            if (loginResult != LoginStepResult.NeedWechatCode)
+                return loginResult;
 
-            // 服务端返回2FA页面
             var recheckDoc = new HtmlDocument();
             recheckDoc.LoadHtml(responseHtml);
-
-            // 若页面没有含2FA相关元素，则视为凭据被拒绝
-            if (recheckDoc.DocumentNode.SelectSingleNode("//input[@name='WxCode']") == null &&
-                recheckDoc.DocumentNode.SelectSingleNode("//*[contains(@class,'recheck')]") == null &&
-                !responseHtml.Contains("微信") && !responseHtml.Contains("二次"))
-                return LoginStepResult.WrongPassword;
 
             _pendingUsername = username;
             _pendingPassword = password;
