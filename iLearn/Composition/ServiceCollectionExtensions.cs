@@ -5,6 +5,7 @@ using iLearn.Notifications;
 using iLearn.Platform;
 using iLearn.Security;
 using iLearn.Services;
+using iLearn.Updates;
 using iLearn.ViewModels;
 using iLearn.ViewModels.Pages;
 using iLearn.ViewModels.Windows;
@@ -32,6 +33,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IDownloadEngine, HttpRangeDownloadEngine>();
         services.AddSingleton<DownloadQueueService>();
         services.AddSingleton<ILearnApiService>();
+        services.AddSingleton<IUpdateManifestClient>(_ => new HttpUpdateManifestClient(
+            new HttpClient(),
+            "https://raw.githubusercontent.com/wzyyyyyyy/iLearn/refs/heads/master/iLearn/Assets/update-manifest.json"));
+        services.AddSingleton<IUpdateService>(sp => new UpdateService(
+            sp.GetRequiredService<IUpdateManifestClient>(),
+            typeof(App).Assembly.GetName().Version ?? new Version(1, 0, 0)));
         services.AddSingleton<List<LiveAndRecordInfo>>();
         services.AddSingleton<ShellViewModel>();
         services.AddSingleton<LoginViewModel>();

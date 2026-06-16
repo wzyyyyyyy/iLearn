@@ -55,6 +55,10 @@
     <Compile Include="Downloads/IDownloadEngine.cs" />
     <Compile Include="Downloads/HttpRangeDownloadEngine.cs" />
     <Compile Include="Downloads/DownloadQueueService.cs" />
+    <Compile Include="Updates/UpdateManifest.cs" />
+    <Compile Include="Updates/UpdateCheckResult.cs" />
+    <Compile Include="Updates/IUpdateService.cs" />
+    <Compile Include="Updates/UpdateService.cs" />
     <Compile Include="Helpers/DesEncryption.cs" />
     <Compile Include="Helpers/Extensions/HttpClientRetryExtensions.cs" />
     <Compile Include="Helpers/Messages/CourseMessage.cs" />

@@ -1,6 +1,7 @@
 using iLearn.Models;
 using iLearn.Notifications;
 using iLearn.Platform;
+using iLearn.Updates;
 
 namespace iLearn.ViewModels.Pages;
 
@@ -9,6 +10,7 @@ public partial class SettingViewModel : ObservableObject
     private readonly AppConfig _appConfig;
     private readonly IPlatformLauncher _launcher;
     private readonly INotificationService _notifications;
+    private readonly IUpdateService _updateService;
     private bool _suppressSave;
 
     [ObservableProperty]
@@ -35,11 +37,13 @@ public partial class SettingViewModel : ObservableObject
     public SettingViewModel(
         AppConfig appConfig,
         IPlatformLauncher launcher,
-        INotificationService notifications)
+        INotificationService notifications,
+        IUpdateService updateService)
     {
         _appConfig = appConfig;
         _launcher = launcher;
         _notifications = notifications;
+        _updateService = updateService;
 
         _suppressSave = true;
         MaxConcurrentDownloads = _appConfig.MaxConcurrentDownloads;
@@ -110,10 +114,32 @@ public partial class SettingViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CheckForUpdates()
+    private async Task CheckForUpdates()
     {
         LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        _notifications.Show("检查更新", "跨平台更新检查将在更新服务接入后启用", AppNotificationKind.Info);
+        try
+        {
+            var result = await _updateService.CheckAsync();
+            if (!result.IsUpdateAvailable)
+            {
+                _notifications.Show("已是最新版本", $"当前版本 {AppVersion}", AppNotificationKind.Success);
+                return;
+            }
+
+            _notifications.Show(
+                "发现新版本",
+                result.DownloadUrl is null
+                    ? $"最新版本 {result.LatestVersion}，但当前平台暂无下载包"
+                    : $"最新版本 {result.LatestVersion}，正在打开下载链接",
+                AppNotificationKind.Info);
+
+            if (result.DownloadUrl is not null)
+                await _launcher.OpenUrlAsync(result.DownloadUrl);
+        }
+        catch (Exception ex)
+        {
+            _notifications.Show("检查更新失败", ex.Message, AppNotificationKind.Error);
+        }
     }
 
     private void SaveDownloadSettings(string message)
