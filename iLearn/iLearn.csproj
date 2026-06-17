@@ -63,6 +63,7 @@
     <Compile Include="Helpers/Extensions/HttpClientRetryExtensions.cs" />
     <Compile Include="Helpers/Messages/CourseMessage.cs" />
     <Compile Include="Services/iLearnApiService.cs" />
+    <Compile Include="Services/LoginResponseClassifier.cs" />
     <Compile Include="Services/FileNameService.cs" />
     <Compile Include="Models/AppConfig.cs" />
     <Compile Include="Models/ClassInfo.cs" />

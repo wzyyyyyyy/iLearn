@@ -75,7 +75,7 @@ namespace iLearn.Services
 
         // ── Step 1: 提交账号密码 ──
 
-        public async Task<LoginStepResult> LoginStep1Async(string username, string password)
+        public virtual async Task<LoginStepResult> LoginStep1Async(string username, string password)
         {
             if (Logined) return LoginStepResult.Success;
 
@@ -88,8 +88,8 @@ namespace iLearn.Services
             var casDoc = new HtmlDocument();
             casDoc.LoadHtml(await casPageResp.Content.ReadAsStringAsync());
 
-            var lt = casDoc.DocumentNode.SelectSingleNode("//input[@name='lt']")?.GetAttributeValue("value", string.Empty);
-            var execution = casDoc.DocumentNode.SelectSingleNode("//input[@name='execution']")?.GetAttributeValue("value", string.Empty);
+            var lt = GetAttributeValueOrNull(casDoc.DocumentNode.SelectSingleNode("//input[@name='lt']"), "value");
+            var execution = GetAttributeValueOrNull(casDoc.DocumentNode.SelectSingleNode("//input[@name='execution']"), "value");
 
             if (string.IsNullOrEmpty(lt) || string.IsNullOrEmpty(execution))
                 return LoginStepResult.Failed;
@@ -106,47 +106,35 @@ namespace iLearn.Services
                 new KeyValuePair<string, string>("_eventId", "submit")
             });
 
-            var loginResp = await _noRedirectClient.PostAsync(
+            var loginResp = await _httpClient.PostAsync(
                 $"{CAS_BASE}/login?service={Uri.EscapeDataString(CAS_SERVICE)}", form);
-
-            if (loginResp.StatusCode == HttpStatusCode.Found)
-            {
-                var redirectUrl = loginResp.Headers.Location?.ToString();
-                if (string.IsNullOrEmpty(redirectUrl))
-                    return LoginStepResult.Failed;
-
-                return await FollowJwcAndCompleteLoginAsync(redirectUrl)
-                    ? LoginStepResult.Success
-                    : LoginStepResult.Failed;
-            }
 
             var responseHtml = await loginResp.Content.ReadAsStringAsync();
 
-            if (responseHtml.Contains("用户名或密码错误") || responseHtml.Contains("账号或密码错误"))
-                return LoginStepResult.WrongPassword;
+            var loginResult = LoginResponseClassifier.Classify(responseHtml);
+            if (loginResult == LoginStepResult.Success)
+                return await CompleteLoginFromJwcRelayPageAsync(responseHtml)
+                    ? LoginStepResult.Success
+                    : LoginStepResult.Failed;
 
-            // 服务端返回2FA页面
+            if (loginResult != LoginStepResult.NeedWechatCode)
+                return loginResult;
+
             var recheckDoc = new HtmlDocument();
             recheckDoc.LoadHtml(responseHtml);
 
-            // 若页面没有含2FA相关元素，则视为凭据被拒绝
-            if (recheckDoc.DocumentNode.SelectSingleNode("//input[@name='WxCode']") == null &&
-                recheckDoc.DocumentNode.SelectSingleNode("//*[contains(@class,'recheck')]") == null &&
-                !responseHtml.Contains("微信") && !responseHtml.Contains("二次"))
-                return LoginStepResult.WrongPassword;
-
             _pendingUsername = username;
             _pendingPassword = password;
-            _pendingLt = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='lt']")?.GetAttributeValue("value", string.Empty) ?? lt;
-            _pendingExecution = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='execution']")?.GetAttributeValue("value", string.Empty) ?? "e1s2";
-            _pendingEventId = recheckDoc.DocumentNode.SelectSingleNode("//input[@name='_eventId']")?.GetAttributeValue("value", string.Empty) ?? "submit";
+            _pendingLt = GetAttributeValueOrNull(recheckDoc.DocumentNode.SelectSingleNode("//input[@name='lt']"), "value") ?? lt;
+            _pendingExecution = GetAttributeValueOrNull(recheckDoc.DocumentNode.SelectSingleNode("//input[@name='execution']"), "value") ?? "e1s2";
+            _pendingEventId = GetAttributeValueOrNull(recheckDoc.DocumentNode.SelectSingleNode("//input[@name='_eventId']"), "value") ?? "submit";
 
             return LoginStepResult.NeedWechatCode;
         }
 
         // ── 获取图形验证码 ──
 
-        public async Task<byte[]> GetCasCaptchaBytesAsync()
+        public virtual async Task<byte[]> GetCasCaptchaBytesAsync()
         {
             var resp = await _httpClient.GetAsync(
                 $"{CAS_BASE}/code?{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}");
@@ -165,7 +153,7 @@ namespace iLearn.Services
             Failed
         }
 
-        public async Task<WechatCodeRequestResult> RequestWechatCodeAsync(string imageCaptcha)
+        public virtual async Task<WechatCodeRequestResult> RequestWechatCodeAsync(string imageCaptcha)
         {
             var time = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             _cookieContainer.Add(
@@ -196,7 +184,7 @@ namespace iLearn.Services
 
         // ── Step 2: 提交验证码完成二次认证 ──
 
-        public async Task<LoginStepResult> LoginStep2Async(string imageCaptcha, string wechatCode)
+        public virtual async Task<LoginStepResult> LoginStep2Async(string imageCaptcha, string wechatCode)
         {
             if (_pendingLt == null || _pendingUsername == null || _pendingPassword == null)
                 return LoginStepResult.Failed;
@@ -248,8 +236,13 @@ namespace iLearn.Services
             var jwcResp = await _httpClient.GetWithRetryAsync(redirectUrl);
             jwcResp.EnsureSuccessStatusCode();
 
+            return await CompleteLoginFromJwcRelayPageAsync(await jwcResp.Content.ReadAsStringAsync());
+        }
+
+        private async Task<bool> CompleteLoginFromJwcRelayPageAsync(string html)
+        {
             var jwcDoc = new HtmlDocument();
-            jwcDoc.LoadHtml(await jwcResp.Content.ReadAsStringAsync());
+            jwcDoc.LoadHtml(html);
 
             var casUsername = jwcDoc.DocumentNode.SelectSingleNode("//input[@id='username']")?.GetAttributeValue("value", string.Empty);
             var casPassword = jwcDoc.DocumentNode.SelectSingleNode("//input[@id='password']")?.GetAttributeValue("value", string.Empty);
@@ -326,6 +319,11 @@ namespace iLearn.Services
             _pendingEventId = null;
             _pendingUsername = null;
             _pendingPassword = null;
+        }
+
+        private static string? GetAttributeValueOrNull(HtmlNode? node, string attributeName)
+        {
+            return node?.Attributes[attributeName]?.Value;
         }
 
         // ── API methods ──
