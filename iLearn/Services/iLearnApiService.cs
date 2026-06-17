@@ -106,23 +106,17 @@ namespace iLearn.Services
                 new KeyValuePair<string, string>("_eventId", "submit")
             });
 
-            var loginResp = await _noRedirectClient.PostAsync(
+            var loginResp = await _httpClient.PostAsync(
                 $"{CAS_BASE}/login?service={Uri.EscapeDataString(CAS_SERVICE)}", form);
-
-            if (loginResp.StatusCode == HttpStatusCode.Found)
-            {
-                var redirectUrl = loginResp.Headers.Location?.ToString();
-                if (string.IsNullOrEmpty(redirectUrl))
-                    return LoginStepResult.Failed;
-
-                return await FollowJwcAndCompleteLoginAsync(redirectUrl)
-                    ? LoginStepResult.Success
-                    : LoginStepResult.Failed;
-            }
 
             var responseHtml = await loginResp.Content.ReadAsStringAsync();
 
             var loginResult = LoginResponseClassifier.Classify(responseHtml);
+            if (loginResult == LoginStepResult.Success)
+                return await CompleteLoginFromJwcRelayPageAsync(responseHtml)
+                    ? LoginStepResult.Success
+                    : LoginStepResult.Failed;
+
             if (loginResult != LoginStepResult.NeedWechatCode)
                 return loginResult;
 
@@ -242,8 +236,13 @@ namespace iLearn.Services
             var jwcResp = await _httpClient.GetWithRetryAsync(redirectUrl);
             jwcResp.EnsureSuccessStatusCode();
 
+            return await CompleteLoginFromJwcRelayPageAsync(await jwcResp.Content.ReadAsStringAsync());
+        }
+
+        private async Task<bool> CompleteLoginFromJwcRelayPageAsync(string html)
+        {
             var jwcDoc = new HtmlDocument();
-            jwcDoc.LoadHtml(await jwcResp.Content.ReadAsStringAsync());
+            jwcDoc.LoadHtml(html);
 
             var casUsername = jwcDoc.DocumentNode.SelectSingleNode("//input[@id='username']")?.GetAttributeValue("value", string.Empty);
             var casPassword = jwcDoc.DocumentNode.SelectSingleNode("//input[@id='password']")?.GetAttributeValue("value", string.Empty);

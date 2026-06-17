@@ -12,6 +12,9 @@ public static class LoginResponseClassifier
         var document = new HtmlDocument();
         document.LoadHtml(html);
 
+        if (HasJwcRelayCredentials(document))
+            return LoginStepResult.Success;
+
         var hasWechatCodeInput = document.DocumentNode.SelectSingleNode("//input[@name='WxCode']") is not null;
         var hasRecheckForm = document.DocumentNode.SelectSingleNode("//form[contains(@class,'recheck') or contains(@action,'recheck')]") is not null;
         var hasRecheckCodeEndpoint = html.Contains("recheckcode", StringComparison.OrdinalIgnoreCase);
@@ -29,5 +32,12 @@ public static class LoginResponseClassifier
             || html.Contains("账号或密码有误", StringComparison.OrdinalIgnoreCase)
             || html.Contains("密码错误", StringComparison.OrdinalIgnoreCase)
             || html.Contains("密码有误", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasJwcRelayCredentials(HtmlDocument document)
+    {
+        var username = document.DocumentNode.SelectSingleNode("//input[@id='username']")?.GetAttributeValue("value", string.Empty);
+        var password = document.DocumentNode.SelectSingleNode("//input[@id='password']")?.GetAttributeValue("value", string.Empty);
+        return !string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password);
     }
 }

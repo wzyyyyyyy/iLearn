@@ -40,4 +40,21 @@ public sealed class LoginResponseClassifierTests
 
         Assert.Equal(LoginStepResult.NeedWechatCode, result);
     }
+
+    [Fact]
+    public void Classify_ReturnsSuccess_WhenJwcRelayCredentialsExist()
+    {
+        var html = """
+        <html>
+          <body>
+            <input id="username" value="relay-user" />
+            <input id="password" value="relay-password" />
+          </body>
+        </html>
+        """;
+
+        var result = LoginResponseClassifier.Classify(html);
+
+        Assert.Equal(LoginStepResult.Success, result);
+    }
 }
