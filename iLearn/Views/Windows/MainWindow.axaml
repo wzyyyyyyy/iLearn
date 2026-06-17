@@ -10,14 +10,14 @@
     MinWidth="980"
     MinHeight="640"
     Title="iLearn">
-  <Grid ColumnDefinitions="236,*" Background="#F6F8FB">
-    <Border Grid.Column="0" Background="#111827" Padding="18">
+  <Grid ColumnDefinitions="236,*" Background="#F7F8F5">
+    <Border Grid.Column="0" Background="#18231F" Padding="18">
       <DockPanel>
         <TextBlock DockPanel.Dock="Top"
                    Text="iLearn"
                    FontSize="28"
                    FontWeight="Bold"
-                   Foreground="White"
+                   Foreground="#F7FAF7"
                    Margin="0,8,0,22" />
         <ItemsControl ItemsSource="{Binding Items}">
           <ItemsControl.ItemTemplate>
@@ -28,6 +28,8 @@
                       HorizontalContentAlignment="Left"
                       Margin="0,0,0,8"
                       Padding="14,10"
+                      Background="Transparent"
+                      Foreground="#BFE7D4"
                       Content="{Binding Title}" />
             </DataTemplate>
           </ItemsControl.ItemTemplate>
@@ -35,26 +37,36 @@
       </DockPanel>
     </Border>
 
-    <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto">
-      <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="28,18">
-        <TextBlock Text="{Binding CurrentRouteTitle}" FontSize="24" FontWeight="SemiBold" Foreground="#111827" />
+    <Grid Grid.Column="1" RowDefinitions="Auto,*">
+      <Border Background="#FEFFFC" BorderBrush="#E3E7DE" BorderThickness="0,0,0,1" Padding="28,18">
+        <TextBlock Text="{Binding CurrentRouteTitle}" FontSize="24" FontWeight="SemiBold" Foreground="#1D2824" />
       </Border>
 
       <ContentControl Name="PageHost" Grid.Row="1" Margin="28" />
 
-      <ItemsControl Grid.Row="2" ItemsSource="{Binding Notifications.Items}" Margin="28,0,28,18">
+      <ItemsControl Grid.Row="1"
+                    ItemsSource="{Binding Notifications.Items}"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Margin="28"
+                    Width="420"
+                    ZIndex="20">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Border Background="#FFFFFF"
-                    BorderBrush="#E5E7EB"
+            <Border Background="{Binding BackgroundBrush}"
+                    BorderBrush="{Binding BorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="6"
-                    Padding="12"
-                    Margin="0,0,0,8">
-              <StackPanel>
-                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding Message}" Foreground="#64748B" TextWrapping="Wrap" />
-              </StackPanel>
+                    CornerRadius="8"
+                    Padding="14"
+                    Margin="0,0,0,10"
+                    BoxShadow="0 12 30 0 #26000000">
+              <Grid ColumnDefinitions="4,*" ColumnSpacing="12">
+                <Border Background="{Binding AccentBrush}" CornerRadius="2" />
+                <StackPanel Grid.Column="1" Spacing="3">
+                  <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#17211D" />
+                  <TextBlock Text="{Binding Message}" Foreground="#52645E" TextWrapping="Wrap" />
+                </StackPanel>
+              </Grid>
             </Border>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
