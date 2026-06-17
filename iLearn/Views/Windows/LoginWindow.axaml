@@ -10,21 +10,21 @@
     MinWidth="760"
     MinHeight="560"
     Title="iLearn">
-  <Grid ColumnDefinitions="1.05*,0.95*" Background="#F5F7FB">
-    <Border Grid.Column="0" Padding="48" Background="#111827">
+  <Grid ColumnDefinitions="1.05*,0.95*" Background="#F7F8F5">
+    <Border Grid.Column="0" Padding="48" Background="#18231F">
       <StackPanel VerticalAlignment="Center" Spacing="18">
-        <TextBlock Text="iLearn" FontSize="42" FontWeight="Bold" Foreground="White" />
-        <TextBlock Text="学在吉大桌面客户端" FontSize="20" Foreground="#CBD5E1" />
+        <TextBlock Text="iLearn" FontSize="42" FontWeight="Bold" Foreground="#F7FAF7" />
+        <TextBlock Text="学在吉大桌面客户端" FontSize="20" Foreground="#BFE7D4" />
         <TextBlock Text="课程、视频、下载和本地学习都在一个更顺手的客户端里。"
                    TextWrapping="Wrap"
-                   Foreground="#94A3B8"
+                   Foreground="#8EA99B"
                    FontSize="15" />
       </StackPanel>
     </Border>
 
-    <Border Grid.Column="1" Padding="42" Background="White">
+    <Border Grid.Column="1" Padding="42" Background="#FEFFFC">
       <StackPanel VerticalAlignment="Center" Spacing="14">
-        <TextBlock Text="登录" FontSize="28" FontWeight="SemiBold" Foreground="#111827" />
+        <TextBlock Text="登录" FontSize="28" FontWeight="SemiBold" Foreground="#1D2824" />
         <TextBox Watermark="学号 / 用户名" Text="{Binding UserName}" />
         <TextBox Watermark="密码" Text="{Binding UserPassword}" PasswordChar="*" />
 
@@ -40,7 +40,7 @@
 
         <StackPanel Spacing="10" IsVisible="{Binding IsWechatVerifyStep}">
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-            <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Height="46">
+            <Border BorderBrush="#C9D8CE" BorderThickness="1" CornerRadius="4" Height="46">
               <Image Source="{Binding CaptchaImage}" Stretch="Uniform" />
             </Border>
             <Button Grid.Column="1"
@@ -63,7 +63,7 @@
                 IsVisible="{Binding IsWechatVerifyStep}" />
 
         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsAuthenticationInProgress}" />
-        <TextBlock Text="{Binding StatusText}" Foreground="#64748B" TextWrapping="Wrap" MinHeight="22" />
+        <TextBlock Text="{Binding StatusText}" Foreground="#52645E" TextWrapping="Wrap" MinHeight="22" />
       </StackPanel>
     </Border>
   </Grid>
