@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace iLearn.Models
+﻿namespace iLearn.Models
 {
     //你吉为啥整这么多结构不同的VideoInfo
     public class VideoInfo
@@ -34,14 +32,7 @@ namespace iLearn.Models
 
         public static VideoInfo Parse(string json)
         {
-            using var doc = JsonDocument.Parse(json);
-            var dataListElement = doc.RootElement
-                .GetProperty("data");
-
-            return JsonSerializer.Deserialize<VideoInfo>(dataListElement.GetRawText(), new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            }) ?? new VideoInfo();
+            return JsonApiResponse.DeserializeDataObject<VideoInfo>(json, "课程服务未返回视频详情");
         }
     }
 

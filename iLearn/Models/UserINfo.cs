@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace iLearn.Models
+﻿namespace iLearn.Models
 {
     public class UserInfo
     {
@@ -15,17 +13,7 @@ namespace iLearn.Models
 
         public static UserInfo Parse(string json)
         {
-            using var doc = JsonDocument.Parse(json);
-
-            var dataElement = doc.RootElement
-                .GetProperty("data");
-
-            var userInfo = JsonSerializer.Deserialize<UserInfo>(dataElement.GetRawText(), new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            return userInfo ?? new UserInfo();
+            return JsonApiResponse.DeserializeDataObject<UserInfo>(json, "课程服务未返回用户信息");
         }
     }
 }

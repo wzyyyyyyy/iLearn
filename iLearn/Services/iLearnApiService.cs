@@ -36,6 +36,7 @@ namespace iLearn.Services
         private const string ILEARN_CAS = "https://ilearn.jlu.edu.cn/cas-server";
         private const string ILEARN_IPLAT = "https://ilearn.jlu.edu.cn/iplat";
         private const string ILEARNTEC = "https://ilearntec.jlu.edu.cn";
+        private const string ILEARNTEC_SERVICE = $"{ILEARNTEC}/";
 
         private void Init()
         {
@@ -256,7 +257,7 @@ namespace iLearn.Services
         private async Task<bool> CompleteILearnLoginAsync(string username, string password)
         {
             var ts0 = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            var getNonceUrl = $"{ILEARN_CAS}/login?service={Uri.EscapeDataString($"{ILEARNTEC}/courselibrary-web/index?isLocation=1")}&get-lt=true&callback=jsonpcallback&n={ts0 + 1}&_={ts0}";
+            var getNonceUrl = $"{ILEARN_CAS}/login?service={Uri.EscapeDataString(ILEARNTEC_SERVICE)}&get-lt=true&callback=jsonpcallback&n={ts0 + 1}&_={ts0}";
 
             var nonceResp = await _httpClient.GetWithRetryAsync(getNonceUrl);
             nonceResp.EnsureSuccessStatusCode();
@@ -272,7 +273,7 @@ namespace iLearn.Services
             var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
             var loginUrl = $"{ILEARN_CAS}/login?" +
-                $"service={Uri.EscapeDataString($"{ILEARNTEC}/courselibrary-web/index?isLocation=1")}&" +
+                $"service={Uri.EscapeDataString(ILEARNTEC_SERVICE)}&" +
                 $"username={Uri.EscapeDataString(username)}&" +
                 $"password={Uri.EscapeDataString(passwordBase64)}&" +
                 $"isajax=true&isframe=true&_eventId=submit&" +
@@ -291,18 +292,16 @@ namespace iLearn.Services
                 loginStatus.GetString() == "fails")
                 return false;
 
-            // 用服务票据完成 ilearntec 的 session 建立
-            if (loginDoc.RootElement.TryGetProperty("service", out var serviceEl))
-            {
-                var serviceUrl = serviceEl.GetString();
-                if (!string.IsNullOrEmpty(serviceUrl))
-                    _ = await _httpClient.GetWithRetryAsync(serviceUrl);
-            }
+            if (!loginDoc.RootElement.TryGetProperty("ticket", out var ticketEl))
+                return false;
 
-            _ = await _httpClient.GetWithRetryAsync($"{ILEARN_IPLAT}/ssoservice");
-            _ = await _httpClient.GetWithRetryAsync($"{ILEARNTEC}/courselibrary-web/index?isLocation=1");
+            var ticket = ticketEl.GetString();
+            if (string.IsNullOrEmpty(ticket))
+                return false;
 
-            // 为 studycenter 子系统单独申请服务票据（TGT 已建立，自动跟随重定向完成 ticket 验证）
+            var ssoUrl = $"{ILEARN_IPLAT}/ssoservice?ssoservice={Uri.EscapeDataString(ILEARNTEC_SERVICE)}&ticket={Uri.EscapeDataString(ticket)}";
+            _ = await _httpClient.GetWithRetryAsync(ssoUrl);
+            _ = await _httpClient.GetWithRetryAsync($"{ILEARNTEC}/coursecenter/main/index");
             _ = await _httpClient.GetWithRetryAsync(
                 $"{ILEARN_CAS}/login?service={Uri.EscapeDataString($"{ILEARNTEC}/studycenter/platform/main/index")}");
 

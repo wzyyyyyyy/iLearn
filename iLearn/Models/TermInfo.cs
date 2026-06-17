@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace iLearn.Models
+﻿namespace iLearn.Models
 {
     public class TermInfo
     {
@@ -21,15 +19,7 @@ namespace iLearn.Models
 
         public static List<TermInfo> Parse(string json)
         {
-            using var doc = JsonDocument.Parse(json);
-            var dataListElement = doc.RootElement
-                .GetProperty("data")
-                .GetProperty("dataList");
-
-            return JsonSerializer.Deserialize<List<TermInfo>>(dataListElement.GetRawText(), new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            }) ?? new List<TermInfo>();
+            return JsonApiResponse.DeserializeDataList<TermInfo>(json, "课程服务未返回学期数据");
         }
     }
 }

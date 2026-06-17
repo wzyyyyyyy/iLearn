@@ -67,6 +67,7 @@
     <Compile Include="Services/FileNameService.cs" />
     <Compile Include="Models/AppConfig.cs" />
     <Compile Include="Models/ClassInfo.cs" />
+    <Compile Include="Models/JsonApiResponse.cs" />
     <Compile Include="Models/LiveAndRecordInfo.cs" />
     <Compile Include="Models/LocalVideoFile.cs" />
     <Compile Include="Models/TermInfo.cs" />

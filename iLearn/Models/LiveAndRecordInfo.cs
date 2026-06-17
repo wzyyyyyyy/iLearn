@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace iLearn.Models
+﻿namespace iLearn.Models
 {
     public partial class LiveAndRecordInfo : ObservableObject
     {
@@ -45,15 +43,7 @@ namespace iLearn.Models
 
         public static List<LiveAndRecordInfo> Parse(string json)
         {
-            using var doc = JsonDocument.Parse(json);
-            var dataListElement = doc.RootElement
-                .GetProperty("data")
-                .GetProperty("dataList");
-
-            return JsonSerializer.Deserialize<List<LiveAndRecordInfo>>(dataListElement.GetRawText(), new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            }) ?? new List<LiveAndRecordInfo>();
+            return JsonApiResponse.DeserializeDataList<LiveAndRecordInfo>(json, "课程服务未返回视频数据");
         }
     }
 
