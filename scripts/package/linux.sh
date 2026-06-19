@@ -3,6 +3,10 @@ set -euo pipefail
 
 RID="${1:-linux-x64}"
 VERSION="${VERSION:-$(git describe --tags --always --dirty 2>/dev/null || echo local)}"
+DEB_VERSION="${VERSION#v}"
+if [[ ! "$DEB_VERSION" =~ ^[0-9] ]]; then
+  DEB_VERSION="0.0.0+${DEB_VERSION//[^A-Za-z0-9.+:~-]/.}"
+fi
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PUBLISH_DIR="$ROOT/artifacts/publish/$RID"
 PACKAGE_ROOT="$ROOT/artifacts/package"
@@ -34,7 +38,7 @@ if command -v dpkg-deb >/dev/null 2>&1; then
   ln -s /opt/iLearn/iLearn "$DEB_ROOT/usr/bin/ilearn"
   cat > "$DEB_ROOT/DEBIAN/control" <<CONTROL
 Package: ilearn
-Version: $VERSION
+Version: $DEB_VERSION
 Section: education
 Priority: optional
 Architecture: amd64
