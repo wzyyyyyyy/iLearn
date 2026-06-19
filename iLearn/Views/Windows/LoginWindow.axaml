@@ -31,74 +31,94 @@
                    HorizontalAlignment="Center" />
       </StackPanel>
 
-      <Border Grid.Row="1"
-              Margin="32,0,32,20"
-              Background="{StaticResource SurfaceBrush}"
-              BorderBrush="{StaticResource BorderBrushSoft}"
-              BorderThickness="1"
-              CornerRadius="9"
-              Padding="28,28,28,22"
-              BoxShadow="0 12 28 0 #1713202A">
-      <StackPanel Spacing="14">
-        <TextBox Watermark="请输入用户名" Text="{Binding UserName}" />
-        <TextBox Watermark="请输入密码" Text="{Binding UserPassword}" PasswordChar="*" />
-
-        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-          <CheckBox Content="记住我"
-                    IsChecked="{Binding IsRememberMeEnabled}"
-                    Command="{Binding SaveLoginOptionsCommand}" />
-          <CheckBox Grid.Column="1"
-                    Content="自动登录"
-                    IsChecked="{Binding IsAutoLoginEnabled}"
-                    Command="{Binding SaveLoginOptionsCommand}" />
-        </Grid>
-
-        <Border Background="{StaticResource SurfaceRaisedBrush}"
+      <Grid Grid.Row="1" Margin="32,0,32,20">
+        <Border Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource BorderBrushSoft}"
                 BorderThickness="1"
-                CornerRadius="8"
-                Padding="12"
-                IsVisible="{Binding IsWechatVerifyStep}">
-          <StackPanel Spacing="10">
-          <TextBlock Text="微信二次认证" FontWeight="SemiBold" FontSize="13" />
-          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-            <Border BorderBrush="{StaticResource BorderBrushStrong}" BorderThickness="1" CornerRadius="7" Height="46" Background="{StaticResource SurfaceBrush}">
-              <Image Source="{Binding CaptchaImage}" Stretch="Uniform" />
-            </Border>
-            <Button Grid.Column="1"
-                    Content="刷新"
-                    Command="{Binding RefreshCasCaptchaCommand}" />
-          </Grid>
-          <TextBox Watermark="图形验证码" Text="{Binding ImageCaptchaCode}" />
-          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-            <TextBox Watermark="微信验证码" Text="{Binding WechatCode}" />
-            <Button Grid.Column="1"
-                    Content="{Binding SendWechatButtonText}"
-                    Command="{Binding SendWechatCodeCommand}" />
-          </Grid>
+                CornerRadius="9"
+                Padding="28,28,28,22"
+                BoxShadow="0 8 14 0 #17132018"
+                IsVisible="{Binding IsPasswordStep}">
+          <StackPanel Spacing="14">
+            <TextBox Watermark="请输入用户名" Text="{Binding UserName}" />
+            <TextBox Watermark="请输入密码" Text="{Binding UserPassword}" PasswordChar="*" />
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+              <CheckBox Content="记住我"
+                        IsChecked="{Binding IsRememberMeEnabled}"
+                        Command="{Binding SaveLoginOptionsCommand}" />
+              <CheckBox Grid.Column="1"
+                        Content="自动登录"
+                        IsChecked="{Binding IsAutoLoginEnabled}"
+                        Command="{Binding SaveLoginOptionsCommand}" />
+            </Grid>
+
+            <Button Content="{Binding SubmitButtonText}"
+                    Classes="primary"
+                    Height="42"
+                    Command="{Binding SubmitCommand}" />
+
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsAuthenticationInProgress}" />
+            <TextBlock Text="{Binding StatusText}" Classes="muted" TextWrapping="Wrap" MinHeight="22" />
+
+            <Border Height="1" Background="{StaticResource BorderBrushSoft}" Margin="0,4,0,0" />
+            <Button Content="跳转官网"
+                    Classes="quiet"
+                    HorizontalAlignment="Center"
+                    Command="{Binding OpenOfficialSiteCommand}" />
           </StackPanel>
         </Border>
 
-        <Button Content="{Binding SubmitButtonText}"
-                Classes="primary"
-                Height="42"
-                Command="{Binding SubmitCommand}" />
-        <Button Content="返回账号密码登录"
-                Classes="quiet"
-                Height="36"
-                Command="{Binding BackToPasswordCommand}"
-                IsVisible="{Binding IsWechatVerifyStep}" />
+        <Border Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrushSoft}"
+                BorderThickness="1"
+                CornerRadius="9"
+                Padding="28,24,28,22"
+                BoxShadow="0 8 14 0 #17132018"
+                IsVisible="{Binding IsWechatVerifyStep}">
+          <StackPanel Spacing="13">
+            <StackPanel Spacing="4">
+              <TextBlock Text="微信二次认证" FontSize="18" FontWeight="SemiBold" />
+              <TextBlock Text="请先填写图形验证码，再获取智慧吉大小程序验证码。"
+                         Classes="muted"
+                         TextWrapping="Wrap" />
+            </StackPanel>
 
-        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsAuthenticationInProgress}" />
-        <TextBlock Text="{Binding StatusText}" Classes="muted" TextWrapping="Wrap" MinHeight="22" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <Border BorderBrush="{StaticResource BorderBrushStrong}"
+                      BorderThickness="1"
+                      CornerRadius="7"
+                      Height="48"
+                      Background="{StaticResource SurfaceRaisedBrush}">
+                <Image Source="{Binding CaptchaImage}" Stretch="Uniform" />
+              </Border>
+              <Button Grid.Column="1"
+                      Content="刷新"
+                      Command="{Binding RefreshCasCaptchaCommand}" />
+            </Grid>
 
-        <Border Height="1" Background="{StaticResource BorderBrushSoft}" Margin="0,4,0,0" />
-        <Button Content="跳转官网"
-                Classes="quiet"
-                HorizontalAlignment="Center"
-                Command="{Binding OpenOfficialSiteCommand}" />
-      </StackPanel>
-      </Border>
+            <TextBox Watermark="图形验证码" Text="{Binding ImageCaptchaCode}" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <TextBox Watermark="微信验证码" Text="{Binding WechatCode}" />
+              <Button Grid.Column="1"
+                      Content="{Binding SendWechatButtonText}"
+                      Command="{Binding SendWechatCodeCommand}" />
+            </Grid>
+
+            <Button Content="{Binding SubmitButtonText}"
+                    Classes="primary"
+                    Height="42"
+                    Command="{Binding SubmitCommand}" />
+            <Button Content="返回账号密码登录"
+                    Classes="quiet"
+                    Height="36"
+                    Command="{Binding BackToPasswordCommand}" />
+
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsAuthenticationInProgress}" />
+            <TextBlock Text="{Binding StatusText}" Classes="muted" TextWrapping="Wrap" MinHeight="22" />
+          </StackPanel>
+        </Border>
+      </Grid>
     </Grid>
 
     <Border IsVisible="{Binding IsAuthenticationInProgress}"

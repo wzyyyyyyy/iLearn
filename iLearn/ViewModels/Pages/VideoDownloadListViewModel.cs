@@ -1,4 +1,6 @@
 using iLearn.Downloads;
+using CommunityToolkit.Mvvm.Messaging;
+using iLearn.Helpers.Messages;
 using iLearn.Models;
 using iLearn.Notifications;
 using iLearn.Services;
@@ -14,9 +16,10 @@ public partial class VideoDownloadListViewModel : ObservableObject
     private readonly INotificationService _notifications;
     private readonly AppConfig _appConfig;
     private bool _isUpdatingAllSelected;
+    private int _loadVersion;
 
     [ObservableProperty]
-    private ObservableCollection<LiveAndRecordInfo> _videos;
+    private ObservableCollection<LiveAndRecordInfo> _videos = [];
 
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -33,6 +36,15 @@ public partial class VideoDownloadListViewModel : ObservableObject
     [ObservableProperty]
     private bool _isPreparingDownloads;
 
+    [ObservableProperty]
+    private bool _isLoadingVideos;
+
+    [ObservableProperty]
+    private string _videoStatusText = "请先在“我的课程”中选择课程";
+
+    [ObservableProperty]
+    private ClassInfo? _currentCourse;
+
     public VideoDownloadListViewModel(
         List<LiveAndRecordInfo> liveAndRecordInfos,
         DownloadQueueService downloadQueue,
@@ -45,12 +57,11 @@ public partial class VideoDownloadListViewModel : ObservableObject
         _notifications = notifications;
         _appConfig = appConfig;
 
-        Videos = new ObservableCollection<LiveAndRecordInfo>(liveAndRecordInfos ?? []);
-
-        foreach (var video in Videos)
-            video.PropertyChanged += OnVideoPropertyChanged;
-
-        RefreshSelectedDownloadCount();
+        ReplaceVideos(liveAndRecordInfos ?? []);
+        WeakReferenceMessenger.Default.Register<CourseMessage>(this, (_, message) =>
+        {
+            _ = LoadCourseAsync(message.classInfo);
+        });
     }
 
     public string SelectedDownloadText => SelectedDownloadCount == 0
@@ -58,6 +69,14 @@ public partial class VideoDownloadListViewModel : ObservableObject
         : $"已选择 {SelectedDownloadCount} 个文件";
 
     public string DownloadButtonText => IsPreparingDownloads ? "正在准备..." : "加入下载队列";
+
+    public string DownloadHeaderText => Videos.Count == 0
+        ? VideoStatusText
+        : $"{VideoStatusText} · {SelectedDownloadText}";
+
+    public bool HasVideos => Videos.Count > 0;
+
+    public bool IsVideoListEmpty => Videos.Count == 0 && !IsLoadingVideos;
 
     public ObservableCollection<LiveAndRecordInfo> FilteredVideos =>
         string.IsNullOrWhiteSpace(SearchText)
@@ -77,6 +96,12 @@ public partial class VideoDownloadListViewModel : ObservableObject
         OnPropertyChanged(nameof(DownloadButtonText));
     }
 
+    partial void OnIsLoadingVideosChanged(bool value)
+    {
+        OnPropertyChanged(nameof(DownloadHeaderText));
+        OnPropertyChanged(nameof(IsVideoListEmpty));
+    }
+
     partial void OnIsAllHdmiSelectedChanged(bool value)
     {
         SetAllSelections(nameof(LiveAndRecordInfo.IsHdmiSelected), value);
@@ -90,6 +115,48 @@ public partial class VideoDownloadListViewModel : ObservableObject
     partial void OnSelectedDownloadCountChanged(int value)
     {
         OnPropertyChanged(nameof(SelectedDownloadText));
+        OnPropertyChanged(nameof(DownloadHeaderText));
+    }
+
+    partial void OnVideoStatusTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(DownloadHeaderText));
+    }
+
+    public async Task LoadCourseAsync(ClassInfo course)
+    {
+        var loadVersion = ++_loadVersion;
+        CurrentCourse = course;
+        IsLoadingVideos = true;
+        VideoStatusText = string.IsNullOrWhiteSpace(course.CourseName)
+            ? "正在加载课程视频..."
+            : $"正在加载“{course.CourseName}”的视频...";
+
+        try
+        {
+            var videos = await _iLearnApiService.GetLiveAndRecordInfoAsync(course.TermId ?? string.Empty, course.ClassId);
+            if (loadVersion != _loadVersion)
+                return;
+
+            ReplaceVideos(videos);
+            VideoStatusText = videos.Count == 0
+                ? "当前课程暂无可下载视频"
+                : $"共 {videos.Count} 个视频";
+        }
+        catch (Exception ex)
+        {
+            if (loadVersion != _loadVersion)
+                return;
+
+            ReplaceVideos([]);
+            VideoStatusText = "视频加载失败";
+            _notifications.Show("课程视频加载失败", ex.Message, AppNotificationKind.Error);
+        }
+        finally
+        {
+            if (loadVersion == _loadVersion)
+                IsLoadingVideos = false;
+        }
     }
 
     [RelayCommand]
@@ -258,6 +325,37 @@ public partial class VideoDownloadListViewModel : ObservableObject
     private void RefreshSelectedDownloadCount()
     {
         SelectedDownloadCount = Videos.Count(video => video.IsHdmiSelected) + Videos.Count(video => video.IsTeacherSelected);
+    }
+
+    private void ReplaceVideos(IEnumerable<LiveAndRecordInfo> videos)
+    {
+        foreach (var video in Videos)
+            video.PropertyChanged -= OnVideoPropertyChanged;
+
+        Videos = new ObservableCollection<LiveAndRecordInfo>(videos);
+
+        foreach (var video in Videos)
+            video.PropertyChanged += OnVideoPropertyChanged;
+
+        _isUpdatingAllSelected = true;
+        try
+        {
+            IsAllHdmiSelected = false;
+            IsAllTeacherSelected = false;
+        }
+        finally
+        {
+            _isUpdatingAllSelected = false;
+        }
+
+        if (Videos.Count == 0 && CurrentCourse is null)
+            VideoStatusText = "请先在“我的课程”中选择课程";
+
+        RefreshSelectedDownloadCount();
+        OnPropertyChanged(nameof(FilteredVideos));
+        OnPropertyChanged(nameof(DownloadHeaderText));
+        OnPropertyChanged(nameof(HasVideos));
+        OnPropertyChanged(nameof(IsVideoListEmpty));
     }
 
     private static bool Contains(string? value, string searchText)

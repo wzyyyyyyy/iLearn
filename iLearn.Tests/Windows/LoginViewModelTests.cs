@@ -25,6 +25,7 @@ public sealed class LoginViewModelTests
         Assert.Equal(0, api.Step2Calls);
         Assert.Equal(LoginStep.Password, viewModel.CurrentStep);
         Assert.Equal("验证并登录", viewModel.SubmitButtonText);
+        Assert.True(viewModel.IsPasswordStep);
     }
 
     [Fact]
@@ -62,6 +63,7 @@ public sealed class LoginViewModelTests
         Assert.Equal(LoginStep.WechatVerify, viewModel.CurrentStep);
         Assert.Equal("提交微信验证码", viewModel.SubmitButtonText);
         Assert.True(viewModel.IsWechatVerifyStep);
+        Assert.False(viewModel.IsPasswordStep);
     }
 
     private static LoginViewModel CreateViewModel(FakeILearnApiService api)

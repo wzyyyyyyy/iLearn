@@ -14,7 +14,7 @@
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
         <StackPanel Spacing="2">
           <TextBlock Text="课程下载" Classes="section-title" />
-          <TextBlock Text="{Binding SelectedDownloadText}" Classes="muted" />
+          <TextBlock Text="{Binding DownloadHeaderText}" Classes="muted" />
         </StackPanel>
         <Button Grid.Column="1"
                 Content="{Binding DownloadButtonText}"
@@ -24,7 +24,10 @@
       </Grid>
     </Border>
 
-    <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsPreparingDownloads}" />
+    <Grid Grid.Row="1">
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsLoadingVideos}" />
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsPreparingDownloads}" />
+    </Grid>
 
     <Border Grid.Row="2"
             Background="{StaticResource SurfaceBrush}"
@@ -32,14 +35,38 @@
             BorderThickness="1"
             CornerRadius="8"
             Padding="12">
-    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
-      <TextBox Watermark="搜索视频或教师" Text="{Binding SearchText}" />
-      <CheckBox Grid.Column="1" Content="全选 HDMI" IsChecked="{Binding IsAllHdmiSelected}" />
-      <CheckBox Grid.Column="2" Content="全选教师" IsChecked="{Binding IsAllTeacherSelected}" />
-    </Grid>
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+        <TextBox Watermark="搜索视频或教师" Text="{Binding SearchText}" />
+        <CheckBox Grid.Column="1" Content="全选 HDMI" IsChecked="{Binding IsAllHdmiSelected}" />
+        <CheckBox Grid.Column="2" Content="全选教师" IsChecked="{Binding IsAllTeacherSelected}" />
+      </Grid>
     </Border>
 
-    <ListBox Grid.Row="3" ItemsSource="{Binding FilteredVideos}">
+    <Border Grid.Row="3"
+            Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrushSoft}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="28"
+            IsVisible="{Binding IsVideoListEmpty}">
+      <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Image Source="avares://iLearn/Assets/iLearn.png"
+               Width="56"
+               Height="56"
+               Stretch="Uniform" />
+        <TextBlock Text="暂无可下载视频"
+                   FontSize="16"
+                   FontWeight="SemiBold"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="{Binding VideoStatusText}"
+                   Classes="muted"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   MaxWidth="360" />
+      </StackPanel>
+    </Border>
+
+    <ListBox Grid.Row="3" ItemsSource="{Binding FilteredVideos}" IsVisible="{Binding HasVideos}">
       <ListBox.ItemTemplate>
         <DataTemplate>
           <Border Background="{StaticResource SurfaceBrush}"
@@ -48,14 +75,14 @@
                   CornerRadius="8"
                   Padding="14"
                   Margin="0,0,0,10">
-          <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
-            <StackPanel Spacing="4">
-              <TextBlock Text="{Binding LiveRecordName}" FontWeight="SemiBold" />
-              <TextBlock Text="{Binding TeacherName}" Classes="muted" />
-            </StackPanel>
-            <CheckBox Grid.Column="1" Content="HDMI" VerticalAlignment="Center" IsChecked="{Binding IsHdmiSelected}" />
-            <CheckBox Grid.Column="2" Content="教师" VerticalAlignment="Center" IsChecked="{Binding IsTeacherSelected}" />
-          </Grid>
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+              <StackPanel Spacing="4">
+                <TextBlock Text="{Binding LiveRecordName}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding TeacherName}" Classes="muted" />
+              </StackPanel>
+              <CheckBox Grid.Column="1" Content="HDMI" VerticalAlignment="Center" IsChecked="{Binding IsHdmiSelected}" />
+              <CheckBox Grid.Column="2" Content="教师" VerticalAlignment="Center" IsChecked="{Binding IsTeacherSelected}" />
+            </Grid>
           </Border>
         </DataTemplate>
       </ListBox.ItemTemplate>
