@@ -46,7 +46,7 @@ public sealed class DownloadQueueServiceTests
     }
 
     [Fact]
-    public async Task CancelAsync_MarksQueuedTaskCancelled()
+    public async Task CancelAsync_RemovesActiveTaskFromQueue()
     {
         var engine = new BlockingDownloadEngine();
         var service = new DownloadQueueService(engine);
@@ -61,10 +61,8 @@ public sealed class DownloadQueueServiceTests
             TestContext.Current.CancellationToken);
 
         await service.CancelAsync("task-1", TestContext.Current.CancellationToken);
-        await WaitUntilAsync(() => service.Tasks.Single().Status == DownloadTaskStatus.Cancelled);
 
-        var snapshot = Assert.Single(service.Tasks);
-        Assert.Equal(DownloadTaskStatus.Cancelled, snapshot.Status);
+        Assert.Empty(service.Tasks);
     }
 
     [Fact]
@@ -130,11 +128,11 @@ public sealed class DownloadQueueServiceTests
             service.RetryAsync("task-1", TestContext.Current.CancellationToken));
 
         engine.AllowCancellationToFinish();
-        await WaitUntilAsync(() => service.Tasks.Single().Status == DownloadTaskStatus.Cancelled);
+        await WaitUntilAsync(() => service.Tasks.Count == 0);
     }
 
     [Fact]
-    public async Task RetryAsync_RequeuesCancelledTaskAfterRunFinishes()
+    public async Task RetryAsync_RejectsCancelledTaskAfterItWasRemoved()
     {
         var engine = new BlockingDownloadEngine();
         var service = new DownloadQueueService(engine);
@@ -148,17 +146,10 @@ public sealed class DownloadQueueServiceTests
             TestContext.Current.CancellationToken);
 
         await service.CancelAsync("task-1", TestContext.Current.CancellationToken);
-        await WaitUntilAsync(() => service.Tasks.Single().Status == DownloadTaskStatus.Cancelled);
+        Assert.Empty(service.Tasks);
 
-        await service.RetryAsync("task-1", TestContext.Current.CancellationToken);
-
-        Assert.Contains(service.Tasks.Single().Status, new[]
-        {
-            DownloadTaskStatus.Queued,
-            DownloadTaskStatus.Downloading,
-            DownloadTaskStatus.Cancelling
-        });
-        await service.CancelAsync("task-1", TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.RetryAsync("task-1", TestContext.Current.CancellationToken));
     }
 
     [Fact]

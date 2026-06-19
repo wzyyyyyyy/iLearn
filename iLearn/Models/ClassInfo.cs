@@ -34,10 +34,34 @@
         public string? OpenType { get; set; }
         public string? AreaSchoolNames { get; set; }
 
+        public string CoverImageUrl => NormalizeImageUrl(Cover)
+            ?? NormalizeImageUrl(TeaImg)
+            ?? "avares://iLearn/Assets/iLearn.png";
 
         public static List<ClassInfo> Parse(string json)
         {
             return JsonApiResponse.DeserializeDataList<ClassInfo>(json, "课程服务未返回课程数据");
+        }
+
+        private static string? NormalizeImageUrl(string? imageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl))
+                return null;
+
+            var trimmed = imageUrl.Trim();
+            if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                || trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                || trimmed.StartsWith("avares://", StringComparison.OrdinalIgnoreCase))
+            {
+                return trimmed;
+            }
+
+            if (trimmed.StartsWith("//", StringComparison.Ordinal))
+                return $"https:{trimmed}";
+
+            return trimmed.StartsWith("/", StringComparison.Ordinal)
+                ? $"https://ilearntec.jlu.edu.cn{trimmed}"
+                : $"https://ilearntec.jlu.edu.cn/{trimmed}";
         }
     }
 }

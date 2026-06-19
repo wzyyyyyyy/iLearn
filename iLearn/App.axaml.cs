@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Styling;
 using iLearn.Composition;
 using iLearn.Views.Windows;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +19,9 @@ public partial class App : Application
 
     public override void Initialize()
     {
+        RequestedThemeVariant = ThemeVariant.Light;
         AvaloniaXamlLoader.Load(this);
+        RequestedThemeVariant = ThemeVariant.Light;
     }
 
     public override void OnFrameworkInitializationCompleted()

@@ -12,6 +12,7 @@ public sealed class DownloadQueueService
     private readonly Dictionary<string, DownloadRequest> _requests = new();
     private readonly Dictionary<string, CancellationTokenSource> _cancellations = new();
     private readonly Dictionary<string, Guid> _activeRuns = new();
+    private readonly HashSet<string> _removedActiveRuns = [];
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _tasksGate = new();
     private readonly SynchronizationContext? _collectionContext;
@@ -78,7 +79,6 @@ public sealed class DownloadQueueService
     public async Task CancelAsync(string id, CancellationToken cancellationToken = default)
     {
         CancellationTokenSource? cancellation = null;
-        DownloadRequest? request = null;
 
         await _gate.WaitAsync(cancellationToken);
         try
@@ -87,9 +87,9 @@ public sealed class DownloadQueueService
                 return;
 
             _cancellations.TryGetValue(id, out cancellation);
-            _requests.TryGetValue(id, out request);
-            if (request is not null)
-                Upsert(DownloadTaskSnapshot.FromRequest(request, DownloadTaskStatus.Cancelling));
+            _requests.Remove(id);
+            _removedActiveRuns.Add(id);
+            Remove(id);
             cancellation?.Cancel();
         }
         finally
@@ -228,7 +228,8 @@ public sealed class DownloadQueueService
             if (_activeRuns.TryGetValue(id, out var currentRun)
                 && currentRun == runId)
             {
-                Upsert(finalSnapshot);
+                if (!_removedActiveRuns.Remove(id))
+                    Upsert(finalSnapshot);
                 _activeRuns.Remove(id);
             }
 
@@ -272,6 +273,17 @@ public sealed class DownloadQueueService
         UpsertCore(snapshot);
     }
 
+    private void Remove(string id)
+    {
+        if (_collectionContext is not null && SynchronizationContext.Current != _collectionContext)
+        {
+            _collectionContext.Post(_ => RemoveCore(id), null);
+            return;
+        }
+
+        RemoveCore(id);
+    }
+
     private void UpsertCore(DownloadTaskSnapshot snapshot)
     {
         lock (_tasksGate)
@@ -294,6 +306,16 @@ public sealed class DownloadQueueService
         lock (_tasksGate)
         {
             return _tasks.FirstOrDefault(task => task.Id == id)?.Status;
+        }
+    }
+
+    private void RemoveCore(string id)
+    {
+        lock (_tasksGate)
+        {
+            var item = _tasks.FirstOrDefault(task => task.Id == id);
+            if (item is not null)
+                _tasks.Remove(item);
         }
     }
 
