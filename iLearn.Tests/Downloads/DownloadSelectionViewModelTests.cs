@@ -56,6 +56,26 @@ public sealed class DownloadSelectionViewModelTests
     }
 
     [Fact]
+    public async Task LoadCourseAsync_LoadsVideosForSelectedCourse()
+    {
+        var api = new FakeILearnApiService();
+        var viewModel = CreateViewModel(Array.Empty<LiveAndRecordInfo>(), api: api);
+
+        await viewModel.LoadCourseAsync(new ClassInfo
+        {
+            TermId = "2026-spring",
+            ClassId = "class-1",
+            CourseName = "高等数学"
+        });
+
+        Assert.Equal(1, api.LiveRecordCalls);
+        Assert.Equal("2026-spring", api.LastTermId);
+        Assert.Equal("class-1", api.LastClassId);
+        Assert.Equal("高等数学 第 1 讲", viewModel.Videos[0].LiveRecordName);
+        Assert.Equal("共 2 个视频", viewModel.VideoStatusText);
+    }
+
+    [Fact]
     public async Task DownloadSelectedCommand_ShowsTipWhenNothingSelected()
     {
         var notifications = new NotificationService();
@@ -128,12 +148,13 @@ public sealed class DownloadSelectionViewModelTests
         IEnumerable<LiveAndRecordInfo> videos,
         NotificationService? notifications = null,
         DownloadQueueService? queue = null,
+        FakeILearnApiService? api = null,
         AppConfig? appConfig = null)
     {
         return new VideoDownloadListViewModel(
             videos.ToList(),
             queue ?? new DownloadQueueService(new FakeDownloadEngine()),
-            new FakeILearnApiService(),
+            api ?? new FakeILearnApiService(),
             notifications ?? new NotificationService(),
             appConfig ?? new AppConfig());
     }
@@ -150,6 +171,22 @@ public sealed class DownloadSelectionViewModelTests
 
     private sealed class FakeILearnApiService : ILearnApiService
     {
+        public int LiveRecordCalls { get; private set; }
+        public string? LastTermId { get; private set; }
+        public string? LastClassId { get; private set; }
+
+        public override Task<List<LiveAndRecordInfo>> GetLiveAndRecordInfoAsync(string termId, string classId)
+        {
+            LiveRecordCalls++;
+            LastTermId = termId;
+            LastClassId = classId;
+            return Task.FromResult(new List<LiveAndRecordInfo>
+            {
+                CreateVideo("resource-1", "高等数学 第 1 讲", "张老师"),
+                CreateVideo("resource-2", "高等数学 第 2 讲", "张老师")
+            });
+        }
+
         public override Task<VideoInfo> GetVideoInfoAsync(string resourceId)
         {
             return Task.FromResult(new VideoInfo

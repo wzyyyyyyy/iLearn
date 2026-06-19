@@ -21,7 +21,8 @@ public sealed partial class ShellViewModel : ObservableObject
             new NavigationItemViewModel(AppRoute.LocalVideos, "本地视频", "FolderVideo"),
             new NavigationItemViewModel(AppRoute.Settings, "设置", "Settings")
         ];
-        SelectRoute(AppRoute.Courses);
+        SelectRoute(_navigation.CurrentRoute);
+        _navigation.RouteChanged += (_, route) => SelectRoute(route);
     }
 
     public ObservableCollection<NavigationItemViewModel> Items { get; }
@@ -36,7 +37,6 @@ public sealed partial class ShellViewModel : ObservableObject
     [RelayCommand]
     private void Navigate(NavigationItemViewModel item)
     {
-        SelectRoute(item.Route);
         _navigation.NavigateTo(item.Route);
     }
 

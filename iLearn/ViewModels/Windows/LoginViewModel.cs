@@ -106,6 +106,8 @@ public sealed partial class LoginViewModel : ObservableObject, IDisposable
 
     public bool IsWechatVerifyStep => CurrentStep == LoginStep.WechatVerify;
 
+    public bool IsPasswordStep => CurrentStep == LoginStep.Password;
+
     public string SubmitButtonText => CurrentStep == LoginStep.WechatVerify
         ? "提交微信验证码"
         : "验证并登录";
@@ -113,6 +115,7 @@ public sealed partial class LoginViewModel : ObservableObject, IDisposable
     partial void OnCurrentStepChanged(LoginStep value)
     {
         OnPropertyChanged(nameof(IsWechatVerifyStep));
+        OnPropertyChanged(nameof(IsPasswordStep));
         OnPropertyChanged(nameof(SubmitButtonText));
         SubmitCommand.NotifyCanExecuteChanged();
     }
