@@ -2,6 +2,7 @@
     x:Class="iLearn.Views.Pages.CoursesPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:iLearn.Controls"
     xmlns:vm="using:iLearn.ViewModels.Pages"
     x:DataType="vm:CoursesViewModel"
     x:CompileBindings="False">
@@ -42,35 +43,24 @@
                     Padding="0"
                     Background="{StaticResource SurfaceBrush}"
                     BorderBrush="{StaticResource BorderBrushSoft}">
-              <Grid RowDefinitions="86,*,Auto">
+              <Grid RowDefinitions="112,*,Auto">
                 <Border Background="{StaticResource AccentSoftBrush}"
                         CornerRadius="8,8,0,0"
                         ClipToBounds="True">
-                  <Grid ColumnDefinitions="Auto,*" Margin="16,0">
-                    <Border Width="48"
-                            Height="48"
-                            CornerRadius="8"
-                            Background="{StaticResource SurfaceBrush}"
-                            VerticalAlignment="Center">
-                      <Image Source="avares://iLearn/Assets/iLearn.png"
-                             Width="34"
-                             Height="34"
-                             Stretch="Uniform"
-                             HorizontalAlignment="Center"
-                             VerticalAlignment="Center" />
-                    </Border>
-                    <StackPanel Grid.Column="1"
-                                VerticalAlignment="Center"
-                                Margin="12,0,0,0"
-                                Spacing="2">
-                      <TextBlock Text="课程"
-                                 FontSize="12"
-                                 Foreground="{StaticResource AccentBrush}" />
+                  <Grid>
+                    <controls:RemoteImage SourceUrl="{Binding CoverImageUrl}"
+                                          FallbackSourceUrl="avares://iLearn/Assets/iLearn.png"
+                                          Stretch="UniformToFill" />
+                    <Border Background="#A617212B"
+                            Padding="10,5"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
+                            CornerRadius="0,6,0,0">
                       <TextBlock Text="{Binding StatusName}"
                                  FontSize="13"
                                  FontWeight="SemiBold"
-                                 Foreground="{StaticResource AccentBrush}" />
-                    </StackPanel>
+                                 Foreground="White" />
+                    </Border>
                   </Grid>
                 </Border>
                 <StackPanel Grid.Row="1" Spacing="7" Margin="16,14,16,8">

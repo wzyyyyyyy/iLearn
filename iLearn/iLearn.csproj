@@ -39,6 +39,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="App.axaml.cs" />
     <Compile Include="Composition/ServiceCollectionExtensions.cs" />
+    <Compile Include="Controls/RemoteImage.cs" />
     <Compile Include="Navigation/AppRoute.cs" />
     <Compile Include="Navigation/NavigationItemViewModel.cs" />
     <Compile Include="Navigation/NavigationService.cs" />

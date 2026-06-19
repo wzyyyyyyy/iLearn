@@ -61,17 +61,71 @@
                   CornerRadius="8"
                   Padding="14"
                   Margin="0,0,0,10">
-          <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-            <StackPanel Spacing="7">
-              <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" />
-              <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" />
-              <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource DangerBrush}" />
-            </StackPanel>
-            <Button Grid.Column="1" Content="打开" Classes="quiet" Command="{Binding DataContext.OpenDownloadFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-            <Button Grid.Column="2" Content="暂停" Classes="quiet" Command="{Binding DataContext.PauseDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-            <Button Grid.Column="3" Content="重试" Classes="quiet" Command="{Binding DataContext.RetryDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-            <Button Grid.Column="4" Content="取消" Classes="quiet" Command="{Binding DataContext.CancelDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
-          </Grid>
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                  <TextBlock Text="{Binding FileName}"
+                             FontWeight="SemiBold"
+                             TextTrimming="CharacterEllipsis"
+                             VerticalAlignment="Center" />
+                  <Border Grid.Column="1"
+                          Background="{StaticResource AccentSoftBrush}"
+                          CornerRadius="999"
+                          Padding="9,3"
+                          VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusText}"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentBrush}" />
+                  </Border>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                  <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" />
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding Progress, StringFormat='{}{0:F1}%'}"
+                             Classes="muted"
+                             FontSize="12"
+                             VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid ColumnDefinitions="120,*,100" ColumnSpacing="12">
+                  <TextBlock Text="{Binding SpeedText}" Classes="muted" FontSize="12" />
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding SizeText}"
+                             Classes="muted"
+                             FontSize="12"
+                             TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="2"
+                             Text="{Binding RemainingText}"
+                             Classes="muted"
+                             FontSize="12"
+                             HorizontalAlignment="Right" />
+                </Grid>
+
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="{StaticResource DangerBrush}"
+                           TextWrapping="Wrap" />
+              </StackPanel>
+              <Button Grid.Column="1"
+                      Content="打开"
+                      Classes="quiet"
+                      IsVisible="{Binding CanOpen}"
+                      Command="{Binding DataContext.OpenDownloadFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding}" />
+              <Button Grid.Column="2"
+                      Content="重试"
+                      Classes="quiet"
+                      IsVisible="{Binding CanRetry}"
+                      Command="{Binding DataContext.RetryDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding}" />
+              <Button Grid.Column="3"
+                      Content="取消"
+                      Classes="quiet"
+                      IsVisible="{Binding CanCancel}"
+                      Command="{Binding DataContext.CancelDownloadCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding}" />
+            </Grid>
           </Border>
         </DataTemplate>
       </ListBox.ItemTemplate>
