@@ -10,27 +10,37 @@
     MinWidth="980"
     MinHeight="640"
     Title="iLearn">
-  <Grid ColumnDefinitions="236,*" Background="#F7F8F5">
-    <Border Grid.Column="0" Background="#18231F" Padding="18">
-      <DockPanel>
-        <TextBlock DockPanel.Dock="Top"
-                   Text="iLearn"
-                   FontSize="28"
-                   FontWeight="Bold"
-                   Foreground="#F7FAF7"
-                   Margin="0,8,0,22" />
+  <Grid ColumnDefinitions="232,*" Background="{StaticResource AppBackgroundBrush}">
+    <Border Grid.Column="0" Background="{StaticResource SidebarBrush}" Padding="18">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Top" Margin="0,4,0,24" Spacing="4">
+          <TextBlock Text="iLearn"
+                     FontSize="30"
+                     FontWeight="SemiBold"
+                     Foreground="#F8FBFC" />
+          <TextBlock Text="学在吉大桌面学习工具"
+                     FontSize="12"
+                     Foreground="#8FA4B1" />
+        </StackPanel>
+
         <ItemsControl ItemsSource="{Binding Items}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                       CommandParameter="{Binding}"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Left"
                       Margin="0,0,0,8"
-                      Padding="14,10"
-                      Background="Transparent"
-                      Foreground="#BFE7D4"
-                      Content="{Binding Title}" />
+                      Classes="nav"
+                      Background="{Binding BackgroundBrush}"
+                      Foreground="{Binding ForegroundBrush}">
+                <Grid ColumnDefinitions="3,*" ColumnSpacing="10">
+                  <Border Background="{Binding IndicatorBrush}" CornerRadius="2" />
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding Title}"
+                             FontSize="14"
+                             FontWeight="SemiBold"
+                             Foreground="{Binding ForegroundBrush}" />
+                </Grid>
+              </Button>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
@@ -38,11 +48,23 @@
     </Border>
 
     <Grid Grid.Column="1" RowDefinitions="Auto,*">
-      <Border Background="#FEFFFC" BorderBrush="#E3E7DE" BorderThickness="0,0,0,1" Padding="28,18">
-        <TextBlock Text="{Binding CurrentRouteTitle}" FontSize="24" FontWeight="SemiBold" Foreground="#1D2824" />
+      <Border Background="{StaticResource SurfaceBrush}"
+              BorderBrush="{StaticResource BorderBrushSoft}"
+              BorderThickness="0,0,0,1"
+              Padding="30,18">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Text="{Binding CurrentRouteTitle}" Classes="page-title" />
+            <TextBlock Text="保持课程、视频和下载在同一条学习线上"
+                       Classes="muted"
+                       FontSize="13" />
+          </StackPanel>
+        </Grid>
       </Border>
 
-      <ContentControl Name="PageHost" Grid.Row="1" Margin="28" />
+      <Border Grid.Row="1" Padding="30">
+        <ContentControl Name="PageHost" />
+      </Border>
 
       <ItemsControl Grid.Row="1"
                     ItemsSource="{Binding Notifications.Items}"
@@ -57,14 +79,14 @@
                     BorderBrush="{Binding BorderBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    Padding="14"
+                    Padding="14,13"
                     Margin="0,0,0,10"
-                    BoxShadow="0 12 30 0 #26000000">
+                    BoxShadow="0 10 24 0 #1F13202A">
               <Grid ColumnDefinitions="4,*" ColumnSpacing="12">
                 <Border Background="{Binding AccentBrush}" CornerRadius="2" />
                 <StackPanel Grid.Column="1" Spacing="3">
-                  <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#17211D" />
-                  <TextBlock Text="{Binding Message}" Foreground="#52645E" TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}" />
+                  <TextBlock Text="{Binding Message}" Classes="muted" TextWrapping="Wrap" />
                 </StackPanel>
               </Grid>
             </Border>

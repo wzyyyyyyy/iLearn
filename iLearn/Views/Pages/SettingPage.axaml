@@ -7,35 +7,37 @@
     x:CompileBindings="False">
   <ScrollViewer>
     <StackPanel Spacing="18">
-      <StackPanel>
-        <TextBlock Text="设置" FontSize="30" FontWeight="SemiBold" />
-        <TextBlock Text="{Binding AppDescription}" Foreground="#64748B" />
-      </StackPanel>
-
-      <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="18">
-        <StackPanel Spacing="14">
-          <TextBlock Text="下载设置" FontSize="18" FontWeight="SemiBold" />
-          <TextBlock Text="同时下载数" Foreground="#64748B" />
-          <NumericUpDown Minimum="1" Maximum="10" Value="{Binding MaxConcurrentDownloads}" />
-          <TextBlock Text="分块数" Foreground="#64748B" />
-          <NumericUpDown Minimum="1" Maximum="32" Value="{Binding ChunkCount}" />
-          <TextBlock Text="限速 MB/s，0 表示不限速" Foreground="#64748B" />
-          <NumericUpDown Minimum="0" Value="{Binding SpeedLimitMBps}" />
-          <TextBlock Text="下载目录" Foreground="#64748B" />
-          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-            <TextBox Text="{Binding DownloadPath}" />
-            <Button Grid.Column="1" Content="打开" Command="{Binding OpenDownloadPathCommand}" />
-          </Grid>
-          <Button Content="恢复下载默认设置" Command="{Binding ResetDownloadSettingsCommand}" />
+      <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="8" Padding="16">
+        <StackPanel Spacing="2">
+          <TextBlock Text="设置" Classes="section-title" />
+          <TextBlock Text="{Binding AppDescription}" Classes="muted" />
         </StackPanel>
       </Border>
 
-      <Border Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="18">
+      <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="8" Padding="18">
+        <StackPanel Spacing="14">
+          <TextBlock Text="下载设置" Classes="section-title" />
+          <TextBlock Text="同时下载数" Classes="muted" />
+          <NumericUpDown Minimum="1" Maximum="10" Value="{Binding MaxConcurrentDownloads}" />
+          <TextBlock Text="分块数" Classes="muted" />
+          <NumericUpDown Minimum="1" Maximum="32" Value="{Binding ChunkCount}" />
+          <TextBlock Text="限速 MB/s，0 表示不限速" Classes="muted" />
+          <NumericUpDown Minimum="0" Value="{Binding SpeedLimitMBps}" />
+          <TextBlock Text="下载目录" Classes="muted" />
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <TextBox Text="{Binding DownloadPath}" />
+            <Button Grid.Column="1" Content="打开" Classes="primary" Command="{Binding OpenDownloadPathCommand}" />
+          </Grid>
+          <Button Content="恢复下载默认设置" Classes="quiet" Command="{Binding ResetDownloadSettingsCommand}" />
+        </StackPanel>
+      </Border>
+
+      <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="8" Padding="18">
         <StackPanel Spacing="12">
-          <TextBlock Text="更新" FontSize="18" FontWeight="SemiBold" />
-          <TextBlock Text="{Binding AppVersion, StringFormat='当前版本 {0}'}" Foreground="#64748B" />
-          <TextBlock Text="{Binding LastChecked, StringFormat='上次检查 {0}'}" Foreground="#64748B" />
-          <Button Content="检查更新" Command="{Binding CheckForUpdatesCommand}" />
+          <TextBlock Text="更新" Classes="section-title" />
+          <TextBlock Text="{Binding AppVersion, StringFormat='当前版本 {0}'}" Classes="muted" />
+          <TextBlock Text="{Binding LastChecked, StringFormat='上次检查 {0}'}" Classes="muted" />
+          <Button Content="检查更新" Classes="primary" Command="{Binding CheckForUpdatesCommand}" />
         </StackPanel>
       </Border>
     </StackPanel>

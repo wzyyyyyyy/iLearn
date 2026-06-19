@@ -10,21 +10,32 @@
     MinWidth="760"
     MinHeight="560"
     Title="iLearn">
-  <Grid ColumnDefinitions="1.05*,0.95*" Background="#F7F8F5">
-    <Border Grid.Column="0" Padding="48" Background="#18231F">
-      <StackPanel VerticalAlignment="Center" Spacing="18">
-        <TextBlock Text="iLearn" FontSize="42" FontWeight="Bold" Foreground="#F7FAF7" />
-        <TextBlock Text="学在吉大桌面客户端" FontSize="20" Foreground="#BFE7D4" />
-        <TextBlock Text="课程、视频、下载和本地学习都在一个更顺手的客户端里。"
-                   TextWrapping="Wrap"
-                   Foreground="#8EA99B"
-                   FontSize="15" />
-      </StackPanel>
-    </Border>
+  <Grid Background="{StaticResource AppBackgroundBrush}">
+    <Border Width="760"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrushSoft}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="34"
+            BoxShadow="0 18 45 0 #1713202A">
+      <Grid ColumnDefinitions="260,*" ColumnSpacing="34">
+        <StackPanel Spacing="14">
+          <TextBlock Text="iLearn" FontSize="34" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}" />
+          <TextBlock Text="一个更安静、更顺手的学在吉大桌面客户端。"
+                     TextWrapping="Wrap"
+                     Classes="muted"
+                     FontSize="14" />
+          <Border Height="1" Background="{StaticResource BorderBrushSoft}" Margin="0,10,0,4" />
+          <TextBlock Text="登录后即可浏览课程、播放视频、创建下载队列并管理本地学习资料。"
+                     TextWrapping="Wrap"
+                     Classes="subtle"
+                     FontSize="13" />
+        </StackPanel>
 
-    <Border Grid.Column="1" Padding="42" Background="#FEFFFC">
-      <StackPanel VerticalAlignment="Center" Spacing="14">
-        <TextBlock Text="登录" FontSize="28" FontWeight="SemiBold" Foreground="#1D2824" />
+        <StackPanel Grid.Column="1" Spacing="14">
+        <TextBlock Text="登录" Classes="page-title" />
         <TextBox Watermark="学号 / 用户名" Text="{Binding UserName}" />
         <TextBox Watermark="密码" Text="{Binding UserPassword}" PasswordChar="*" />
 
@@ -38,9 +49,16 @@
                     Command="{Binding SaveLoginOptionsCommand}" />
         </Grid>
 
-        <StackPanel Spacing="10" IsVisible="{Binding IsWechatVerifyStep}">
+        <Border Background="{StaticResource SurfaceRaisedBrush}"
+                BorderBrush="{StaticResource BorderBrushSoft}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14"
+                IsVisible="{Binding IsWechatVerifyStep}">
+          <StackPanel Spacing="10">
+          <TextBlock Text="微信二次认证" FontWeight="SemiBold" />
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-            <Border BorderBrush="#C9D8CE" BorderThickness="1" CornerRadius="4" Height="46">
+            <Border BorderBrush="{StaticResource BorderBrushStrong}" BorderThickness="1" CornerRadius="7" Height="46" Background="{StaticResource SurfaceBrush}">
               <Image Source="{Binding CaptchaImage}" Stretch="Uniform" />
             </Border>
             <Button Grid.Column="1"
@@ -54,17 +72,21 @@
                     Content="{Binding SendWechatButtonText}"
                     Command="{Binding SendWechatCodeCommand}" />
           </Grid>
-        </StackPanel>
+          </StackPanel>
+        </Border>
 
         <Button Content="{Binding SubmitButtonText}"
+                Classes="primary"
                 Command="{Binding SubmitCommand}" />
         <Button Content="返回账号密码登录"
+                Classes="quiet"
                 Command="{Binding BackToPasswordCommand}"
                 IsVisible="{Binding IsWechatVerifyStep}" />
 
         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsAuthenticationInProgress}" />
-        <TextBlock Text="{Binding StatusText}" Foreground="#52645E" TextWrapping="Wrap" MinHeight="22" />
+        <TextBlock Text="{Binding StatusText}" Classes="muted" TextWrapping="Wrap" MinHeight="22" />
       </StackPanel>
+      </Grid>
     </Border>
   </Grid>
 </Window>
