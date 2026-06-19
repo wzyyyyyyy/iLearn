@@ -4,8 +4,99 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:semi="https://irihi.tech/semi"
     xmlns:ursaSemi="https://irihi.tech/ursa/themes/semi">
+  <Application.Resources>
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F4F7F8" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#FBFDFD" />
+    <SolidColorBrush x:Key="SidebarBrush" Color="#13202A" />
+    <SolidColorBrush x:Key="SidebarHoverBrush" Color="#1B2B36" />
+    <SolidColorBrush x:Key="InkBrush" Color="#17212B" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#5C6B78" />
+    <SolidColorBrush x:Key="SubtleBrush" Color="#7B8794" />
+    <SolidColorBrush x:Key="BorderBrushSoft" Color="#E8EEF2" />
+    <SolidColorBrush x:Key="BorderBrushStrong" Color="#DDE5EA" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#0F766E" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#0B625C" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#E5F4F1" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#B42318" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#B7791F" />
+    <SolidColorBrush x:Key="InfoBrush" Color="#2563EB" />
+  </Application.Resources>
+
   <Application.Styles>
     <semi:SemiTheme Locale="zh-CN" />
     <ursaSemi:SemiTheme Locale="zh-CN" />
+
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.subtle">
+      <Setter Property="Foreground" Value="{StaticResource SubtleBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.page-title">
+      <Setter Property="FontSize" Value="28" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.section-title">
+      <Setter Property="FontSize" Value="18" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+    </Style>
+
+    <Style Selector="Button">
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+    </Style>
+
+    <Style Selector="Button.quiet">
+      <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}" />
+    </Style>
+
+    <Style Selector="Button.nav">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="MinHeight" Value="42" />
+      <Setter Property="Padding" Value="12,10" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="TextBox, ComboBox, NumericUpDown">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}" />
+      <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource InkBrush}" />
+    </Style>
+
+    <Style Selector="ProgressBar">
+      <Setter Property="Height" Value="4" />
+    </Style>
+
+    <Style Selector="ListBox">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
   </Application.Styles>
 </Application>

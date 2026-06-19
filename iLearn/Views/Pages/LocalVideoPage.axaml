@@ -5,40 +5,52 @@
     xmlns:vm="using:iLearn.ViewModels.Pages"
     x:DataType="vm:LocalVideoViewModel"
     x:CompileBindings="False">
-  <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="14">
-    <DockPanel>
-      <StackPanel>
-        <TextBlock Text="本地视频" FontSize="30" FontWeight="SemiBold" />
-        <TextBlock Text="{Binding StatusText}" Foreground="#64748B" />
-      </StackPanel>
-      <Button DockPanel.Dock="Right" Content="刷新" Command="{Binding LoadLocalVideosCommand}" />
-    </DockPanel>
+  <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="16">
+    <Border Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrushSoft}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="16">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+        <StackPanel Spacing="2">
+          <TextBlock Text="本地视频" Classes="section-title" />
+          <TextBlock Text="{Binding StatusText}" Classes="muted" />
+        </StackPanel>
+        <Button Grid.Column="1" Content="刷新" Classes="primary" VerticalAlignment="Center" Command="{Binding LoadLocalVideosCommand}" />
+      </Grid>
+    </Border>
 
     <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
 
-    <Grid Grid.Row="2" ColumnDefinitions="*,180" ColumnSpacing="12">
+    <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="8" Padding="12">
+    <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
       <TextBox Watermark="搜索课程或文件名" Text="{Binding SearchQuery}" />
       <ComboBox Grid.Column="1" ItemsSource="{Binding FilterOptions}" SelectedItem="{Binding SelectedFilter}" />
     </Grid>
+    </Border>
 
     <ListBox Grid.Row="3" ItemsSource="{Binding FilteredVideos}">
       <ListBox.ItemTemplate>
         <DataTemplate>
-          <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
-            <StackPanel>
+          <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,10">
+          <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <StackPanel Spacing="4">
               <TextBlock Text="{Binding CourseName}" FontWeight="SemiBold" />
-              <TextBlock Text="{Binding FileName}" Foreground="#64748B" />
-              <TextBlock Text="{Binding FileSizeFormatted}" Foreground="#94A3B8" />
+              <TextBlock Text="{Binding FileName}" Classes="muted" />
+              <TextBlock Text="{Binding FileSizeFormatted}" Classes="subtle" />
             </StackPanel>
             <Button Grid.Column="1"
                     Content="播放"
+                    Classes="primary"
                     Command="{Binding DataContext.OpenVideoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     CommandParameter="{Binding}" />
             <Button Grid.Column="2"
                     Content="位置"
+                    Classes="quiet"
                     Command="{Binding DataContext.OpenFileLocationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     CommandParameter="{Binding}" />
           </Grid>
+          </Border>
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>

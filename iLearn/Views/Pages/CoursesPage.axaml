@@ -5,17 +5,23 @@
     xmlns:vm="using:iLearn.ViewModels.Pages"
     x:DataType="vm:CoursesViewModel"
     x:CompileBindings="False">
-  <Grid RowDefinitions="Auto,Auto,*" RowSpacing="18">
-    <DockPanel>
-      <StackPanel>
-        <TextBlock Text="我的课程" FontSize="30" FontWeight="SemiBold" />
-        <TextBlock Text="{Binding StatusText}" Foreground="#64748B" />
-      </StackPanel>
-      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10">
+  <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16">
+    <Border Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrushSoft}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="16">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+        <StackPanel Spacing="2">
+          <TextBlock Text="课程工作台" Classes="section-title" />
+          <TextBlock Text="{Binding StatusText}" Classes="muted" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
         <ComboBox Width="260" ItemsSource="{Binding TermsOptions}" SelectedItem="{Binding SelectedTerm}" />
-        <Button Content="刷新" Command="{Binding RefreshCommand}" />
-      </StackPanel>
-    </DockPanel>
+        <Button Content="刷新" Classes="primary" Command="{Binding RefreshCommand}" />
+        </StackPanel>
+      </Grid>
+    </Border>
 
     <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
 
@@ -30,15 +36,25 @@
           <DataTemplate>
             <Button Command="{Binding DataContext.CourseSelectedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     CommandParameter="{Binding}"
-                    Width="280"
-                    Height="138"
-                    Margin="0,0,16,16"
-                    Padding="16">
-              <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <TextBlock Text="{Binding CourseName}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding TeacherName}" Foreground="#64748B" Margin="0,8,0,0" />
-                <TextBlock Text="{Binding StatusName}" Foreground="#0F766E" Margin="0,12,0,0" />
-              </StackPanel>
+                    Width="300"
+                    Height="150"
+                    Margin="0,0,14,14"
+                    Padding="16"
+                    Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrushSoft}">
+              <Grid RowDefinitions="*,Auto">
+                <StackPanel Spacing="7">
+                  <TextBlock Text="{Binding CourseName}" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding TeacherName}" Classes="muted" />
+                </StackPanel>
+                <Border Grid.Row="1"
+                        Background="{StaticResource AccentSoftBrush}"
+                        CornerRadius="999"
+                        Padding="10,4"
+                        HorizontalAlignment="Left">
+                  <TextBlock Text="{Binding StatusName}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" />
+                </Border>
+              </Grid>
             </Button>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
