@@ -5,46 +5,50 @@
     xmlns:vm="using:iLearn.ViewModels.Windows"
     x:DataType="vm:LoginViewModel"
     x:CompileBindings="False"
-    Width="920"
-    Height="620"
-    MinWidth="760"
-    MinHeight="560"
+    Width="420"
+    Height="600"
+    MinWidth="420"
+    MinHeight="600"
+    MaxWidth="420"
+    MaxHeight="600"
+    CanResize="False"
     Title="iLearn">
   <Grid Background="{StaticResource AppBackgroundBrush}">
-    <Border Width="760"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Background="{StaticResource SurfaceBrush}"
-            BorderBrush="{StaticResource BorderBrushSoft}"
-            BorderThickness="1"
-            CornerRadius="10"
-            Padding="34"
-            BoxShadow="0 18 45 0 #1713202A">
-      <Grid ColumnDefinitions="260,*" ColumnSpacing="34">
-        <StackPanel Spacing="14">
-          <TextBlock Text="iLearn" FontSize="34" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}" />
-          <TextBlock Text="一个更安静、更顺手的学在吉大桌面客户端。"
-                     TextWrapping="Wrap"
-                     Classes="muted"
-                     FontSize="14" />
-          <Border Height="1" Background="{StaticResource BorderBrushSoft}" Margin="0,10,0,4" />
-          <TextBlock Text="登录后即可浏览课程、播放视频、创建下载队列并管理本地学习资料。"
-                     TextWrapping="Wrap"
-                     Classes="subtle"
-                     FontSize="13" />
-        </StackPanel>
+    <Border Background="#0F766E"
+            Opacity="0.06"
+            CornerRadius="18"
+            Margin="0,0,0,280" />
 
-        <StackPanel Grid.Column="1" Spacing="14">
-        <TextBlock Text="登录" Classes="page-title" />
-        <TextBox Watermark="学号 / 用户名" Text="{Binding UserName}" />
-        <TextBox Watermark="密码" Text="{Binding UserPassword}" PasswordChar="*" />
+    <Grid Margin="0,30,0,0" RowDefinitions="Auto,*">
+      <StackPanel Grid.Row="0" HorizontalAlignment="Center" Spacing="10" Margin="0,12,0,14">
+        <Image Source="avares://iLearn/Assets/iLearn.png"
+               Width="118"
+               Height="118"
+               Stretch="Uniform" />
+        <TextBlock Text="请登录您的账户"
+                   FontSize="13"
+                   Classes="muted"
+                   HorizontalAlignment="Center" />
+      </StackPanel>
+
+      <Border Grid.Row="1"
+              Margin="32,0,32,20"
+              Background="{StaticResource SurfaceBrush}"
+              BorderBrush="{StaticResource BorderBrushSoft}"
+              BorderThickness="1"
+              CornerRadius="9"
+              Padding="28,28,28,22"
+              BoxShadow="0 12 28 0 #1713202A">
+      <StackPanel Spacing="14">
+        <TextBox Watermark="请输入用户名" Text="{Binding UserName}" />
+        <TextBox Watermark="请输入密码" Text="{Binding UserPassword}" PasswordChar="*" />
 
         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-          <CheckBox Content="记住密码"
+          <CheckBox Content="记住我"
                     IsChecked="{Binding IsRememberMeEnabled}"
                     Command="{Binding SaveLoginOptionsCommand}" />
           <CheckBox Grid.Column="1"
-                    Content="下次自动登录"
+                    Content="自动登录"
                     IsChecked="{Binding IsAutoLoginEnabled}"
                     Command="{Binding SaveLoginOptionsCommand}" />
         </Grid>
@@ -53,10 +57,10 @@
                 BorderBrush="{StaticResource BorderBrushSoft}"
                 BorderThickness="1"
                 CornerRadius="8"
-                Padding="14"
+                Padding="12"
                 IsVisible="{Binding IsWechatVerifyStep}">
           <StackPanel Spacing="10">
-          <TextBlock Text="微信二次认证" FontWeight="SemiBold" />
+          <TextBlock Text="微信二次认证" FontWeight="SemiBold" FontSize="13" />
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
             <Border BorderBrush="{StaticResource BorderBrushStrong}" BorderThickness="1" CornerRadius="7" Height="46" Background="{StaticResource SurfaceBrush}">
               <Image Source="{Binding CaptchaImage}" Stretch="Uniform" />
@@ -77,16 +81,46 @@
 
         <Button Content="{Binding SubmitButtonText}"
                 Classes="primary"
+                Height="42"
                 Command="{Binding SubmitCommand}" />
         <Button Content="返回账号密码登录"
                 Classes="quiet"
+                Height="36"
                 Command="{Binding BackToPasswordCommand}"
                 IsVisible="{Binding IsWechatVerifyStep}" />
 
         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsAuthenticationInProgress}" />
         <TextBlock Text="{Binding StatusText}" Classes="muted" TextWrapping="Wrap" MinHeight="22" />
+
+        <Border Height="1" Background="{StaticResource BorderBrushSoft}" Margin="0,4,0,0" />
+        <Button Content="跳转官网"
+                Classes="quiet"
+                HorizontalAlignment="Center"
+                Command="{Binding OpenOfficialSiteCommand}" />
       </StackPanel>
-      </Grid>
+      </Border>
+    </Grid>
+
+    <Border IsVisible="{Binding IsAuthenticationInProgress}"
+            Background="#CCF4F7F8"
+            ZIndex="10">
+      <Border Width="180"
+              Height="120"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Background="{StaticResource SurfaceBrush}"
+              BorderBrush="{StaticResource BorderBrushSoft}"
+              BorderThickness="1"
+              CornerRadius="8"
+              Padding="18"
+              BoxShadow="0 12 32 0 #2613202A">
+        <StackPanel Spacing="12" VerticalAlignment="Center">
+          <ProgressBar IsIndeterminate="True" />
+          <TextBlock Text="正在登录中..."
+                     HorizontalAlignment="Center"
+                     Classes="muted" />
+        </StackPanel>
+      </Border>
     </Border>
   </Grid>
 </Window>

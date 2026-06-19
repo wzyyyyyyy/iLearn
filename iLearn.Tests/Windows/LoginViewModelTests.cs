@@ -1,5 +1,6 @@
 using iLearn.Models;
 using iLearn.Notifications;
+using iLearn.Platform;
 using iLearn.Security;
 using iLearn.Services;
 using iLearn.ViewModels.Windows;
@@ -71,7 +72,8 @@ public sealed class LoginViewModelTests
             new NotificationService(),
             new InMemorySecretStore(),
             new AppConfig(),
-            services);
+            services,
+            new NoopLauncher());
     }
 
     private sealed class FakeILearnApiService : ILearnApiService
@@ -117,6 +119,24 @@ public sealed class LoginViewModelTests
         public Task DeleteSecretAsync(string key, CancellationToken cancellationToken = default)
         {
             _secrets.Remove(key);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class NoopLauncher : IPlatformLauncher
+    {
+        public Task OpenFileAsync(string path, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task OpenFolderAsync(string path, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task OpenUrlAsync(string url, CancellationToken cancellationToken = default)
+        {
             return Task.CompletedTask;
         }
     }

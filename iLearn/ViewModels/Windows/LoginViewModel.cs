@@ -3,6 +3,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using iLearn.Models;
 using iLearn.Notifications;
+using iLearn.Platform;
 using iLearn.Security;
 using iLearn.Services;
 using iLearn.Views.Windows;
@@ -23,6 +24,7 @@ public sealed partial class LoginViewModel : ObservableObject, IDisposable
     private readonly ISecretStore _secretStore;
     private readonly AppConfig _appConfig;
     private readonly IServiceProvider _services;
+    private readonly IPlatformLauncher _launcher;
     private System.Timers.Timer? _countdownTimer;
     private int _countdownSeconds;
 
@@ -70,13 +72,15 @@ public sealed partial class LoginViewModel : ObservableObject, IDisposable
         INotificationService notifications,
         ISecretStore secretStore,
         AppConfig appConfig,
-        IServiceProvider services)
+        IServiceProvider services,
+        IPlatformLauncher launcher)
     {
         _learnApiService = learnApiService;
         _notifications = notifications;
         _secretStore = secretStore;
         _appConfig = appConfig;
         _services = services;
+        _launcher = launcher;
 
         IsAutoLoginEnabled = _appConfig.IsAutoLoginEnabled;
         IsRememberMeEnabled = _appConfig.IsRememberMeEnabled;
@@ -316,6 +320,12 @@ public sealed partial class LoginViewModel : ObservableObject, IDisposable
         _appConfig.IsRememberMeEnabled = IsRememberMeEnabled;
         _appConfig.IsAutoLoginEnabled = IsAutoLoginEnabled;
         _appConfig.Save();
+    }
+
+    [RelayCommand]
+    private async Task OpenOfficialSiteAsync()
+    {
+        await _launcher.OpenUrlAsync("https://ilearntec.jlu.edu.cn/");
     }
 
     private async Task LoadSavedCredentialsAsync()
