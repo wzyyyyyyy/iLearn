@@ -1,10 +1,10 @@
 {
-  "version": "1.3.0",
-  "notes": "Avalonia cross-platform desktop release.",
+  "version": "1.4.0",
+  "notes": "Avalonia migration, login flow fixes, improved downloads, course covers, and refreshed documentation.",
   "downloads": {
-    "win-x64": "https://github.com/wzyyyyyyy/iLearn/releases/latest/download/iLearn-win-x64.zip",
-    "osx-x64": "https://github.com/wzyyyyyyy/iLearn/releases/latest/download/iLearn-osx-x64.zip",
-    "osx-arm64": "https://github.com/wzyyyyyyy/iLearn/releases/latest/download/iLearn-osx-arm64.zip",
-    "linux-x64": "https://github.com/wzyyyyyyy/iLearn/releases/latest/download/iLearn-linux-x64.tar.gz"
+    "win-x64": "https://github.com/wzyyyyyyy/iLearn/releases/latest/download/iLearn-v1.4.0-win-x64.zip",
+    "osx-x64": "https://github.com/wzyyyyyyy/iLearn/releases/latest/download/iLearn-v1.4.0-osx-x64.zip",
+    "osx-arm64": "https://github.com/wzyyyyyyy/iLearn/releases/latest/download/iLearn-v1.4.0-osx-arm64.zip",
+    "linux-x64": "https://github.com/wzyyyyyyy/iLearn/releases/latest/download/iLearn-v1.4.0-linux-x64.tar.gz"
   }
 }
