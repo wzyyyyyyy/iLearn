@@ -98,6 +98,12 @@ public sealed class DownloadQueueService
         }
     }
 
+    public async Task CancelAllAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var id in _activeRuns.Keys)
+            await CancelAsync(id, cancellationToken);
+    }
+
     public Task PauseAsync(string id, CancellationToken cancellationToken = default)
     {
         return CancelAsync(id, cancellationToken);

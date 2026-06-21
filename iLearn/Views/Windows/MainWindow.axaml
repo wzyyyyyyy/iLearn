@@ -5,7 +5,7 @@
     xmlns:vm="using:iLearn.ViewModels"
     x:DataType="vm:ShellViewModel"
     x:CompileBindings="False"
-    Width="1180"
+    Width="1580"
     Height="760"
     MinWidth="980"
     MinHeight="640"
@@ -18,7 +18,7 @@
                      FontSize="30"
                      FontWeight="SemiBold"
                      Foreground="#F8FBFC" />
-          <TextBlock Text="学在吉大桌面学习工具"
+          <TextBlock Text="学在吉大"
                      FontSize="12"
                      Foreground="#8FA4B1" />
         </StackPanel>
@@ -55,9 +55,6 @@
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel Spacing="2">
             <TextBlock Text="{Binding CurrentRouteTitle}" Classes="page-title" />
-            <TextBlock Text="保持课程、视频和下载在同一条学习线上"
-                       Classes="muted"
-                       FontSize="13" />
           </StackPanel>
         </Grid>
       </Border>

@@ -14,7 +14,7 @@
             Padding="16">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
         <StackPanel Spacing="2">
-          <TextBlock Text="课程工作台" Classes="section-title" />
+          <TextBlock Text="课程列表" Classes="section-title" />
           <TextBlock Text="{Binding StatusText}" Classes="muted" />
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
@@ -75,11 +75,6 @@
                         Height="1"
                         Background="{StaticResource BorderBrushSoft}"
                         VerticalAlignment="Bottom" />
-                <TextBlock Grid.Row="2"
-                           Text="打开课程视频"
-                           Classes="muted"
-                           FontSize="12"
-                           Margin="16,0,16,14" />
               </Grid>
             </Button>
           </DataTemplate>

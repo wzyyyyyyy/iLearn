@@ -17,6 +17,7 @@
           <TextBlock Text="{Binding TotalDownloadSpeed}" Classes="muted" />
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button Content="全部取消" Command="{Binding CancelAllDownloadCommand}"/>
           <Button Content="重试失败" Command="{Binding RetryFailedCommand}" />
           <Button Content="清理完成" Command="{Binding ClearCompletedCommand}" />
           <Button Content="打开下载文件夹" Classes="primary" Command="{Binding OpenDownloadsFolderCommand}" />

@@ -53,6 +53,13 @@ public partial class DownloadManageViewModel : ObservableObject
         Downloads.Where(download => download.Status == DownloadTaskStatus.Downloading).Sum(download => download.BytesPerSecond));
 
     [RelayCommand]
+    private async Task CancelAllDownload()
+    {
+        _downloadQueue.ClearCompleted();
+        await _downloadQueue.CancelAllAsync();
+    }
+
+    [RelayCommand]
     private void ClearCompleted()
     {
         _downloadQueue.ClearCompleted();
