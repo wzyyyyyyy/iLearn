@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using iLearn.Downloads;
+using iLearn.Models;
 using Xunit;
 
 namespace iLearn.Tests.Downloads;
@@ -193,6 +194,44 @@ public sealed class DownloadQueueServiceTests
         await WaitUntilAsync(() => service.Tasks.Single().Status == DownloadTaskStatus.Completed);
     }
 
+    [Fact]
+    public async Task EnqueueAsync_UsesConfiguredMaxConcurrentDownloads()
+    {
+        var engine = new TrackingBlockingDownloadEngine();
+        var config = new AppConfig { MaxConcurrentDownloads = 1 };
+        var service = new DownloadQueueService(engine, config);
+
+        await service.EnqueueAsync(CreateRequest("task-1"), TestContext.Current.CancellationToken);
+        await service.EnqueueAsync(CreateRequest("task-2"), TestContext.Current.CancellationToken);
+
+        await WaitUntilAsync(() => engine.StartedCount >= 1);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, engine.MaxObservedActiveDownloads);
+
+        await service.CancelAsync("task-1", TestContext.Current.CancellationToken);
+        await service.CancelAsync("task-2", TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task UpdateMaxConcurrentDownloads_AllowsWaitingTasksToStart()
+    {
+        var engine = new TrackingBlockingDownloadEngine();
+        var config = new AppConfig { MaxConcurrentDownloads = 1 };
+        var service = new DownloadQueueService(engine, config);
+
+        await service.EnqueueAsync(CreateRequest("task-1"), TestContext.Current.CancellationToken);
+        await service.EnqueueAsync(CreateRequest("task-2"), TestContext.Current.CancellationToken);
+        await WaitUntilAsync(() => engine.StartedCount >= 1);
+
+        service.UpdateMaxConcurrentDownloads(2);
+
+        await WaitUntilAsync(() => engine.MaxObservedActiveDownloads >= 2);
+
+        await service.CancelAsync("task-1", TestContext.Current.CancellationToken);
+        await service.CancelAsync("task-2", TestContext.Current.CancellationToken);
+    }
+
     private sealed class FakeDownloadEngine : IDownloadEngine
     {
         public Task DownloadAsync(
@@ -262,6 +301,61 @@ public sealed class DownloadQueueServiceTests
                 throw new InvalidOperationException("network failed");
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class TrackingBlockingDownloadEngine : IDownloadEngine
+    {
+        private int _activeDownloads;
+        private int _startedCount;
+        private int _maxObservedActiveDownloads;
+
+        public int StartedCount => Volatile.Read(ref _startedCount);
+
+        public int MaxObservedActiveDownloads => Volatile.Read(ref _maxObservedActiveDownloads);
+
+        public async Task DownloadAsync(
+            DownloadRequest request,
+            string outputPath,
+            IProgress<DownloadTaskSnapshot> progress,
+            CancellationToken cancellationToken)
+        {
+            var activeDownloads = Interlocked.Increment(ref _activeDownloads);
+            Interlocked.Increment(ref _startedCount);
+            UpdateMaxObservedActiveDownloads(activeDownloads);
+            progress.Report(DownloadTaskSnapshot.Downloading(request, 10, 100, 1024, null));
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _activeDownloads);
+            }
+        }
+
+        private void UpdateMaxObservedActiveDownloads(int activeDownloads)
+        {
+            while (true)
+            {
+                var current = Volatile.Read(ref _maxObservedActiveDownloads);
+                if (activeDownloads <= current)
+                    return;
+
+                if (Interlocked.CompareExchange(ref _maxObservedActiveDownloads, activeDownloads, current) == current)
+                    return;
+            }
+        }
+    }
+
+    private static DownloadRequest CreateRequest(string id)
+    {
+        return new DownloadRequest(
+            id,
+            $"https://example.test/{id}.mp4",
+            $"{id}.mp4",
+            Path.GetTempPath(),
+            id,
+            "HDMI");
     }
 
     private static async Task WaitUntilAsync(Func<bool> condition)

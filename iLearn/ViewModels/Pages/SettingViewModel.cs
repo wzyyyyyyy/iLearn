@@ -1,3 +1,4 @@
+using iLearn.Downloads;
 using iLearn.Models;
 using iLearn.Notifications;
 using iLearn.Platform;
@@ -11,6 +12,7 @@ public partial class SettingViewModel : ObservableObject
     private readonly IPlatformLauncher _launcher;
     private readonly INotificationService _notifications;
     private readonly IUpdateService _updateService;
+    private readonly DownloadQueueService _downloadQueue;
     private bool _suppressSave;
 
     [ObservableProperty]
@@ -38,12 +40,14 @@ public partial class SettingViewModel : ObservableObject
         AppConfig appConfig,
         IPlatformLauncher launcher,
         INotificationService notifications,
-        IUpdateService updateService)
+        IUpdateService updateService,
+        DownloadQueueService downloadQueue)
     {
         _appConfig = appConfig;
         _launcher = launcher;
         _notifications = notifications;
         _updateService = updateService;
+        _downloadQueue = downloadQueue;
 
         _suppressSave = true;
         MaxConcurrentDownloads = _appConfig.MaxConcurrentDownloads;
@@ -59,6 +63,7 @@ public partial class SettingViewModel : ObservableObject
             return;
 
         _appConfig.MaxConcurrentDownloads = value;
+        _downloadQueue.UpdateMaxConcurrentDownloads(value);
         SaveDownloadSettings("同时下载数已更新");
     }
 

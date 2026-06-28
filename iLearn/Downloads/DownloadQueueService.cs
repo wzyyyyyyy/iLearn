@@ -1,26 +1,36 @@
 using System.Collections.ObjectModel;
 using System.Threading.Channels;
+using iLearn.Models;
 
 namespace iLearn.Downloads;
 
 public sealed class DownloadQueueService
 {
     private readonly IDownloadEngine _engine;
+    private readonly AppConfig _appConfig;
     private readonly Channel<QueuedDownload> _channel = Channel.CreateUnbounded<QueuedDownload>();
-    private readonly SemaphoreSlim _concurrency = new(3, 3);
     private readonly ObservableCollection<DownloadTaskSnapshot> _tasks = new();
     private readonly Dictionary<string, DownloadRequest> _requests = new();
     private readonly Dictionary<string, CancellationTokenSource> _cancellations = new();
     private readonly Dictionary<string, Guid> _activeRuns = new();
     private readonly HashSet<string> _removedActiveRuns = [];
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly object _concurrencyGate = new();
     private readonly object _tasksGate = new();
     private readonly SynchronizationContext? _collectionContext;
+    private TaskCompletionSource _capacityChanged = CreateCapacityChangedSignal();
+    private int _runningDownloads;
     private int _processorStarted;
 
     public DownloadQueueService(IDownloadEngine engine)
+        : this(engine, new AppConfig())
+    {
+    }
+
+    public DownloadQueueService(IDownloadEngine engine, AppConfig appConfig)
     {
         _engine = engine;
+        _appConfig = appConfig;
         _collectionContext = SynchronizationContext.Current;
         Tasks = new ReadOnlyObservableCollection<DownloadTaskSnapshot>(_tasks);
     }
@@ -104,6 +114,15 @@ public sealed class DownloadQueueService
             await CancelAsync(id, cancellationToken);
     }
 
+    public void UpdateMaxConcurrentDownloads(int value)
+    {
+        if (value < 1)
+            return;
+
+        _appConfig.MaxConcurrentDownloads = Math.Clamp(value, 1, 10);
+        SignalCapacityChanged();
+    }
+
     public Task PauseAsync(string id, CancellationToken cancellationToken = default)
     {
         return CancelAsync(id, cancellationToken);
@@ -180,7 +199,7 @@ public sealed class DownloadQueueService
     {
         await foreach (var queuedDownload in _channel.Reader.ReadAllAsync())
         {
-            await _concurrency.WaitAsync();
+            await WaitForDownloadSlotAsync();
             _ = Task.Run(() => ProcessRequestAsync(queuedDownload));
         }
     }
@@ -218,8 +237,58 @@ public sealed class DownloadQueueService
         finally
         {
             await CompleteActiveRunAsync(request.Id, runId, cancellation, finalSnapshot);
-            _concurrency.Release();
+            ReleaseDownloadSlot();
         }
+    }
+
+    private async Task WaitForDownloadSlotAsync()
+    {
+        while (true)
+        {
+            Task waitForCapacity;
+            lock (_concurrencyGate)
+            {
+                if (_runningDownloads < GetMaxConcurrentDownloads())
+                {
+                    _runningDownloads++;
+                    return;
+                }
+
+                waitForCapacity = _capacityChanged.Task;
+            }
+
+            await waitForCapacity;
+        }
+    }
+
+    private void ReleaseDownloadSlot()
+    {
+        lock (_concurrencyGate)
+        {
+            if (_runningDownloads > 0)
+                _runningDownloads--;
+        }
+
+        SignalCapacityChanged();
+    }
+
+    private int GetMaxConcurrentDownloads()
+    {
+        return Math.Clamp(_appConfig.MaxConcurrentDownloads, 1, 10);
+    }
+
+    private void SignalCapacityChanged()
+    {
+        lock (_concurrencyGate)
+        {
+            _capacityChanged.TrySetResult();
+            _capacityChanged = CreateCapacityChangedSignal();
+        }
+    }
+
+    private static TaskCompletionSource CreateCapacityChangedSignal()
+    {
+        return new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     private async Task CompleteActiveRunAsync(

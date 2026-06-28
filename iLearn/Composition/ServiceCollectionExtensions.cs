@@ -30,8 +30,12 @@ public static class ServiceCollectionExtensions
                 "config.json");
             return new AppConfig(configPath);
         });
-        services.AddSingleton<IDownloadEngine, HttpRangeDownloadEngine>();
-        services.AddSingleton<DownloadQueueService>();
+        services.AddSingleton<IDownloadEngine>(sp => new HttpRangeDownloadEngine(
+            new HttpClient { Timeout = TimeSpan.FromMinutes(10) },
+            sp.GetRequiredService<AppConfig>()));
+        services.AddSingleton(sp => new DownloadQueueService(
+            sp.GetRequiredService<IDownloadEngine>(),
+            sp.GetRequiredService<AppConfig>()));
         services.AddSingleton<ILearnApiService>();
         services.AddSingleton<IUpdateManifestClient>(_ => new HttpUpdateManifestClient(
             new HttpClient(),
